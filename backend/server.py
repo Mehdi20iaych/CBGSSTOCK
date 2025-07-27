@@ -11,6 +11,10 @@ from typing import List, Dict, Optional
 import google.generativeai as genai
 from pymongo import MongoClient
 from pydantic import BaseModel
+from fastapi.responses import StreamingResponse
+from io import BytesIO
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 # Configure Gemini API
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', "AIzaSyDaUyWzYQEDBqFwuniG8KiqKHgtk-l5Dco")
@@ -45,6 +49,10 @@ class CalculationRequest(BaseModel):
 
 class GeminiQueryRequest(BaseModel):
     query: str
+    session_id: str
+
+class ExportRequest(BaseModel):
+    selected_items: List[Dict]
     session_id: str
 
 # Store uploaded data temporarily
@@ -92,9 +100,25 @@ async def upload_excel(file: UploadFile = File(...)):
         # Generate session ID for this upload
         session_id = str(uuid.uuid4())
         
-        # Get unique values for filters
+        # Get unique values for filters with better packaging display
         unique_products = sorted(df['Désignation Article'].unique().tolist())
-        unique_packaging = sorted(df['Type Emballage'].unique().tolist())
+        unique_packaging_raw = sorted(df['Type Emballage'].unique().tolist())
+        
+        # Enhance packaging display names
+        packaging_display_map = {
+            'Verre': 'Bouteille en Verre',
+            'Pet': 'Bouteille en Plastique (PET)',
+            'Canette': 'Canette Aluminium',
+            'Tétra': 'Emballage Tétra Pak',
+            'Bag': 'Bag-in-Box',
+            'Fût': 'Fût'
+        }
+        
+        unique_packaging = []
+        for pkg in unique_packaging_raw:
+            display_name = packaging_display_map.get(pkg, pkg)
+            unique_packaging.append({"value": pkg, "display": display_name})
+        
         unique_depots = sorted(df['Nom Division'].unique().tolist())
         
         # Store data temporarily
@@ -163,6 +187,8 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                     "date_range_days": 0,
                     "requested_days": request.days,
                     "high_priority": [],
+                    "medium_priority": [],
+                    "low_priority": [],
                     "no_stock_needed": [],
                     "message": "Aucune donnée trouvée avec les filtres appliqués"
                 }
@@ -211,7 +237,11 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                 priority = 'low'
                 priority_text = 'Faible'
             
+            # Add unique ID for selection
+            item_id = f"{row['depot']}_{row['article_code']}_{row['packaging_type']}"
+            
             results.append({
+                'id': item_id,
                 'depot': row['depot'],
                 'article_code': row['article_code'],
                 'article_name': row['article_name'],
@@ -223,7 +253,8 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                 'quantity_to_send': round(quantity_to_send, 2),
                 'total_ordered_in_period': row['total_ordered'],
                 'priority': priority,
-                'priority_text': priority_text
+                'priority_text': priority_text,
+                'selected': False
             })
         
         # Sort by priority (high first) and then by quantity needed (descending)
@@ -258,6 +289,107 @@ async def get_filters(session_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des filtres: {str(e)}")
 
+@app.post("/api/export-critical/{session_id}")
+async def export_critical_items(session_id: str, request: ExportRequest):
+    try:
+        if session_id not in uploaded_data:
+            raise HTTPException(status_code=404, detail="Session non trouvée")
+        
+        # Create Excel workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Articles Critiques CBGS"
+        
+        # Company header
+        ws['A1'] = "CBGS - Rapport d'Articles Critiques"
+        ws['A2'] = f"Date de génération: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+        ws['A3'] = f"Nombre d'articles critiques: {len(request.selected_items)}"
+        
+        # Style for header
+        header_font = Font(bold=True, size=14)
+        ws['A1'].font = header_font
+        ws['A2'].font = Font(bold=True)
+        ws['A3'].font = Font(bold=True)
+        
+        # Table headers
+        headers = [
+            'Dépôt', 'Code Article', 'Désignation Article', 'Type Emballage',
+            'Stock Actuel', 'Consommation Quotidienne', 'Jours de Couverture',
+            'Quantité Requise', 'Priorité', 'Action Recommandée'
+        ]
+        
+        row_num = 5
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=row_num, column=col_num, value=header)
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.alignment = Alignment(horizontal="center")
+        
+        # Add data rows
+        for idx, item in enumerate(request.selected_items, 1):
+            row_num = 5 + idx
+            
+            # Determine action based on priority
+            if item['priority'] == 'high':
+                action = "URGENT - Réapprovisionnement immédiat"
+            elif item['priority'] == 'medium':
+                action = "Planifier réapprovisionnement"
+            else:
+                action = "Surveiller"
+            
+            row_data = [
+                item['depot'],
+                item['article_code'],
+                item['article_name'],
+                item['packaging_type'],
+                item['current_stock'],
+                item['average_daily_consumption'],
+                item['days_of_coverage'],
+                item['quantity_to_send'],
+                item['priority_text'],
+                action
+            ]
+            
+            for col_num, value in enumerate(row_data, 1):
+                cell = ws.cell(row=row_num, column=col_num, value=value)
+                if item['priority'] == 'high':
+                    cell.fill = PatternFill(start_color="FFE6E6", end_color="FFE6E6", fill_type="solid")
+                elif item['priority'] == 'medium':
+                    cell.fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+        
+        # Auto-adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to BytesIO
+        excel_buffer = BytesIO()
+        wb.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        # Create filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"CBGS_Articles_Critiques_{timestamp}.xlsx"
+        
+        # Return file as download
+        return StreamingResponse(
+            BytesIO(excel_buffer.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")
+
 @app.post("/api/gemini-query/{session_id}")
 async def gemini_query(session_id: str, request: GeminiQueryRequest):
     try:
@@ -268,33 +400,28 @@ async def gemini_query(session_id: str, request: GeminiQueryRequest):
         data = uploaded_data[session_id]['data']
         df = pd.DataFrame(data)
         
-        # Create context for Gemini in French
+        # Create context for Gemini in French with instruction for brief responses
         context = f"""
-        Vous analysez les données de stock et de commandes pour plusieurs dépôts. Voici le résumé des données:
+        Vous analysez les données de stock et de commandes pour plusieurs dépôts. 
         
+        IMPORTANT: Donnez une réponse BRÈVE et CONCISE (maximum 3-4 phrases).
+        
+        Données:
         - Total des enregistrements: {len(df)}
         - Plage de dates: {uploaded_data[session_id]['date_range']['start']} à {uploaded_data[session_id]['date_range']['end']}
-        - Total des jours: {uploaded_data[session_id]['date_range']['total_days']}
         - Dépôts: {df['Nom Division'].unique().tolist()}
         - Produits: {df['Désignation Article'].nunique()} produits uniques
         - Types d'emballage: {df['Type Emballage'].unique().tolist()}
         
-        Exemple de structure de données:
-        {df.head().to_dict('records')}
-        
-        Métriques clés que vous pouvez calculer:
-        - Consommation Quotidienne Moyenne (CQM) = Total commandé / Jours dans la période
-        - Jours de Couverture (JC) = Stock actuel / CQM
-        - Quantité requise pour X jours = (X * CQM) - Stock actuel
-        
-        Répondez à la question de l'utilisateur en français basée sur ce contexte de données.
+        Répondez en français de manière BRÈVE et DIRECTE.
         """
         
         # Initialize Gemini model
         model = genai.GenerativeModel('gemini-2.5-flash')
         
-        # Generate response
-        response = model.generate_content(context + "\n\nQuestion de l'utilisateur: " + request.query)
+        # Generate response with instruction for brevity
+        prompt = context + "\n\nQuestion: " + request.query + "\n\nRéponse brève (maximum 3-4 phrases):"
+        response = model.generate_content(prompt)
         
         return {
             "response": response.text,

@@ -16,6 +16,8 @@ function App() {
   const [geminiQuery, setGeminiQuery] = useState('');
   const [geminiResponse, setGeminiResponse] = useState(null);
   const [activeTab, setActiveTab] = useState('upload');
+  const [selectedCriticalItems, setSelectedCriticalItems] = useState([]);
+  const [showCriticalOnly, setShowCriticalOnly] = useState(false);
   const fileInputRef = useRef(null);
 
   // Fetch available filters when session is created
@@ -96,6 +98,7 @@ function App() {
 
       const data = await response.json();
       setCalculations(data);
+      setSelectedCriticalItems([]);
       setActiveTab('results');
     } catch (err) {
       setError(`Échec du calcul: ${err.message}`);
@@ -136,18 +139,62 @@ function App() {
     }
   };
 
+  const handleExportCritical = async () => {
+    if (!sessionId || selectedCriticalItems.length === 0) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/export-critical/${sessionId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          selected_items: selectedCriticalItems,
+          session_id: sessionId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Erreur HTTP! statut: ${response.status}`);
+      }
+
+      // Handle file download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CBGS_Articles_Critiques_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setSelectedCriticalItems([]);
+    } catch (err) {
+      setError(`Échec de l'export: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetApp = () => {
     setSessionId(null);
     setUploadedData(null);
     setCalculations(null);
     setGeminiResponse(null);
     setAvailableFilters(null);
+    setSelectedCriticalItems([]);
     setError(null);
     setActiveTab('upload');
     setDays(30);
     setSelectedProducts([]);
     setSelectedPackaging([]);
     setGeminiQuery('');
+    setShowCriticalOnly(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -169,6 +216,27 @@ function App() {
     );
   };
 
+  const handleCriticalItemSelect = (item) => {
+    setSelectedCriticalItems(prev => {
+      const exists = prev.find(i => i.id === item.id);
+      if (exists) {
+        return prev.filter(i => i.id !== item.id);
+      } else {
+        return [...prev, item];
+      }
+    });
+  };
+
+  const selectAllCritical = () => {
+    if (!calculations) return;
+    const criticalItems = calculations.calculations.filter(item => item.priority === 'high');
+    setSelectedCriticalItems(criticalItems);
+  };
+
+  const clearCriticalSelection = () => {
+    setSelectedCriticalItems([]);
+  };
+
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'high': return 'text-red-600 bg-red-50';
@@ -185,13 +253,21 @@ function App() {
     return num;
   };
 
+  const getDisplayedCalculations = () => {
+    if (!calculations) return [];
+    if (showCriticalOnly) {
+      return calculations.calculations.filter(item => item.priority === 'high');
+    }
+    return calculations.calculations;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg">
           <div className="p-6 border-b border-gray-200">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Système de Gestion des Stocks
+              Système de Gestion des Stocks - CBGS
             </h1>
             <p className="text-gray-600">
               Téléchargez des fichiers Excel pour analyser les niveaux de stock et calculer les besoins des dépôts
@@ -359,14 +435,14 @@ function App() {
                     </label>
                     <div className="space-y-2">
                       {availableFilters?.packaging?.map((packaging) => (
-                        <label key={packaging} className="flex items-center space-x-2 cursor-pointer">
+                        <label key={packaging.value} className="flex items-center space-x-2 cursor-pointer">
                           <input
                             type="checkbox"
-                            checked={selectedPackaging.includes(packaging)}
-                            onChange={() => handlePackagingSelect(packaging)}
+                            checked={selectedPackaging.includes(packaging.value)}
+                            onChange={() => handlePackagingSelect(packaging.value)}
                             className="rounded text-blue-500 focus:ring-blue-500"
                           />
-                          <span className="text-sm text-gray-700">{packaging}</span>
+                          <span className="text-sm text-gray-700">{packaging.display}</span>
                         </label>
                       ))}
                     </div>
@@ -427,10 +503,54 @@ function App() {
                   </div>
                 </div>
 
+                {/* Critical Items Selection */}
+                {calculations.summary.high_priority.length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-red-800">
+                        🚨 Articles Critiques - Sélection pour Export
+                      </h3>
+                      <div className="flex items-center space-x-2">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={showCriticalOnly}
+                            onChange={(e) => setShowCriticalOnly(e.target.checked)}
+                            className="rounded text-red-500 focus:ring-red-500"
+                          />
+                          <span className="text-sm text-red-700">Afficher uniquement les critiques</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex space-x-4 mb-4">
+                      <button
+                        onClick={selectAllCritical}
+                        className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                      >
+                        Sélectionner tous les critiques
+                      </button>
+                      <button
+                        onClick={clearCriticalSelection}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors"
+                      >
+                        Effacer sélection
+                      </button>
+                      <button
+                        onClick={handleExportCritical}
+                        disabled={selectedCriticalItems.length === 0 || loading}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        📄 Exporter CBGS ({selectedCriticalItems.length} sélectionnés)
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse border border-gray-300 rounded-lg">
                     <thead>
                       <tr className="bg-gray-100">
+                        <th className="border border-gray-300 p-3 text-left">Sélection</th>
                         <th className="border border-gray-300 p-3 text-left">Dépôt</th>
                         <th className="border border-gray-300 p-3 text-left">Produit</th>
                         <th className="border border-gray-300 p-3 text-left">Emballage</th>
@@ -442,8 +562,18 @@ function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {calculations.calculations.map((item, index) => (
+                      {getDisplayedCalculations().map((item, index) => (
                         <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="border border-gray-300 p-3 text-center">
+                            {item.priority === 'high' && (
+                              <input
+                                type="checkbox"
+                                checked={selectedCriticalItems.some(selected => selected.id === item.id)}
+                                onChange={() => handleCriticalItemSelect(item)}
+                                className="rounded text-red-500 focus:ring-red-500"
+                              />
+                            )}
+                          </td>
                           <td className="border border-gray-300 p-3 font-medium">{item.depot}</td>
                           <td className="border border-gray-300 p-3">{item.article_name}</td>
                           <td className="border border-gray-300 p-3">{item.packaging_type}</td>
@@ -479,38 +609,38 @@ function App() {
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
                   <h3 className="font-medium text-blue-800 mb-2">🤖 Analyses Intelligentes</h3>
                   <p className="text-sm text-blue-700">
-                    Posez des questions sur vos données, obtenez des insights sur la consommation, ou identifiez des anomalies.
+                    Posez des questions sur vos données. Les réponses seront brèves et directes.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
-                    onClick={() => setGeminiQuery('Quels dépôts vont être en rupture de stock dans moins de 7 jours?')}
+                    onClick={() => setGeminiQuery('Quels dépôts sont en rupture critique?')}
                     className="p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
                   >
-                    <div className="font-medium text-gray-800">Dépôts en rupture</div>
-                    <div className="text-sm text-gray-600">Quels dépôts vont être en rupture dans moins de 7 jours?</div>
+                    <div className="font-medium text-gray-800">Dépôts critiques</div>
+                    <div className="text-sm text-gray-600">Quels dépôts sont en rupture critique?</div>
                   </button>
                   <button
-                    onClick={() => setGeminiQuery('Quels sont les 5 produits avec la plus forte consommation?')}
+                    onClick={() => setGeminiQuery('Top 3 produits forte consommation?')}
                     className="p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
                   >
                     <div className="font-medium text-gray-800">Top consommation</div>
-                    <div className="text-sm text-gray-600">Quels sont les 5 produits avec la plus forte consommation?</div>
+                    <div className="text-sm text-gray-600">Top 3 produits forte consommation?</div>
                   </button>
                   <button
-                    onClick={() => setGeminiQuery('Y a-t-il des anomalies dans les données de consommation?')}
+                    onClick={() => setGeminiQuery('Anomalies dans les données?')}
                     className="p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
                   >
-                    <div className="font-medium text-gray-800">Détection d\'anomalies</div>
-                    <div className="text-sm text-gray-600">Y a-t-il des anomalies dans les données de consommation?</div>
+                    <div className="font-medium text-gray-800">Anomalies</div>
+                    <div className="text-sm text-gray-600">Anomalies dans les données?</div>
                   </button>
                   <button
-                    onClick={() => setGeminiQuery('Recommandations pour optimiser la gestion des stocks?')}
+                    onClick={() => setGeminiQuery('Recommandations urgentes?')}
                     className="p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
                   >
                     <div className="font-medium text-gray-800">Recommandations</div>
-                    <div className="text-sm text-gray-600">Recommandations pour optimiser la gestion des stocks?</div>
+                    <div className="text-sm text-gray-600">Recommandations urgentes?</div>
                   </button>
                 </div>
 
@@ -519,8 +649,8 @@ function App() {
                     value={geminiQuery}
                     onChange={(e) => setGeminiQuery(e.target.value)}
                     className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Posez votre question ici..."
-                    rows="3"
+                    placeholder="Posez une question brève..."
+                    rows="2"
                   />
                   <button
                     onClick={handleGeminiQuery}
@@ -533,8 +663,8 @@ function App() {
 
                 {geminiResponse && (
                   <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
-                    <h4 className="font-medium text-green-800 mb-3">🎯 Réponse IA:</h4>
-                    <div className="text-sm text-green-700 whitespace-pre-wrap leading-relaxed">
+                    <h4 className="font-medium text-green-800 mb-3">🎯 Réponse Rapide:</h4>
+                    <div className="text-sm text-green-700 leading-relaxed">
                       {geminiResponse.response}
                     </div>
                   </div>
