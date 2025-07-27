@@ -13,7 +13,7 @@ from pymongo import MongoClient
 from pydantic import BaseModel
 
 # Configure Gemini API
-GEMINI_API_KEY = "AIzaSyDaUyWzYQEDBqFwuniG8KiqKHgtk-l5Dco"
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', "AIzaSyDaUyWzYQEDBqFwuniG8KiqKHgtk-l5Dco")
 genai.configure(api_key=GEMINI_API_KEY)
 
 app = FastAPI()
