@@ -176,19 +176,19 @@ class StockManagementAPITester:
         )
         return success
 
-    def test_gemini_query(self):
-        """Test Gemini AI query endpoint"""
+    def test_gemini_query_french(self):
+        """Test Gemini AI query endpoint with French query"""
         if not self.session_id:
             print("❌ No session ID available for Gemini query test")
             return False
             
         query_data = {
-            "query": "What are the top 3 products with highest consumption?",
+            "query": "Quels sont les 3 produits avec la plus forte consommation?",
             "session_id": self.session_id
         }
         
         success, response = self.run_test(
-            "Gemini AI Query",
+            "Gemini AI Query (French)",
             "POST",
             f"api/gemini-query/{self.session_id}",
             200,
