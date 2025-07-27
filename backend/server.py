@@ -238,7 +238,7 @@ async def gemini_query(session_id: str, request: GeminiQueryRequest):
         """
         
         # Initialize Gemini model
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         # Generate response
         response = model.generate_content(context + "\n\nUser question: " + request.query)
