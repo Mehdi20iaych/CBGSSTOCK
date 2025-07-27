@@ -141,20 +141,34 @@ class StockManagementAPITester:
         )
         return success
 
+    def test_get_filters(self):
+        """Test get filters endpoint"""
+        if not self.session_id:
+            print("❌ No session ID available for filters test")
+            return False
+            
+        success, response = self.run_test(
+            "Get Available Filters",
+            "GET",
+            f"api/filters/{self.session_id}",
+            200
+        )
+        return success
+
     def test_calculate_with_filters(self):
-        """Test calculation with filters"""
+        """Test calculation with array filters"""
         if not self.session_id:
             print("❌ No session ID available for filtered calculation test")
             return False
             
         calculation_data = {
             "days": 15,
-            "product_filter": "COCA",
-            "packaging_filter": "Verre"
+            "product_filter": ["COCA-COLA 33CL", "PEPSI 50CL"],
+            "packaging_filter": ["Verre", "Pet"]
         }
         
         success, response = self.run_test(
-            "Calculate Requirements with Filters",
+            "Calculate Requirements with Array Filters",
             "POST",
             f"api/calculate/{self.session_id}",
             200,
