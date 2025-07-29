@@ -200,6 +200,14 @@ function App() {
     }
   };
 
+  const handleProductSelect = (product) => {
+    setSelectedProducts(prev => 
+      prev.includes(product) 
+        ? prev.filter(p => p !== product)
+        : [...prev, product]
+    );
+  };
+
   const handleProductSelectAll = () => {
     if (!availableFilters?.products) return;
     
