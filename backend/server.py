@@ -406,20 +406,23 @@ async def gemini_query(session_id: str, request: GeminiQueryRequest):
         data = uploaded_data[session_id]['data']
         df = pd.DataFrame(data)
         
-        # Create context for Gemini in French with instruction for brief responses
+        # Create enhanced context for Gemini in French with instruction for intelligent responses
         context = f"""
-        Vous analysez les données de stock et de commandes pour plusieurs dépôts. 
+        Vous êtes un expert en analyse de stocks et de supply chain. Analysez les données avec expertise.
         
-        IMPORTANT: Donnez une réponse BRÈVE et CONCISE (maximum 3-4 phrases).
+        IMPORTANT: Donnez une réponse INTELLIGENTE et CONCISE (2-4 phrases maximum), avec des chiffres précis quand possible.
         
-        Données:
+        Données actuelles:
         - Total des enregistrements: {len(df)}
-        - Plage de dates: {uploaded_data[session_id]['date_range']['start']} à {uploaded_data[session_id]['date_range']['end']}
+        - Période analysée: {uploaded_data[session_id]['date_range']['start']} à {uploaded_data[session_id]['date_range']['end']} ({uploaded_data[session_id]['date_range']['total_days']} jours)
         - Dépôts: {df['Nom Division'].unique().tolist()}
-        - Produits: {df['Désignation Article'].nunique()} produits uniques
+        - Produits uniques: {df['Désignation Article'].nunique()}
         - Types d'emballage: {df['Type Emballage'].unique().tolist()}
+        - Volume total commandé: {df['Quantité Commandée'].sum():,.0f} unités
+        - Stock moyen: {df['Stock Utilisation Libre'].mean():,.0f} unités
         
-        Répondez en français de manière BRÈVE et DIRECTE.
+        Analysez intelligemment selon la question posée. Utilisez les données pour donner des insights précis.
+        Répondez toujours en français, de manière professionnelle et actionnable.
         """
         
         # Initialize Gemini model
