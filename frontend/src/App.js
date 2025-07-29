@@ -638,63 +638,63 @@ function App() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
-                    onClick={() => setGeminiQuery('Quels sont les dépôts en situation critique avec moins de 7 jours de couverture?')}
+                    onClick={() => setGeminiQuery('Quels dépôts ont les plus faibles niveaux de stock aujourd\'hui?')}
                     className="p-4 text-left bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors"
                   >
                     <div className="font-medium text-red-800 flex items-center">
-                      🚨 <span className="ml-2">Alertes Critiques</span>
+                      🚨 <span className="ml-2">Stocks Critiques</span>
                     </div>
-                    <div className="text-sm text-red-600 mt-1">Dépôts en rupture imminente</div>
+                    <div className="text-sm text-red-600 mt-1">Dépôts avec faibles stocks</div>
                   </button>
                   
                   <button
-                    onClick={() => setGeminiQuery('Quel est le top 5 des produits avec la plus forte consommation quotidienne?')}
+                    onClick={() => setGeminiQuery('Quels sont les 5 produits les plus commandés aujourd\'hui?')}
                     className="p-4 text-left bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 transition-colors"
                   >
                     <div className="font-medium text-orange-800 flex items-center">
-                      📈 <span className="ml-2">Top Consommation</span>
+                      📈 <span className="ml-2">Top Commandes</span>
                     </div>
-                    <div className="text-sm text-orange-600 mt-1">Produits haute rotation</div>
+                    <div className="text-sm text-orange-600 mt-1">Produits les plus demandés</div>
                   </button>
                   
                   <button
-                    onClick={() => setGeminiQuery('Y a-t-il des anomalies ou des incohérences dans les données de stock?')}
-                    className="p-4 text-left bg-yellow-50 hover:bg-yellow-100 rounded-lg border border-yellow-200 transition-colors"
+                    onClick={() => setGeminiQuery('Analysez la répartition des commandes par dépôt pour aujourd\'hui.')}
+                    className="p-4 text-left bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
                   >
-                    <div className="font-medium text-yellow-800 flex items-center">
-                      🔍 <span className="ml-2">Détection d'Anomalies</span>
+                    <div className="font-medium text-blue-800 flex items-center">
+                      📊 <span className="ml-2">Répartition Dépôts</span>
                     </div>
-                    <div className="text-sm text-yellow-600 mt-1">Incohérences dans les données</div>
+                    <div className="text-sm text-blue-600 mt-1">Volume par dépôt</div>
                   </button>
                   
                   <button
-                    onClick={() => setGeminiQuery('Quelles sont vos recommandations urgentes pour optimiser la gestion des stocks?')}
+                    onClick={() => setGeminiQuery('Quels produits nécessitent un réapprovisionnement immédiat basé sur les stocks actuels?')}
                     className="p-4 text-left bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors"
                   >
                     <div className="font-medium text-green-800 flex items-center">
-                      💡 <span className="ml-2">Recommandations</span>
+                      💡 <span className="ml-2">Réapprovisionnement</span>
                     </div>
-                    <div className="text-sm text-green-600 mt-1">Optimisations suggérées</div>
+                    <div className="text-sm text-green-600 mt-1">Actions urgentes</div>
                   </button>
                   
                   <button
-                    onClick={() => setGeminiQuery('Quelle est la répartition des stocks par type d\'emballage et quelles tendances observez-vous?')}
+                    onClick={() => setGeminiQuery('Comparez les volumes commandés par type d\'emballage aujourd\'hui.')}
                     className="p-4 text-left bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors"
                   >
                     <div className="font-medium text-indigo-800 flex items-center">
-                      📊 <span className="ml-2">Analyse Emballages</span>
+                      📦 <span className="ml-2">Analyse Emballages</span>
                     </div>
-                    <div className="text-sm text-indigo-600 mt-1">Tendances par packaging</div>
+                    <div className="text-sm text-indigo-600 mt-1">Volumes par packaging</div>
                   </button>
                   
                   <button
-                    onClick={() => setGeminiQuery('Calculez les coûts potentiels de rupture pour les articles en priorité critique.')}
+                    onClick={() => setGeminiQuery('Donnez-moi un résumé des performances commerciales du jour avec les chiffres clés.')}
                     className="p-4 text-left bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors"
                   >
                     <div className="font-medium text-purple-800 flex items-center">
-                      💰 <span className="ml-2">Impact Financier</span>
+                      📈 <span className="ml-2">Résumé Journalier</span>
                     </div>
-                    <div className="text-sm text-purple-600 mt-1">Coûts de rupture estimés</div>
+                    <div className="text-sm text-purple-600 mt-1">Performance du jour</div>
                   </button>
                 </div>
 
