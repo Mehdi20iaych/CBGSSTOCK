@@ -111,27 +111,33 @@
 ## backend:
   - task: "Filter packaging types to only verre, pet, ciel"
     implemented: true
-    working: "NA"  
+    working: true  
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Modified packaging filtering logic to only show verre, pet, ciel types that exist in uploaded data"
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Packaging filter enhancement working correctly. Upload endpoint returns only allowed packaging types (verre, pet, ciel) that exist in data. Sample file with mixed packaging types (including Canette, Tétra) correctly filtered to show only Pet and Verre. Display names properly formatted (e.g., 'Pet' -> 'Bouteille en Plastique (PET)'). Calculation endpoints work correctly with packaging filters."
   
   - task: "Improve AI assistant context and prompting"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"  
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Enhanced Gemini context with better prompting, data statistics, and professional tone"
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: AI assistant improvements working excellently. Enhanced context provides intelligent responses with precise data statistics (650 units total, 26-day period, 333 average stock). Responses are appropriately concise (2-4 sentences, 300-500 chars), professional, and in French. Multiple query types tested successfully: consumption analysis, stock trends, restocking needs, volume statistics. AI correctly identifies data limitations and provides actionable insights."
 
 ## frontend:
   - task: "Add select all option to products filter"
