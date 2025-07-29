@@ -393,9 +393,11 @@ def main():
     tests = [
         ("Health Check", tester.test_health_check),
         ("Upload Excel File", tester.test_upload_excel),
+        ("Packaging Filter Enhancement", tester.test_packaging_filter_enhancement),
         ("Get Available Filters", tester.test_get_filters),
         ("Calculate Requirements", tester.test_calculate_requirements),
-        ("Calculate with Array Filters", tester.test_calculate_with_filters),
+        ("Calculate with Packaging Filters", tester.test_calculate_with_packaging_filters),
+        ("Enhanced Gemini AI Queries", tester.test_gemini_query_enhanced),
         ("Gemini AI Query (French)", tester.test_gemini_query_french),
         ("Invalid Session ID", tester.test_invalid_session_id),
         ("Invalid File Upload", tester.test_invalid_file_upload),
