@@ -111,10 +111,10 @@ class StockManagementAPITester:
 
     def test_upload_excel(self):
         """Test Excel file upload"""
-        excel_file = self.create_sample_excel_file()
+        excel_file = self.use_sample_excel_file()
         
         files = {
-            'file': ('test_stock_data.xlsx', excel_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            'file': ('sample_stock_data.xlsx', excel_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         }
         
         success, response = self.run_test(
@@ -129,6 +129,47 @@ class StockManagementAPITester:
             self.session_id = response['session_id']
             print(f"Session ID: {self.session_id}")
             return True
+        return False
+
+    def test_packaging_filter_enhancement(self):
+        """Test that packaging filter only returns allowed types (verre, pet, ciel)"""
+        if not self.session_id:
+            print("❌ No session ID available for packaging filter test")
+            return False
+            
+        success, response = self.run_test(
+            "Packaging Filter Enhancement",
+            "GET",
+            f"api/filters/{self.session_id}",
+            200
+        )
+        
+        if success and 'packaging' in response:
+            packaging_types = [pkg['value'] for pkg in response['packaging']]
+            allowed_types = ['Verre', 'Pet', 'Ciel']
+            
+            print(f"📋 Found packaging types: {packaging_types}")
+            
+            # Check that only allowed types are returned
+            invalid_types = [pkg for pkg in packaging_types if pkg not in allowed_types]
+            if invalid_types:
+                print(f"❌ Found non-allowed packaging types: {invalid_types}")
+                return False
+            
+            # Check that all returned types are from the allowed list
+            valid_types_found = [pkg for pkg in packaging_types if pkg in allowed_types]
+            print(f"✅ Valid packaging types found: {valid_types_found}")
+            
+            # Verify display names are present
+            for pkg in response['packaging']:
+                if 'display' not in pkg:
+                    print(f"❌ Missing display name for packaging type: {pkg}")
+                    return False
+                print(f"📦 {pkg['value']} -> {pkg['display']}")
+            
+            return True
+        
+        print("❌ No packaging data found in response")
         return False
 
     def test_calculate_requirements(self):
