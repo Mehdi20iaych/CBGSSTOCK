@@ -632,7 +632,7 @@ function App() {
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
                   <h3 className="font-medium text-blue-800 mb-2">🤖 Assistant Intelligent d'Analyse des Stocks</h3>
                   <p className="text-sm text-blue-700">
-                    Obtenez des insights précis sur vos données de stock avec des analyses expertes alimentées par l'IA.
+                    Analysez vos données journalières de stock avec des insights précis et des recommandations d'expert.
                   </p>
                 </div>
 
