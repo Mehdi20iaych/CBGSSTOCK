@@ -172,9 +172,7 @@
 
 ## test_plan:
   current_focus:
-    - "Filter packaging types to only verre, pet, ciel"
     - "Add select all option to products filter"
-    - "Improve AI assistant context and prompting"
     - "Improve AI assistant interface"
   stuck_tasks: []
   test_all: false
@@ -183,3 +181,5 @@
 ## agent_communication:
     - agent: "main"
       message: "Implemented all requested improvements: 1) Added select all to products filter, 2) Limited packaging filter to verre/pet/ciel based on Excel data, 3) Enhanced AI assistant with better prompting and interface. Ready for testing."
+    - agent: "testing"
+      message: "✅ BACKEND TESTING COMPLETE: Both high-priority backend tasks are working perfectly. 1) Packaging filter enhancement: Successfully filters to only allowed types (verre, pet, ciel) from uploaded data, with proper display names. 2) AI assistant improvements: Provides intelligent, concise responses with precise statistics in French. Core functionality (upload, calculation, filters, export) all working. Minor: Error handling returns 500 instead of expected 4xx codes, but doesn't affect functionality. Backend is ready for production."
