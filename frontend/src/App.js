@@ -419,6 +419,17 @@ function App() {
                       Filtrer par Produits ({selectedProducts.length} sélectionné{selectedProducts.length !== 1 ? 's' : ''})
                     </label>
                     <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-2">
+                      {/* Select All Option */}
+                      <label className="flex items-center space-x-2 py-1 hover:bg-gray-50 cursor-pointer border-b border-gray-200 mb-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.length === availableFilters?.products?.length && availableFilters?.products?.length > 0}
+                          onChange={handleProductSelectAll}
+                          className="rounded text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-medium text-blue-700">Sélectionner tout</span>
+                      </label>
+                      
                       {availableFilters?.products?.map((product) => (
                         <label key={product} className="flex items-center space-x-2 py-1 hover:bg-gray-50 cursor-pointer">
                           <input
