@@ -104,20 +104,26 @@ async def upload_excel(file: UploadFile = File(...)):
         unique_products = sorted(df['Désignation Article'].unique().tolist())
         unique_packaging_raw = sorted(df['Type Emballage'].unique().tolist())
         
-        # Enhance packaging display names
+        # Enhanced packaging display names with filtering for allowed types
         packaging_display_map = {
             'Verre': 'Bouteille en Verre',
             'Pet': 'Bouteille en Plastique (PET)',
+            'Ciel': 'Ciel',
             'Canette': 'Canette Aluminium',
             'Tétra': 'Emballage Tétra Pak',
             'Bag': 'Bag-in-Box',
             'Fût': 'Fût'
         }
         
+        # Filter packaging to only show allowed types: verre, pet, ciel
+        allowed_packaging_types = ['Verre', 'Pet', 'Ciel']
+        
         unique_packaging = []
         for pkg in unique_packaging_raw:
-            display_name = packaging_display_map.get(pkg, pkg)
-            unique_packaging.append({"value": pkg, "display": display_name})
+            # Only include packaging types that are in the allowed list
+            if pkg in allowed_packaging_types:
+                display_name = packaging_display_map.get(pkg, pkg)
+                unique_packaging.append({"value": pkg, "display": display_name})
         
         unique_depots = sorted(df['Nom Division'].unique().tolist())
         
