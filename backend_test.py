@@ -207,26 +207,55 @@ class StockManagementAPITester:
         )
         return success
 
-    def test_calculate_with_filters(self):
-        """Test calculation with array filters"""
+    def test_calculate_with_packaging_filters(self):
+        """Test calculation with packaging filters to verify only allowed types work"""
         if not self.session_id:
-            print("❌ No session ID available for filtered calculation test")
+            print("❌ No session ID available for packaging filter calculation test")
             return False
-            
-        calculation_data = {
+        
+        # Test with allowed packaging types
+        allowed_calculation_data = {
             "days": 15,
-            "product_filter": ["COCA-COLA 33CL", "PEPSI 50CL"],
-            "packaging_filter": ["Verre", "Pet"]
+            "product_filter": None,
+            "packaging_filter": ["Verre", "Pet"]  # Only allowed types
         }
         
-        success, response = self.run_test(
-            "Calculate Requirements with Array Filters",
+        success1, response1 = self.run_test(
+            "Calculate with Allowed Packaging Filters",
             "POST",
             f"api/calculate/{self.session_id}",
             200,
-            data=calculation_data
+            data=allowed_calculation_data
         )
-        return success
+        
+        # Test with mixed allowed/non-allowed packaging types
+        mixed_calculation_data = {
+            "days": 15,
+            "product_filter": None,
+            "packaging_filter": ["Verre", "Pet", "Canette"]  # Mix of allowed and non-allowed
+        }
+        
+        success2, response2 = self.run_test(
+            "Calculate with Mixed Packaging Filters",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=mixed_calculation_data
+        )
+        
+        # Verify that calculations work and return appropriate results
+        if success1 and 'calculations' in response1:
+            print(f"✅ Allowed packaging filter returned {len(response1['calculations'])} results")
+        
+        if success2 and 'calculations' in response2:
+            print(f"✅ Mixed packaging filter returned {len(response2['calculations'])} results")
+            # Should only return results for allowed packaging types that exist in data
+            for calc in response2['calculations']:
+                if calc['packaging_type'] not in ['Verre', 'Pet', 'Ciel']:
+                    print(f"❌ Found non-allowed packaging type in results: {calc['packaging_type']}")
+                    return False
+        
+        return success1 and success2
 
     def test_gemini_query_enhanced(self):
         """Test enhanced Gemini AI query endpoint with improved context"""
