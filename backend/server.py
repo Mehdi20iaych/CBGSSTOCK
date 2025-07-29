@@ -406,29 +406,37 @@ async def gemini_query(session_id: str, request: GeminiQueryRequest):
         data = uploaded_data[session_id]['data']
         df = pd.DataFrame(data)
         
-        # Create enhanced context for Gemini optimized for single-day data analysis
+        # Create enhanced context for Gemini optimized for actionable single-day analysis
+        # First, calculate key insights from the data
+        top_products = df.groupby('Désignation Article')['Quantité Commandée'].sum().sort_values(ascending=False).head(5)
+        depot_summary = df.groupby('Nom Division')['Quantité Commandée'].sum().sort_values(ascending=False)
+        packaging_summary = df.groupby('Type Emballage')['Quantité Commandée'].sum().sort_values(ascending=False)
+        
         context = f"""
-        Vous êtes un expert en analyse de stocks et de supply chain spécialisé dans l'analyse de données journalières.
+        Vous êtes un expert en analyse de stocks avec accès aux données détaillées. Analysez ces données CONCRÈTES.
         
-        IMPORTANT: Donnez une réponse INTELLIGENTE et CONCISE (2-4 phrases maximum), avec des chiffres précis. 
-        Les données fournies représentent généralement une journée d'activité.
+        IMPORTANT: Donnez une réponse PRÉCISE et ACTIONNABLE basée sur les données réelles, pas de généralités.
         
-        Données journalières actuelles:
-        - Enregistrements du jour: {len(df)}
-        - Date d'analyse: {uploaded_data[session_id]['date_range']['start']} à {uploaded_data[session_id]['date_range']['end']}
-        - Dépôts actifs: {df['Nom Division'].unique().tolist()}
-        - Produits traités: {df['Désignation Article'].nunique()} articles uniques
-        - Types d'emballage: {df['Type Emballage'].unique().tolist()}
-        - Volume total commandé aujourd'hui: {df['Quantité Commandée'].sum():,.0f} unités
-        - Stock moyen disponible: {df['Stock Utilisation Libre'].mean():,.0f} unités
+        DONNÉES DÉTAILLÉES DISPONIBLES:
+        - Date d'analyse: {uploaded_data[session_id]['date_range']['start']}
+        - Nombre d'enregistrements: {len(df)}
+        - Dépôts actifs: {list(df['Nom Division'].unique())}
+        - Volume total commandé: {df['Quantité Commandée'].sum():,.0f} unités
+        - Stock total disponible: {df['Stock Utilisation Libre'].sum():,.0f} unités
         
-        Concentrez-vous sur l'analyse des données de cette journée. Fournissez des insights précis basés sur:
-        - Les volumes commandés du jour
-        - Les niveaux de stock actuels
-        - La répartition par dépôt et produit
-        - Les priorités de réapprovisionnement
+        TOP 5 PRODUITS LES PLUS COMMANDÉS AUJOURD'HUI:
+        {chr(10).join([f"- {prod}: {qty:,.0f} unités" for prod, qty in top_products.items()])}
         
-        Répondez toujours en français, de manière professionnelle et actionnable pour cette journée d'activité.
+        RÉPARTITION PAR DÉPÔT:
+        {chr(10).join([f"- {depot}: {qty:,.0f} unités" for depot, qty in depot_summary.items()])}
+        
+        RÉPARTITION PAR EMBALLAGE:
+        {chr(10).join([f"- {pkg}: {qty:,.0f} unités" for pkg, qty in packaging_summary.items()])}
+        
+        STOCKS ACTUELS PAR PRODUIT:
+        {chr(10).join([f"- {row['Désignation Article']}: {row['Stock Utilisation Libre']:,.0f} unités (Dépôt: {row['Nom Division']})" for _, row in df[['Désignation Article', 'Stock Utilisation Libre', 'Nom Division']].head(10).iterrows()])}
+        
+        Utilisez ces données précises pour répondre. Donnez des chiffres exacts, nommez les produits et dépôts spécifiques.
         """
         
         # Initialize Gemini model
