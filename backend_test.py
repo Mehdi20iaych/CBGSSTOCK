@@ -228,8 +228,78 @@ class StockManagementAPITester:
         )
         return success
 
+    def test_gemini_query_enhanced(self):
+        """Test enhanced Gemini AI query endpoint with improved context"""
+        if not self.session_id:
+            print("❌ No session ID available for Gemini query test")
+            return False
+        
+        # Test multiple queries to verify enhanced context and intelligence
+        test_queries = [
+            {
+                "query": "Quels sont les 3 produits avec la plus forte consommation?",
+                "description": "Top 3 products by consumption"
+            },
+            {
+                "query": "Analyse les tendances de stock par dépôt",
+                "description": "Stock trends by depot analysis"
+            },
+            {
+                "query": "Quels produits nécessitent un réapprovisionnement urgent?",
+                "description": "Products needing urgent restocking"
+            },
+            {
+                "query": "Donne-moi des statistiques précises sur les volumes",
+                "description": "Precise volume statistics"
+            }
+        ]
+        
+        all_passed = True
+        
+        for i, test_query in enumerate(test_queries, 1):
+            query_data = {
+                "query": test_query["query"],
+                "session_id": self.session_id
+            }
+            
+            success, response = self.run_test(
+                f"Enhanced Gemini Query {i}: {test_query['description']}",
+                "POST",
+                f"api/gemini-query/{self.session_id}",
+                200,
+                data=query_data
+            )
+            
+            if success and 'response' in response:
+                ai_response = response['response']
+                print(f"🤖 AI Response length: {len(ai_response)} characters")
+                
+                # Check for intelligent response characteristics
+                if len(ai_response) < 50:
+                    print(f"⚠️ Response seems too short: {ai_response}")
+                    all_passed = False
+                elif len(ai_response) > 1000:
+                    print(f"⚠️ Response seems too long (should be 2-4 sentences): {len(ai_response)} chars")
+                    all_passed = False
+                else:
+                    print(f"✅ Response length appropriate: {len(ai_response)} characters")
+                
+                # Check for French language
+                french_indicators = ['le', 'la', 'les', 'de', 'du', 'des', 'et', 'avec', 'pour', 'dans']
+                if not any(indicator in ai_response.lower() for indicator in french_indicators):
+                    print(f"⚠️ Response may not be in French: {ai_response[:100]}...")
+                    all_passed = False
+                else:
+                    print("✅ Response appears to be in French")
+                
+                print(f"📝 Sample response: {ai_response[:200]}...")
+            else:
+                all_passed = False
+        
+        return all_passed
+
     def test_gemini_query_french(self):
-        """Test Gemini AI query endpoint with French query"""
+        """Test Gemini AI query endpoint with French query (legacy test)"""
         if not self.session_id:
             print("❌ No session ID available for Gemini query test")
             return False
