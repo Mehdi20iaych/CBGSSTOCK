@@ -428,8 +428,8 @@ async def gemini_query(session_id: str, request: GeminiQueryRequest):
         # Initialize Gemini model
         model = genai.GenerativeModel('gemini-2.5-flash')
         
-        # Generate response with instruction for brevity
-        prompt = context + "\n\nQuestion: " + request.query + "\n\nRéponse brève (maximum 3-4 phrases):"
+        # Generate response with enhanced prompt for intelligent analysis
+        prompt = context + f"\n\nQuestion: {request.query}\n\nAnalyse experte (2-4 phrases avec données précises):"
         response = model.generate_content(prompt)
         
         return {
