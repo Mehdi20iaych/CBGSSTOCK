@@ -406,23 +406,29 @@ async def gemini_query(session_id: str, request: GeminiQueryRequest):
         data = uploaded_data[session_id]['data']
         df = pd.DataFrame(data)
         
-        # Create enhanced context for Gemini in French with instruction for intelligent responses
+        # Create enhanced context for Gemini optimized for single-day data analysis
         context = f"""
-        Vous êtes un expert en analyse de stocks et de supply chain. Analysez les données avec expertise.
+        Vous êtes un expert en analyse de stocks et de supply chain spécialisé dans l'analyse de données journalières.
         
-        IMPORTANT: Donnez une réponse INTELLIGENTE et CONCISE (2-4 phrases maximum), avec des chiffres précis quand possible.
+        IMPORTANT: Donnez une réponse INTELLIGENTE et CONCISE (2-4 phrases maximum), avec des chiffres précis. 
+        Les données fournies représentent généralement une journée d'activité.
         
-        Données actuelles:
-        - Total des enregistrements: {len(df)}
-        - Période analysée: {uploaded_data[session_id]['date_range']['start']} à {uploaded_data[session_id]['date_range']['end']} ({uploaded_data[session_id]['date_range']['total_days']} jours)
-        - Dépôts: {df['Nom Division'].unique().tolist()}
-        - Produits uniques: {df['Désignation Article'].nunique()}
+        Données journalières actuelles:
+        - Enregistrements du jour: {len(df)}
+        - Date d'analyse: {uploaded_data[session_id]['date_range']['start']} à {uploaded_data[session_id]['date_range']['end']}
+        - Dépôts actifs: {df['Nom Division'].unique().tolist()}
+        - Produits traités: {df['Désignation Article'].nunique()} articles uniques
         - Types d'emballage: {df['Type Emballage'].unique().tolist()}
-        - Volume total commandé: {df['Quantité Commandée'].sum():,.0f} unités
-        - Stock moyen: {df['Stock Utilisation Libre'].mean():,.0f} unités
+        - Volume total commandé aujourd'hui: {df['Quantité Commandée'].sum():,.0f} unités
+        - Stock moyen disponible: {df['Stock Utilisation Libre'].mean():,.0f} unités
         
-        Analysez intelligemment selon la question posée. Utilisez les données pour donner des insights précis.
-        Répondez toujours en français, de manière professionnelle et actionnable.
+        Concentrez-vous sur l'analyse des données de cette journée. Fournissez des insights précis basés sur:
+        - Les volumes commandés du jour
+        - Les niveaux de stock actuels
+        - La répartition par dépôt et produit
+        - Les priorités de réapprovisionnement
+        
+        Répondez toujours en français, de manière professionnelle et actionnable pour cette journée d'activité.
         """
         
         # Initialize Gemini model
