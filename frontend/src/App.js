@@ -630,65 +630,110 @@ function App() {
             {activeTab === 'ai' && sessionId && (
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
-                  <h3 className="font-medium text-blue-800 mb-2">🤖 Analyses Intelligentes</h3>
+                  <h3 className="font-medium text-blue-800 mb-2">🤖 Assistant Intelligent d'Analyse des Stocks</h3>
                   <p className="text-sm text-blue-700">
-                    Posez des questions sur vos données. Les réponses seront brèves et directes.
+                    Obtenez des insights précis sur vos données de stock avec des analyses expertes alimentées par l'IA.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
-                    onClick={() => setGeminiQuery('Quels dépôts sont en rupture critique?')}
-                    className="p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
+                    onClick={() => setGeminiQuery('Quels sont les dépôts en situation critique avec moins de 7 jours de couverture?')}
+                    className="p-4 text-left bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors"
                   >
-                    <div className="font-medium text-gray-800">Dépôts critiques</div>
-                    <div className="text-sm text-gray-600">Quels dépôts sont en rupture critique?</div>
+                    <div className="font-medium text-red-800 flex items-center">
+                      🚨 <span className="ml-2">Alertes Critiques</span>
+                    </div>
+                    <div className="text-sm text-red-600 mt-1">Dépôts en rupture imminente</div>
                   </button>
+                  
                   <button
-                    onClick={() => setGeminiQuery('Top 3 produits forte consommation?')}
-                    className="p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
+                    onClick={() => setGeminiQuery('Quel est le top 5 des produits avec la plus forte consommation quotidienne?')}
+                    className="p-4 text-left bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 transition-colors"
                   >
-                    <div className="font-medium text-gray-800">Top consommation</div>
-                    <div className="text-sm text-gray-600">Top 3 produits forte consommation?</div>
+                    <div className="font-medium text-orange-800 flex items-center">
+                      📈 <span className="ml-2">Top Consommation</span>
+                    </div>
+                    <div className="text-sm text-orange-600 mt-1">Produits haute rotation</div>
                   </button>
+                  
                   <button
-                    onClick={() => setGeminiQuery('Anomalies dans les données?')}
-                    className="p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
+                    onClick={() => setGeminiQuery('Y a-t-il des anomalies ou des incohérences dans les données de stock?')}
+                    className="p-4 text-left bg-yellow-50 hover:bg-yellow-100 rounded-lg border border-yellow-200 transition-colors"
                   >
-                    <div className="font-medium text-gray-800">Anomalies</div>
-                    <div className="text-sm text-gray-600">Anomalies dans les données?</div>
+                    <div className="font-medium text-yellow-800 flex items-center">
+                      🔍 <span className="ml-2">Détection d'Anomalies</span>
+                    </div>
+                    <div className="text-sm text-yellow-600 mt-1">Incohérences dans les données</div>
                   </button>
+                  
                   <button
-                    onClick={() => setGeminiQuery('Recommandations urgentes?')}
-                    className="p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
+                    onClick={() => setGeminiQuery('Quelles sont vos recommandations urgentes pour optimiser la gestion des stocks?')}
+                    className="p-4 text-left bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors"
                   >
-                    <div className="font-medium text-gray-800">Recommandations</div>
-                    <div className="text-sm text-gray-600">Recommandations urgentes?</div>
+                    <div className="font-medium text-green-800 flex items-center">
+                      💡 <span className="ml-2">Recommandations</span>
+                    </div>
+                    <div className="text-sm text-green-600 mt-1">Optimisations suggérées</div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setGeminiQuery('Quelle est la répartition des stocks par type d\'emballage et quelles tendances observez-vous?')}
+                    className="p-4 text-left bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors"
+                  >
+                    <div className="font-medium text-indigo-800 flex items-center">
+                      📊 <span className="ml-2">Analyse Emballages</span>
+                    </div>
+                    <div className="text-sm text-indigo-600 mt-1">Tendances par packaging</div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setGeminiQuery('Calculez les coûts potentiels de rupture pour les articles en priorité critique.')}
+                    className="p-4 text-left bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors"
+                  >
+                    <div className="font-medium text-purple-800 flex items-center">
+                      💰 <span className="ml-2">Impact Financier</span>
+                    </div>
+                    <div className="text-sm text-purple-600 mt-1">Coûts de rupture estimés</div>
                   </button>
                 </div>
 
-                <div className="flex space-x-4">
-                  <textarea
-                    value={geminiQuery}
-                    onChange={(e) => setGeminiQuery(e.target.value)}
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Posez une question brève..."
-                    rows="2"
-                  />
-                  <button
-                    onClick={handleGeminiQuery}
-                    disabled={loading || !geminiQuery.trim()}
-                    className="bg-green-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {loading ? 'Analyse...' : 'Analyser'}
-                  </button>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex space-x-4">
+                    <textarea
+                      value={geminiQuery}
+                      onChange={(e) => setGeminiQuery(e.target.value)}
+                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      placeholder="Posez votre question personnalisée sur les données de stock..."
+                      rows="3"
+                    />
+                    <button
+                      onClick={handleGeminiQuery}
+                      disabled={loading || !geminiQuery.trim()}
+                      className="bg-blue-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors self-start"
+                    >
+                      {loading ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Analyse...</span>
+                        </div>
+                      ) : (
+                        '🔍 Analyser'
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {geminiResponse && (
                   <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
-                    <h4 className="font-medium text-green-800 mb-3">🎯 Réponse Rapide:</h4>
-                    <div className="text-sm text-green-700 leading-relaxed">
+                    <h4 className="font-medium text-green-800 mb-3 flex items-center">
+                      🎯 <span className="ml-2">Analyse Experte:</span>
+                    </h4>
+                    <div className="text-sm text-green-700 leading-relaxed bg-white p-4 rounded border">
                       {geminiResponse.response}
+                    </div>
+                    <div className="mt-3 text-xs text-green-600">
+                      Question analysée: "{geminiResponse.query}"
                     </div>
                   </div>
                 )}
