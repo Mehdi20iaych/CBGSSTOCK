@@ -200,12 +200,16 @@ function App() {
     }
   };
 
-  const handleProductSelect = (product) => {
-    setSelectedProducts(prev => 
-      prev.includes(product) 
-        ? prev.filter(p => p !== product)
-        : [...prev, product]
-    );
+  const handleProductSelectAll = () => {
+    if (!availableFilters?.products) return;
+    
+    if (selectedProducts.length === availableFilters.products.length) {
+      // If all are selected, deselect all
+      setSelectedProducts([]);
+    } else {
+      // If not all are selected, select all
+      setSelectedProducts([...availableFilters.products]);
+    }
   };
 
   const handlePackagingSelect = (packaging) => {
