@@ -434,8 +434,8 @@ async def gemini_query(session_id: str, request: GeminiQueryRequest):
         # Initialize Gemini model
         model = genai.GenerativeModel('gemini-2.5-flash')
         
-        # Generate response with enhanced prompt for intelligent analysis
-        prompt = context + f"\n\nQuestion: {request.query}\n\nAnalyse experte (2-4 phrases avec données précises):"
+        # Generate response optimized for single-day data analysis
+        prompt = context + f"\n\nQuestion: {request.query}\n\nAnalyse des données journalières (réponse concise avec chiffres précis):"
         response = model.generate_content(prompt)
         
         return {
