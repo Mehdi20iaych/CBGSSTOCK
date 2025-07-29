@@ -58,25 +58,27 @@ class StockManagementAPITester:
             return False, {}
 
     def create_sample_excel_file(self):
-        """Create a sample Excel file for testing"""
-        # Create sample data with required columns
+        """Create a sample Excel file for testing with various packaging types"""
+        # Create sample data with required columns including non-allowed packaging types
         data = {
             'Date de Commande': [
                 datetime.now() - timedelta(days=30),
                 datetime.now() - timedelta(days=25),
                 datetime.now() - timedelta(days=20),
                 datetime.now() - timedelta(days=15),
-                datetime.now() - timedelta(days=10)
+                datetime.now() - timedelta(days=10),
+                datetime.now() - timedelta(days=5),
+                datetime.now() - timedelta(days=2)
             ],
-            'Article': ['ART001', 'ART002', 'ART001', 'ART003', 'ART002'],
-            'Désignation Article': ['COCA-COLA 33CL', 'PEPSI 50CL', 'COCA-COLA 33CL', 'SPRITE 33CL', 'PEPSI 50CL'],
-            'Point d\'Expédition': ['DEPOT1', 'DEPOT1', 'DEPOT2', 'DEPOT1', 'DEPOT2'],
-            'Nom Division': ['Division A', 'Division A', 'Division B', 'Division A', 'Division B'],
-            'Quantité Commandée': [100, 150, 80, 120, 90],
-            'Stock Utilisation Libre': [500, 300, 200, 400, 250],
-            'Ecart': [0, 0, 0, 0, 0],
-            'Type Emballage': ['Verre', 'Pet', 'Verre', 'Pet', 'Pet'],
-            'Quantité en Palette': [24, 12, 24, 12, 12]
+            'Article': ['ART001', 'ART002', 'ART001', 'ART003', 'ART002', 'ART004', 'ART005'],
+            'Désignation Article': ['COCA-COLA 33CL', 'PEPSI 50CL', 'COCA-COLA 33CL', 'SPRITE 33CL', 'PEPSI 50CL', 'FANTA 33CL', 'ORANGINA 25CL'],
+            'Point d\'Expédition': ['DEPOT1', 'DEPOT1', 'DEPOT2', 'DEPOT1', 'DEPOT2', 'DEPOT1', 'DEPOT3'],
+            'Nom Division': ['Division A', 'Division A', 'Division B', 'Division A', 'Division B', 'Division C', 'Division A'],
+            'Quantité Commandée': [100, 150, 80, 120, 90, 200, 75],
+            'Stock Utilisation Libre': [500, 300, 200, 400, 250, 600, 180],
+            'Ecart': [0, 0, 0, 0, 0, 0, 0],
+            'Type Emballage': ['Verre', 'Pet', 'Verre', 'Ciel', 'Pet', 'Canette', 'Tétra'],  # Mix of allowed and non-allowed types
+            'Quantité en Palette': [24, 12, 24, 18, 12, 36, 20]
         }
         
         df = pd.DataFrame(data)
@@ -87,6 +89,15 @@ class StockManagementAPITester:
         excel_buffer.seek(0)
         
         return excel_buffer
+
+    def use_sample_excel_file(self):
+        """Use the existing sample_stock_data.xlsx file"""
+        try:
+            with open('/app/sample_stock_data.xlsx', 'rb') as f:
+                return io.BytesIO(f.read())
+        except FileNotFoundError:
+            print("⚠️ sample_stock_data.xlsx not found, using generated sample")
+            return self.create_sample_excel_file()
 
     def test_health_check(self):
         """Test health check endpoint"""
