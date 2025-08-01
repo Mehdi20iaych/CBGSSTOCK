@@ -918,6 +918,7 @@ function App() {
                         <th className="border border-gray-300 p-3 text-right">Jours Couv.</th>
                         <th className="border border-gray-300 p-3 text-right">Stock Actuel</th>
                         <th className="border border-gray-300 p-3 text-right">Quantité à Envoyer</th>
+                        <th className="border border-gray-300 p-3 text-right">Palettes</th>
                         {calculations.summary.inventory_status === 'available' && (
                           <>
                             <th className="border border-gray-300 p-3 text-right">Stock Inventaire</th>
