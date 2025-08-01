@@ -488,6 +488,41 @@ function App() {
             {/* Calculate Tab */}
             {activeTab === 'calculate' && uploadedData && (
               <div className="space-y-6">
+                {/* Status Overview */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-medium text-blue-800 mb-2">📋 État des Données</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-blue-600">📊</span>
+                      <span>Données de commandes: <strong className="text-green-600">✅ Chargées</strong></span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-600">📦</span>
+                      <span>Données d'inventaire: 
+                        {inventoryData ? (
+                          <strong className="text-green-600"> ✅ Chargées</strong>
+                        ) : (
+                          <strong className="text-yellow-600"> ⚠️ Non chargées</strong>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  {inventoryData && (
+                    <div className="mt-3 p-3 bg-green-100 rounded border border-green-300">
+                      <p className="text-sm text-green-800">
+                        🎯 <strong>Mode Avancé Activé:</strong> Le système vérifiera la disponibilité en inventaire pour chaque article demandé.
+                      </p>
+                    </div>
+                  )}
+                  {!inventoryData && (
+                    <div className="mt-3 p-3 bg-yellow-100 rounded border border-yellow-300">
+                      <p className="text-sm text-yellow-800">
+                        💡 <strong>Mode Standard:</strong> Calculs basés uniquement sur les données de commandes. Pour vérifier la disponibilité, téléchargez les données d'inventaire.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
