@@ -693,6 +693,9 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
             required_stock = request.days * adc
             quantity_to_send = max(0, required_stock - row['current_stock'])
             
+            # Calculate palettes needed for this item
+            palettes_needed = row['palette_quantity'] if quantity_to_send > 0 else 0
+            
             # Determine priority based on days of coverage
             if doc == float('inf'):
                 priority = 'low'
