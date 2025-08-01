@@ -617,6 +617,7 @@ function App() {
             {/* Results Tab */}
             {activeTab === 'results' && calculations && (
               <div className="space-y-6">
+                {/* Summary Statistics */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">
@@ -649,6 +650,66 @@ function App() {
                     <div className="text-sm text-gray-700">Stock Suffisant</div>
                   </div>
                 </div>
+
+                {/* Inventory Status Summary */}
+                {calculations.summary.inventory_status === 'available' && (
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                    <h3 className="font-medium text-green-800 mb-3">📦 État de l'Inventaire</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">✅</span>
+                        <div>
+                          <div className="font-bold text-green-600">
+                            {formatNumber(calculations.summary.sufficient_items || 0)}
+                          </div>
+                          <div className="text-green-700">Stock Suffisant</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">⚠️</span>
+                        <div>
+                          <div className="font-bold text-yellow-600">
+                            {formatNumber(calculations.summary.partial_items || 0)}
+                          </div>
+                          <div className="text-yellow-700">Stock Partiel</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">❌</span>
+                        <div>
+                          <div className="font-bold text-red-600">
+                            {formatNumber(calculations.summary.insufficient_items || 0)}
+                          </div>
+                          <div className="text-red-700">Stock Insuffisant</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">❓</span>
+                        <div>
+                          <div className="font-bold text-gray-600">
+                            {formatNumber(calculations.summary.not_found_items || 0)}
+                          </div>
+                          <div className="text-gray-700">Non Trouvé</div>
+                        </div>
+                      </div>
+                    </div>
+                    {calculations.summary.total_inventory_shortage > 0 && (
+                      <div className="mt-3 p-3 bg-red-100 rounded border border-red-300">
+                        <p className="text-sm text-red-800">
+                          🚨 <strong>Manque Total:</strong> {formatNumber(calculations.summary.total_inventory_shortage)} unités manquantes en inventaire.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {calculations.summary.inventory_status === 'no_inventory_data' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-sm text-yellow-800">
+                      💡 <strong>Info:</strong> Aucune donnée d'inventaire disponible. Les calculs sont basés uniquement sur les données de commandes.
+                    </p>
+                  </div>
+                )}
 
                 {/* Critical Items Selection */}
                 {calculations.summary.high_priority.length > 0 && (
