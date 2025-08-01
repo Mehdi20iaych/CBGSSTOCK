@@ -256,15 +256,18 @@
 
   - task: "Add local production vs external sourcing intelligence"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py, /app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Added comprehensive sourcing intelligence system. Backend: Added LOCALLY_MADE_ARTICLES list with 57 article codes, enhanced calculation endpoints to include sourcing_status, sourcing_text, and is_locally_made fields. Frontend: Added Sourcing column in results table with visual indicators (green for local production, orange for external sourcing), added sourcing summary dashboard showing local vs external breakdown with warning alerts for external sourcing needs."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE SOURCING INTELLIGENCE TESTING COMPLETED: All sourcing functionality working perfectly! Executed 31 total tests (28 comprehensive backend tests + 3 focused sourcing tests) - ALL PASSED. Key findings: (1) Basic calculation endpoint (/api/calculate) correctly returns sourcing_status, sourcing_text, and is_locally_made fields for all items, (2) Enhanced calculation endpoint (/api/enhanced-calculate) includes sourcing fields with inventory cross-reference functionality, (3) Sourcing logic validation confirmed - articles 1011, 1016, 1021, 1033 correctly identified as local (is_locally_made=true, sourcing_status='local', sourcing_text='Production Locale'), articles 9999, 8888 correctly identified as external (is_locally_made=false, sourcing_status='external', sourcing_text='Sourcing Externe'), (4) Summary statistics include sourcing_summary with accurate local_items and external_items counts (4 local, 2 external in test), (5) Data consistency verified - sourcing fields are identical between basic and enhanced calculations. LOCALLY_MADE_ARTICLES list with 57 article codes working correctly. System ready for production use with full sourcing intelligence capabilities."
 
 ## metadata:
   created_by: "main_agent"
