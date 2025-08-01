@@ -200,6 +200,272 @@ class StockManagementAPITester:
         print("❌ No packaging data found in response")
         return False
 
+    def test_upload_inventory_excel(self):
+        """Test inventory Excel file upload"""
+        inventory_file = self.create_sample_inventory_excel_file()
+        
+        files = {
+            'file': ('sample_inventory_data.xlsx', inventory_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Upload Inventory Excel File",
+            "POST",
+            "api/upload-inventory-excel",
+            200,
+            files=files
+        )
+        
+        if success and 'session_id' in response:
+            self.inventory_session_id = response['session_id']
+            print(f"Inventory Session ID: {self.inventory_session_id}")
+            
+            # Verify response structure
+            required_fields = ['session_id', 'message', 'records_count', 'summary']
+            for field in required_fields:
+                if field not in response:
+                    print(f"❌ Missing required field in response: {field}")
+                    return False
+            
+            # Verify summary structure
+            summary = response['summary']
+            summary_fields = ['divisions', 'articles_count', 'total_stock', 'records_count']
+            for field in summary_fields:
+                if field not in summary:
+                    print(f"❌ Missing required field in summary: {field}")
+                    return False
+            
+            print(f"✅ Inventory upload successful with {response['records_count']} records")
+            print(f"✅ Total stock: {summary['total_stock']} units")
+            print(f"✅ Articles count: {summary['articles_count']}")
+            return True
+        return False
+
+    def test_upload_inventory_excel_missing_columns(self):
+        """Test inventory Excel upload with missing required columns"""
+        # Create invalid inventory data missing required columns
+        invalid_data = {
+            'Division': ['M210', 'M210'],
+            'Article': ['ART001', 'ART002'],
+            # Missing 'Désignation article' and 'STOCK À DATE'
+        }
+        
+        df = pd.DataFrame(invalid_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('invalid_inventory.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Upload Invalid Inventory Excel (Missing Columns)",
+            "POST",
+            "api/upload-inventory-excel",
+            400,
+            files=files
+        )
+        
+        # Success here means we got the expected 400 error
+        return success
+
+    def test_get_inventory_data(self):
+        """Test inventory data retrieval endpoint"""
+        if not self.inventory_session_id:
+            print("❌ No inventory session ID available for inventory data test")
+            return False
+            
+        success, response = self.run_test(
+            "Get Inventory Data",
+            "GET",
+            f"api/inventory/{self.inventory_session_id}",
+            200
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['data', 'upload_time', 'summary']
+            for field in required_fields:
+                if field not in response:
+                    print(f"❌ Missing required field in inventory response: {field}")
+                    return False
+            
+            print(f"✅ Retrieved inventory data with {len(response['data'])} records")
+            return True
+        return False
+
+    def test_get_inventory_data_invalid_session(self):
+        """Test inventory data retrieval with invalid session ID"""
+        success, response = self.run_test(
+            "Get Inventory Data (Invalid Session)",
+            "GET",
+            "api/inventory/invalid-session-id",
+            404
+        )
+        # Success means we got the expected 404 error
+        return success
+
+    def test_enhanced_calculate_with_inventory(self):
+        """Test enhanced calculation with inventory cross-reference"""
+        if not self.session_id or not self.inventory_session_id:
+            print("❌ Missing session IDs for enhanced calculation test")
+            return False
+            
+        calculation_data = {
+            "days": 30,
+            "order_session_id": self.session_id,
+            "inventory_session_id": self.inventory_session_id,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Enhanced Calculate with Inventory Cross-Reference",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['calculations', 'summary', 'inventory_status']
+            for field in required_fields:
+                if field not in response:
+                    print(f"❌ Missing required field in enhanced calculation response: {field}")
+                    return False
+            
+            # Verify inventory status fields in calculations
+            calculations = response['calculations']
+            if calculations:
+                sample_calc = calculations[0]
+                inventory_fields = ['inventory_available', 'can_fulfill', 'inventory_status', 'inventory_status_text']
+                for field in inventory_fields:
+                    if field not in sample_calc:
+                        print(f"❌ Missing inventory field in calculation: {field}")
+                        return False
+                
+                print(f"✅ Enhanced calculation returned {len(calculations)} items with inventory data")
+                
+                # Check inventory status distribution
+                status_counts = {}
+                for calc in calculations:
+                    status = calc.get('inventory_status', 'unknown')
+                    status_counts[status] = status_counts.get(status, 0) + 1
+                
+                print(f"📊 Inventory status distribution: {status_counts}")
+                
+                # Verify summary contains inventory statistics
+                summary = response['summary']
+                inventory_summary_fields = ['sufficient_items', 'partial_items', 'insufficient_items', 'not_found_items']
+                for field in inventory_summary_fields:
+                    if field not in summary:
+                        print(f"❌ Missing inventory summary field: {field}")
+                        return False
+                
+                print(f"✅ Inventory summary: Sufficient={summary['sufficient_items']}, Partial={summary['partial_items']}, Insufficient={summary['insufficient_items']}, Not Found={summary['not_found_items']}")
+                return True
+            else:
+                print("⚠️ No calculations returned")
+                return True  # This might be valid if no data matches filters
+        return False
+
+    def test_enhanced_calculate_without_inventory(self):
+        """Test enhanced calculation without inventory data"""
+        if not self.session_id:
+            print("❌ No order session ID available for enhanced calculation test")
+            return False
+            
+        calculation_data = {
+            "days": 15,
+            "order_session_id": self.session_id,
+            "inventory_session_id": None,  # No inventory data
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Enhanced Calculate without Inventory",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success:
+            # Verify that inventory_status indicates no inventory data
+            if response.get('inventory_status') != 'no_inventory_data':
+                print(f"❌ Expected inventory_status 'no_inventory_data', got '{response.get('inventory_status')}'")
+                return False
+            
+            # Verify calculations don't have inventory fields
+            calculations = response.get('calculations', [])
+            if calculations:
+                sample_calc = calculations[0]
+                if sample_calc.get('inventory_status') != 'no_data':
+                    print(f"❌ Expected inventory_status 'no_data' in calculations, got '{sample_calc.get('inventory_status')}'")
+                    return False
+            
+            print("✅ Enhanced calculation without inventory works correctly")
+            return True
+        return False
+
+    def test_enhanced_calculate_invalid_order_session(self):
+        """Test enhanced calculation with invalid order session ID"""
+        calculation_data = {
+            "days": 30,
+            "order_session_id": "invalid-session-id",
+            "inventory_session_id": self.inventory_session_id,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Enhanced Calculate (Invalid Order Session)",
+            "POST",
+            "api/enhanced-calculate",
+            404,
+            data=calculation_data
+        )
+        # Success means we got the expected 404 error
+        return success
+
+    def test_enhanced_calculate_with_filters(self):
+        """Test enhanced calculation with product and packaging filters"""
+        if not self.session_id or not self.inventory_session_id:
+            print("❌ Missing session IDs for enhanced calculation with filters test")
+            return False
+            
+        calculation_data = {
+            "days": 20,
+            "order_session_id": self.session_id,
+            "inventory_session_id": self.inventory_session_id,
+            "product_filter": ["COCA-COLA 33CL"],
+            "packaging_filter": ["Verre", "Pet"]
+        }
+        
+        success, response = self.run_test(
+            "Enhanced Calculate with Filters",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success:
+            calculations = response.get('calculations', [])
+            print(f"✅ Enhanced calculation with filters returned {len(calculations)} items")
+            
+            # Verify that returned items match the filters
+            for calc in calculations:
+                if calc.get('packaging_type') not in ['Verre', 'Pet']:
+                    print(f"❌ Found item with non-matching packaging: {calc.get('packaging_type')}")
+                    return False
+            
+            return True
+        return False
+
     def test_calculate_requirements(self):
         """Test calculation endpoint"""
         if not self.session_id:
