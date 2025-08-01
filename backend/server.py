@@ -63,6 +63,76 @@ inventory_data = {}
 async def root():
     return {"message": "API de Gestion des Stocks fonctionne"}
 
+@app.post("/api/upload-inventory-excel")
+async def upload_inventory_excel(file: UploadFile = File(...)):
+    try:
+        # Validate file type
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="Veuillez télécharger un fichier Excel (.xlsx ou .xls)")
+        
+        # Read Excel file
+        contents = await file.read()
+        
+        # Parse Excel with pandas
+        df = pd.read_excel(contents)
+        
+        # Validate required columns for inventory data
+        required_columns = ['Division', 'Article', 'Désignation article', 'STOCK À DATE']
+        
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Colonnes manquantes pour les données d'inventaire: {', '.join(missing_columns)}"
+            )
+        
+        # Clean and process inventory data
+        df['Article'] = df['Article'].astype(str)
+        df['STOCK À DATE'] = pd.to_numeric(df['STOCK À DATE'], errors='coerce')
+        
+        # Remove rows with invalid data
+        df = df.dropna(subset=['Article', 'STOCK À DATE'])
+        
+        # Generate session ID for this inventory upload
+        session_id = str(uuid.uuid4())
+        
+        # Get unique values for overview
+        unique_divisions = sorted(df['Division'].unique().tolist())
+        unique_articles = sorted(df['Article'].unique().tolist())
+        total_stock = df['STOCK À DATE'].sum()
+        
+        # Store inventory data temporarily
+        inventory_data[session_id] = {
+            'data': df.to_dict('records'),
+            'upload_time': datetime.now(),
+            'summary': {
+                'divisions': unique_divisions,
+                'articles_count': len(unique_articles),
+                'total_stock': total_stock,
+                'records_count': len(df)
+            }
+        }
+        
+        # Save to MongoDB
+        document = {
+            'session_id': session_id,
+            'type': 'inventory',
+            'data': df.to_dict('records'),
+            'upload_time': datetime.now(),
+            'summary': inventory_data[session_id]['summary']
+        }
+        collection.insert_one(document)
+        
+        return {
+            "session_id": session_id,
+            "message": "Données d'inventaire téléchargées avec succès",
+            "records_count": len(df),
+            "summary": inventory_data[session_id]['summary']
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du traitement du fichier d'inventaire: {str(e)}")
+
 @app.post("/api/upload-excel")
 async def upload_excel(file: UploadFile = File(...)):
     try:
