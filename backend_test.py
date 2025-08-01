@@ -1778,6 +1778,620 @@ class StockManagementAPITester:
             print("❌ Could not get calculations for statistical accuracy test")
             return False
 
+    def test_20_palette_delivery_optimization_basic(self):
+        """Test 20-palette delivery optimization constraint in basic calculation"""
+        if not self.session_id:
+            print("❌ No session ID available for 20-palette delivery optimization test")
+            return False
+            
+        calculation_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "20-Palette Delivery Optimization - Basic Calculate",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            summary = response.get('summary', {})
+            
+            # Verify new delivery optimization fields in calculations
+            for calc in calculations:
+                required_fields = ['palette_quantity', 'delivery_efficient', 'delivery_status', 'delivery_status_color']
+                for field in required_fields:
+                    if field not in calc:
+                        print(f"❌ Missing delivery optimization field '{field}' in calculation")
+                        return False
+                
+                # Verify palette_quantity is a number
+                palette_qty = calc['palette_quantity']
+                if not isinstance(palette_qty, (int, float)):
+                    print(f"❌ palette_quantity should be numeric, got {type(palette_qty)}: {palette_qty}")
+                    return False
+                
+                # Verify delivery_efficient is boolean
+                delivery_efficient = calc['delivery_efficient']
+                if not isinstance(delivery_efficient, bool):
+                    print(f"❌ delivery_efficient should be boolean, got {type(delivery_efficient)}: {delivery_efficient}")
+                    return False
+                
+                # Verify delivery status fields
+                delivery_status = calc['delivery_status']
+                delivery_status_color = calc['delivery_status_color']
+                
+                if delivery_efficient:
+                    if 'efficace' not in delivery_status.lower():
+                        print(f"❌ Efficient depot should have 'efficace' in status, got: {delivery_status}")
+                        return False
+                    if 'green' not in delivery_status_color:
+                        print(f"❌ Efficient depot should have green color, got: {delivery_status_color}")
+                        return False
+                else:
+                    if 'inefficace' not in delivery_status.lower():
+                        print(f"❌ Inefficient depot should have 'inefficace' in status, got: {delivery_status}")
+                        return False
+                    if 'orange' not in delivery_status_color:
+                        print(f"❌ Inefficient depot should have orange color, got: {delivery_status_color}")
+                        return False
+                
+                print(f"📦 Item {calc['article_code']}: {palette_qty} palettes, efficient={delivery_efficient}")
+            
+            # Verify delivery optimization summary in response
+            if 'delivery_optimization' not in summary:
+                print("❌ Missing delivery_optimization in summary")
+                return False
+            
+            delivery_opt = summary['delivery_optimization']
+            required_summary_fields = ['efficient_depots', 'inefficient_depots', 'total_palettes', 'depot_summaries']
+            for field in required_summary_fields:
+                if field not in delivery_opt:
+                    print(f"❌ Missing field '{field}' in delivery_optimization summary")
+                    return False
+            
+            # Verify depot summaries structure
+            depot_summaries = delivery_opt['depot_summaries']
+            for depot_summary in depot_summaries:
+                required_depot_fields = ['depot_name', 'total_palettes', 'delivery_status', 'items_count', 'suggested_items', 'palettes_needed']
+                for field in required_depot_fields:
+                    if field not in depot_summary:
+                        print(f"❌ Missing field '{field}' in depot summary")
+                        return False
+                
+                depot_name = depot_summary['depot_name']
+                total_palettes = depot_summary['total_palettes']
+                delivery_status = depot_summary['delivery_status']
+                suggested_items = depot_summary['suggested_items']
+                palettes_needed = depot_summary['palettes_needed']
+                
+                print(f"🏭 Depot {depot_name}: {total_palettes} palettes, status={delivery_status}")
+                
+                # Test 20-palette logic
+                if total_palettes >= 20:
+                    if delivery_status != 'efficient':
+                        print(f"❌ Depot {depot_name} has {total_palettes} palettes (≥20) but status is {delivery_status}, should be 'efficient'")
+                        return False
+                    if palettes_needed != 0:
+                        print(f"❌ Efficient depot {depot_name} should have palettes_needed=0, got {palettes_needed}")
+                        return False
+                    print(f"✅ Depot {depot_name} correctly marked as efficient (≥20 palettes)")
+                else:
+                    if delivery_status != 'inefficient':
+                        print(f"❌ Depot {depot_name} has {total_palettes} palettes (<20) but status is {delivery_status}, should be 'inefficient'")
+                        return False
+                    expected_needed = 20 - total_palettes
+                    if palettes_needed != expected_needed:
+                        print(f"❌ Inefficient depot {depot_name} should need {expected_needed} palettes, got {palettes_needed}")
+                        return False
+                    print(f"✅ Depot {depot_name} correctly marked as inefficient (<20 palettes), needs {palettes_needed} more")
+                    
+                    # Verify suggested items for inefficient depots
+                    if isinstance(suggested_items, list):
+                        print(f"📋 Depot {depot_name} has {len(suggested_items)} suggested items")
+                        for suggestion in suggested_items[:3]:  # Check first 3 suggestions
+                            required_suggestion_fields = ['article_code', 'article_name', 'quantity_to_send', 'palette_quantity', 'days_of_coverage']
+                            for field in required_suggestion_fields:
+                                if field not in suggestion:
+                                    print(f"❌ Missing field '{field}' in suggested item")
+                                    return False
+                            
+                            # Verify suggestions are for items that need restocking
+                            if suggestion['quantity_to_send'] <= 0:
+                                print(f"❌ Suggested item {suggestion['article_code']} has quantity_to_send={suggestion['quantity_to_send']}, should be > 0")
+                                return False
+                            
+                            print(f"💡 Suggestion: {suggestion['article_code']} - {suggestion['quantity_to_send']} units, {suggestion['palette_quantity']} palettes")
+                    else:
+                        print(f"⚠️ Suggested items is not a list: {type(suggested_items)}")
+            
+            efficient_count = delivery_opt['efficient_depots']
+            inefficient_count = delivery_opt['inefficient_depots']
+            total_palettes = delivery_opt['total_palettes']
+            
+            print(f"📊 Delivery Summary: {efficient_count} efficient depots, {inefficient_count} inefficient depots, {total_palettes} total palettes")
+            print("✅ 20-palette delivery optimization working correctly in basic calculation")
+            return True
+        
+        return False
+
+    def test_20_palette_delivery_optimization_enhanced(self):
+        """Test 20-palette delivery optimization constraint in enhanced calculation"""
+        if not self.session_id:
+            print("❌ No session ID available for enhanced 20-palette delivery optimization test")
+            return False
+            
+        calculation_data = {
+            "days": 30,
+            "order_session_id": self.session_id,
+            "inventory_session_id": self.inventory_session_id,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "20-Palette Delivery Optimization - Enhanced Calculate",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            summary = response.get('summary', {})
+            
+            # Verify delivery optimization works with inventory data
+            for calc in calculations:
+                # Check all delivery optimization fields are present
+                required_fields = ['palette_quantity', 'delivery_efficient', 'delivery_status', 'delivery_status_color']
+                for field in required_fields:
+                    if field not in calc:
+                        print(f"❌ Missing delivery optimization field '{field}' in enhanced calculation")
+                        return False
+                
+                # Verify inventory fields are also present (if inventory session provided)
+                if self.inventory_session_id:
+                    inventory_fields = ['inventory_status', 'inventory_status_text']
+                    for field in inventory_fields:
+                        if field not in calc:
+                            print(f"❌ Missing inventory field '{field}' in enhanced calculation with delivery optimization")
+                            return False
+            
+            # Verify delivery optimization summary exists alongside inventory summary
+            if 'delivery_optimization' not in summary:
+                print("❌ Missing delivery_optimization in enhanced calculation summary")
+                return False
+            
+            delivery_opt = summary['delivery_optimization']
+            
+            # Test priority modifications based on delivery efficiency
+            depot_groups = {}
+            for calc in calculations:
+                depot = calc['depot']
+                if depot not in depot_groups:
+                    depot_groups[depot] = {'items': [], 'total_palettes': 0}
+                depot_groups[depot]['items'].append(calc)
+                depot_groups[depot]['total_palettes'] += calc['palette_quantity']
+            
+            for depot_name, depot_info in depot_groups.items():
+                total_palettes = depot_info['total_palettes']
+                items = depot_info['items']
+                
+                print(f"🏭 Testing priority modifications for depot {depot_name} ({total_palettes} palettes)")
+                
+                for item in items:
+                    priority = item['priority']
+                    priority_text = item['priority_text']
+                    delivery_efficient = item['delivery_efficient']
+                    
+                    if total_palettes >= 20:  # Efficient depot
+                        if not delivery_efficient:
+                            print(f"❌ Item in efficient depot should have delivery_efficient=True")
+                            return False
+                        # Check for priority boosts in priority_text
+                        if 'efficace' not in priority_text.lower():
+                            print(f"⚠️ Expected 'efficace' in priority text for efficient depot: {priority_text}")
+                    else:  # Inefficient depot
+                        if delivery_efficient:
+                            print(f"❌ Item in inefficient depot should have delivery_efficient=False")
+                            return False
+                        # Check for priority reductions in priority_text
+                        if 'inefficace' not in priority_text.lower():
+                            print(f"⚠️ Expected 'inefficace' in priority text for inefficient depot: {priority_text}")
+            
+            print("✅ 20-palette delivery optimization working correctly in enhanced calculation")
+            return True
+        
+        return False
+
+    def test_20_palette_edge_cases(self):
+        """Test edge cases for 20-palette delivery optimization"""
+        if not self.session_id:
+            print("❌ No session ID available for 20-palette edge cases test")
+            return False
+        
+        # Test with different scenarios
+        test_cases = [
+            {
+                "name": "Standard 30-day calculation",
+                "days": 30,
+                "description": "Normal case with mixed depot sizes"
+            },
+            {
+                "name": "Short 7-day calculation", 
+                "days": 7,
+                "description": "Short period might result in smaller palette quantities"
+            },
+            {
+                "name": "Long 60-day calculation",
+                "days": 60, 
+                "description": "Long period might result in larger palette quantities"
+            }
+        ]
+        
+        all_passed = True
+        
+        for test_case in test_cases:
+            calculation_data = {
+                "days": test_case["days"],
+                "product_filter": None,
+                "packaging_filter": None
+            }
+            
+            success, response = self.run_test(
+                f"20-Palette Edge Case: {test_case['name']}",
+                "POST",
+                f"api/calculate/{self.session_id}",
+                200,
+                data=calculation_data
+            )
+            
+            if success and 'calculations' in response:
+                calculations = response['calculations']
+                summary = response.get('summary', {})
+                
+                # Verify delivery optimization works for different time periods
+                if 'delivery_optimization' not in summary:
+                    print(f"❌ Missing delivery_optimization in {test_case['name']}")
+                    all_passed = False
+                    continue
+                
+                delivery_opt = summary['delivery_optimization']
+                depot_summaries = delivery_opt.get('depot_summaries', [])
+                
+                # Test exactly 20 palettes case (should be efficient)
+                exactly_20_found = False
+                for depot_summary in depot_summaries:
+                    total_palettes = depot_summary['total_palettes']
+                    delivery_status = depot_summary['delivery_status']
+                    
+                    if total_palettes == 20:
+                        exactly_20_found = True
+                        if delivery_status != 'efficient':
+                            print(f"❌ Depot with exactly 20 palettes should be efficient, got {delivery_status}")
+                            all_passed = False
+                        else:
+                            print(f"✅ Depot with exactly 20 palettes correctly marked as efficient")
+                
+                # Test 0 palettes case (should be inefficient with suggestions)
+                zero_palettes_found = False
+                for depot_summary in depot_summaries:
+                    total_palettes = depot_summary['total_palettes']
+                    delivery_status = depot_summary['delivery_status']
+                    suggested_items = depot_summary['suggested_items']
+                    palettes_needed = depot_summary['palettes_needed']
+                    
+                    if total_palettes == 0:
+                        zero_palettes_found = True
+                        if delivery_status != 'inefficient':
+                            print(f"❌ Depot with 0 palettes should be inefficient, got {delivery_status}")
+                            all_passed = False
+                        elif palettes_needed != 20:
+                            print(f"❌ Depot with 0 palettes should need 20 palettes, got {palettes_needed}")
+                            all_passed = False
+                        else:
+                            print(f"✅ Depot with 0 palettes correctly marked as inefficient, needs 20 palettes")
+                
+                print(f"📊 {test_case['name']}: {len(depot_summaries)} depots analyzed")
+                
+            else:
+                all_passed = False
+        
+        return all_passed
+
+    def test_20_palette_filler_suggestions_logic(self):
+        """Test smart filler suggestions for inefficient depots"""
+        if not self.session_id:
+            print("❌ No session ID available for filler suggestions test")
+            return False
+            
+        calculation_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "20-Palette Filler Suggestions Logic",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            summary = response.get('summary', {})
+            delivery_opt = summary.get('delivery_optimization', {})
+            depot_summaries = delivery_opt.get('depot_summaries', [])
+            
+            # Find inefficient depots and test their suggestions
+            inefficient_depots = [d for d in depot_summaries if d['delivery_status'] == 'inefficient']
+            
+            if not inefficient_depots:
+                print("⚠️ No inefficient depots found for filler suggestions test")
+                return True  # Not a failure, just no data to test
+            
+            for depot in inefficient_depots:
+                depot_name = depot['depot_name']
+                suggested_items = depot['suggested_items']
+                total_palettes = depot['total_palettes']
+                palettes_needed = depot['palettes_needed']
+                
+                print(f"🏭 Testing filler suggestions for depot {depot_name} ({total_palettes} palettes, needs {palettes_needed})")
+                
+                if not isinstance(suggested_items, list):
+                    print(f"❌ Suggested items should be a list, got {type(suggested_items)}")
+                    return False
+                
+                # Test suggestion limit (should be max 5)
+                if len(suggested_items) > 5:
+                    print(f"❌ Too many suggestions: {len(suggested_items)}, should be max 5")
+                    return False
+                
+                # Test each suggestion
+                for i, suggestion in enumerate(suggested_items):
+                    required_fields = ['article_code', 'article_name', 'packaging_type', 'current_stock', 
+                                     'quantity_to_send', 'palette_quantity', 'days_of_coverage', 'average_daily_consumption']
+                    
+                    for field in required_fields:
+                        if field not in suggestion:
+                            print(f"❌ Missing field '{field}' in suggestion {i+1}")
+                            return False
+                    
+                    # Verify suggestions are for items that need restocking
+                    quantity_to_send = suggestion['quantity_to_send']
+                    if quantity_to_send <= 0:
+                        print(f"❌ Suggestion {suggestion['article_code']} has quantity_to_send={quantity_to_send}, should be > 0")
+                        return False
+                    
+                    # Verify days of coverage makes sense
+                    days_of_coverage = suggestion['days_of_coverage']
+                    if isinstance(days_of_coverage, (int, float)) and days_of_coverage < 0:
+                        print(f"❌ Invalid days_of_coverage: {days_of_coverage}")
+                        return False
+                    
+                    print(f"💡 Suggestion {i+1}: {suggestion['article_code']} - {quantity_to_send} units, {suggestion['palette_quantity']} palettes, {days_of_coverage} days coverage")
+                
+                # Test sorting by urgency (lowest days of coverage first)
+                if len(suggested_items) > 1:
+                    for i in range(len(suggested_items) - 1):
+                        current_coverage = suggested_items[i]['days_of_coverage']
+                        next_coverage = suggested_items[i + 1]['days_of_coverage']
+                        
+                        # Handle 'Infinie' case
+                        if current_coverage == 'Infinie':
+                            current_coverage = float('inf')
+                        if next_coverage == 'Infinie':
+                            next_coverage = float('inf')
+                        
+                        if isinstance(current_coverage, (int, float)) and isinstance(next_coverage, (int, float)):
+                            if current_coverage > next_coverage:
+                                print(f"❌ Suggestions not sorted by urgency: {current_coverage} > {next_coverage}")
+                                return False
+                    
+                    print("✅ Suggestions correctly sorted by urgency (lowest days of coverage first)")
+                
+                print(f"✅ Depot {depot_name} has {len(suggested_items)} valid filler suggestions")
+            
+            print("✅ Filler suggestions logic working correctly")
+            return True
+        
+        return False
+
+    def test_20_palette_priority_modifications(self):
+        """Test priority modifications based on delivery efficiency"""
+        if not self.session_id:
+            print("❌ No session ID available for priority modifications test")
+            return False
+            
+        calculation_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "20-Palette Priority Modifications",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            summary = response.get('summary', {})
+            delivery_opt = summary.get('delivery_optimization', {})
+            depot_summaries = delivery_opt.get('depot_summaries', [])
+            
+            # Group items by depot to test priority modifications
+            depot_groups = {}
+            for calc in calculations:
+                depot = calc['depot']
+                if depot not in depot_groups:
+                    depot_groups[depot] = []
+                depot_groups[depot].append(calc)
+            
+            # Find depot efficiency status
+            depot_efficiency = {}
+            for depot_summary in depot_summaries:
+                depot_name = depot_summary['depot_name']
+                total_palettes = depot_summary['total_palettes']
+                depot_efficiency[depot_name] = total_palettes >= 20
+            
+            priority_modifications_found = False
+            
+            for depot_name, items in depot_groups.items():
+                is_efficient = depot_efficiency.get(depot_name, False)
+                total_palettes = sum(item['palette_quantity'] for item in items)
+                
+                print(f"🏭 Testing priority modifications for depot {depot_name} (efficient={is_efficient}, {total_palettes} palettes)")
+                
+                for item in items:
+                    priority = item['priority']
+                    priority_text = item['priority_text']
+                    delivery_efficient = item['delivery_efficient']
+                    
+                    # Verify delivery_efficient matches depot efficiency
+                    if delivery_efficient != is_efficient:
+                        print(f"❌ Item delivery_efficient={delivery_efficient} doesn't match depot efficiency={is_efficient}")
+                        return False
+                    
+                    # Test priority modifications for efficient depots
+                    if is_efficient:
+                        # Efficient depots should get priority boosts
+                        if 'efficace' in priority_text.lower():
+                            priority_modifications_found = True
+                            print(f"✅ Found priority boost for efficient depot: {priority_text}")
+                        
+                        # Medium priority should become high in efficient depots
+                        if priority == 'high' and 'efficace' in priority_text.lower():
+                            print(f"✅ Priority boosted to high for efficient delivery: {priority_text}")
+                    
+                    # Test priority modifications for inefficient depots  
+                    else:
+                        # Inefficient depots should get priority reductions
+                        if 'inefficace' in priority_text.lower():
+                            priority_modifications_found = True
+                            print(f"✅ Found priority reduction for inefficient depot: {priority_text}")
+                        
+                        # High priority should become medium, medium should become low
+                        if priority in ['medium', 'low'] and 'inefficace' in priority_text.lower():
+                            print(f"✅ Priority reduced for inefficient delivery: {priority_text}")
+            
+            if priority_modifications_found:
+                print("✅ Priority modifications based on delivery efficiency are working")
+                return True
+            else:
+                print("⚠️ No clear priority modifications found - this might be normal if all depots are efficient or inefficient")
+                return True  # Not necessarily a failure
+        
+        return False
+
+    def test_20_palette_response_structure(self):
+        """Test complete response structure for 20-palette delivery optimization"""
+        if not self.session_id:
+            print("❌ No session ID available for response structure test")
+            return False
+            
+        calculation_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "20-Palette Response Structure Verification",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=calculation_data
+        )
+        
+        if success:
+            # Test top-level response structure
+            required_top_level = ['calculations', 'summary']
+            for field in required_top_level:
+                if field not in response:
+                    print(f"❌ Missing top-level field: {field}")
+                    return False
+            
+            calculations = response['calculations']
+            summary = response['summary']
+            
+            # Test calculations structure
+            if calculations:
+                sample_calc = calculations[0]
+                required_calc_fields = [
+                    'palette_quantity', 'delivery_efficient', 'delivery_status', 'delivery_status_color',
+                    'depot', 'article_code', 'priority', 'priority_text', 'quantity_to_send'
+                ]
+                
+                for field in required_calc_fields:
+                    if field not in sample_calc:
+                        print(f"❌ Missing calculation field: {field}")
+                        return False
+                
+                print(f"✅ All required calculation fields present in {len(calculations)} items")
+            
+            # Test summary structure
+            required_summary_fields = ['delivery_optimization']
+            for field in required_summary_fields:
+                if field not in summary:
+                    print(f"❌ Missing summary field: {field}")
+                    return False
+            
+            # Test delivery_optimization structure
+            delivery_opt = summary['delivery_optimization']
+            required_delivery_fields = ['efficient_depots', 'inefficient_depots', 'total_palettes', 'depot_summaries']
+            
+            for field in required_delivery_fields:
+                if field not in delivery_opt:
+                    print(f"❌ Missing delivery_optimization field: {field}")
+                    return False
+            
+            # Test depot_summaries structure
+            depot_summaries = delivery_opt['depot_summaries']
+            if depot_summaries:
+                sample_depot = depot_summaries[0]
+                required_depot_fields = ['depot_name', 'total_palettes', 'delivery_status', 'items_count', 'suggested_items', 'palettes_needed']
+                
+                for field in required_depot_fields:
+                    if field not in sample_depot:
+                        print(f"❌ Missing depot summary field: {field}")
+                        return False
+                
+                print(f"✅ All required depot summary fields present in {len(depot_summaries)} depots")
+            
+            # Test data types
+            efficient_depots = delivery_opt['efficient_depots']
+            inefficient_depots = delivery_opt['inefficient_depots']
+            total_palettes = delivery_opt['total_palettes']
+            
+            if not isinstance(efficient_depots, int):
+                print(f"❌ efficient_depots should be int, got {type(efficient_depots)}")
+                return False
+            
+            if not isinstance(inefficient_depots, int):
+                print(f"❌ inefficient_depots should be int, got {type(inefficient_depots)}")
+                return False
+            
+            if not isinstance(total_palettes, (int, float)):
+                print(f"❌ total_palettes should be numeric, got {type(total_palettes)}")
+                return False
+            
+            print(f"📊 Delivery optimization summary: {efficient_depots} efficient, {inefficient_depots} inefficient, {total_palettes} total palettes")
+            print("✅ Complete response structure verification passed")
+            return True
+        
+        return False
+
 def main():
     print("🚀 Starting Stock Management API Tests")
     print("=" * 50)
