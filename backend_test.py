@@ -1806,10 +1806,12 @@ def main():
         ("Sourcing Intelligence - Enhanced Calculate", tester.test_sourcing_intelligence_enhanced_calculate),
         ("Sourcing Data Consistency", tester.test_sourcing_data_consistency),
         ("Sourcing Specific Articles", tester.test_sourcing_specific_articles),
-        # Excel Export Tests (NEW)
+        # Excel Export Tests (ENHANCED FOR PROFESSIONAL MULTI-SHEET SYSTEM)
         ("Excel Export with Sourcing Column", tester.test_excel_export_with_sourcing_column),
         ("Excel Export Sourcing Logic", tester.test_excel_export_sourcing_logic),
         ("Excel Export Regression Test", tester.test_excel_export_regression),
+        ("Professional Excel Multi-Sheet Architecture", tester.test_professional_excel_multi_sheet_architecture),
+        ("Excel Statistical Accuracy", tester.test_excel_statistical_accuracy),
         # AI and other tests
         ("Enhanced Gemini AI Queries", tester.test_gemini_query_enhanced),
         ("Gemini AI Query (French)", tester.test_gemini_query_french),
