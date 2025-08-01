@@ -363,6 +363,9 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             required_stock = request.days * adc
             quantity_to_send = max(0, required_stock - row['current_stock'])
             
+            # Calculate palettes needed for this item
+            palettes_needed = row['palette_quantity'] if quantity_to_send > 0 else 0
+            
             if doc == float('inf'):
                 priority = 'low'
                 priority_text = 'Faible'
@@ -395,6 +398,7 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                 'required_for_x_days': round(required_stock, 2),
                 'quantity_to_send': round(quantity_to_send, 2),
                 'total_ordered_in_period': row['total_ordered'],
+                'palette_quantity': palettes_needed,
                 'priority': priority,
                 'priority_text': priority_text,
                 'sourcing_status': sourcing_status,
