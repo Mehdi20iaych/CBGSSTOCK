@@ -86,8 +86,8 @@ class StockManagementAPITester:
         return excel_buffer
 
     def create_sample_excel_file(self):
-        """Create a sample Excel file for testing with various packaging types"""
-        # Create sample data with required columns including non-allowed packaging types
+        """Create a sample Excel file for testing with various packaging types and sourcing test articles"""
+        # Create sample data with required columns including articles for sourcing intelligence testing
         data = {
             'Date de Commande': [
                 datetime.now() - timedelta(days=30),
@@ -96,17 +96,19 @@ class StockManagementAPITester:
                 datetime.now() - timedelta(days=15),
                 datetime.now() - timedelta(days=10),
                 datetime.now() - timedelta(days=5),
-                datetime.now() - timedelta(days=2)
+                datetime.now() - timedelta(days=2),
+                datetime.now() - timedelta(days=1)
             ],
-            'Article': ['ART001', 'ART002', 'ART001', 'ART003', 'ART002', 'ART004', 'ART005'],
-            'Désignation Article': ['COCA-COLA 33CL', 'PEPSI 50CL', 'COCA-COLA 33CL', 'SPRITE 33CL', 'PEPSI 50CL', 'FANTA 33CL', 'ORANGINA 25CL'],
-            'Point d\'Expédition': ['DEPOT1', 'DEPOT1', 'DEPOT2', 'DEPOT1', 'DEPOT2', 'DEPOT1', 'DEPOT3'],
-            'Nom Division': ['Division A', 'Division A', 'Division B', 'Division A', 'Division B', 'Division C', 'Division A'],
-            'Quantité Commandée': [100, 150, 80, 120, 90, 200, 75],
-            'Stock Utilisation Libre': [500, 300, 200, 400, 250, 600, 180],
-            'Ecart': [0, 0, 0, 0, 0, 0, 0],
-            'Type Emballage': ['Verre', 'Pet', 'Verre', 'Ciel', 'Pet', 'Canette', 'Tétra'],  # Mix of allowed and non-allowed types
-            'Quantité en Palette': [24, 12, 24, 18, 12, 36, 20]
+            # Include articles that should be local (1011, 1016) and external (9999, 8888) for sourcing testing
+            'Article': ['1011', '1016', '9999', '8888', '1021', '1022', 'ART001', 'ART002'],
+            'Désignation Article': ['COCA-COLA 33CL LOCAL', 'PEPSI 50CL LOCAL', 'SPRITE 33CL EXTERNAL', 'FANTA 33CL EXTERNAL', 'ORANGINA 25CL LOCAL', 'COCA-ZERO 33CL LOCAL', 'COCA-COLA 33CL', 'PEPSI 50CL'],
+            'Point d\'Expédition': ['DEPOT1', 'DEPOT1', 'DEPOT2', 'DEPOT1', 'DEPOT2', 'DEPOT1', 'DEPOT3', 'DEPOT1'],
+            'Nom Division': ['Division A', 'Division A', 'Division B', 'Division A', 'Division B', 'Division C', 'Division A', 'Division B'],
+            'Quantité Commandée': [100, 150, 80, 120, 90, 200, 75, 110],
+            'Stock Utilisation Libre': [500, 300, 200, 400, 250, 600, 180, 350],
+            'Ecart': [0, 0, 0, 0, 0, 0, 0, 0],
+            'Type Emballage': ['Verre', 'Pet', 'Verre', 'Ciel', 'Pet', 'Canette', 'Tétra', 'Verre'],  # Mix of allowed and non-allowed types
+            'Quantité en Palette': [24, 12, 24, 18, 12, 36, 20, 24]
         }
         
         df = pd.DataFrame(data)
