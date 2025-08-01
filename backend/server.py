@@ -242,6 +242,186 @@ async def upload_excel(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du traitement du fichier: {str(e)}")
 
+@app.post("/api/enhanced-calculate")
+async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
+    try:
+        # Validate order session
+        if request.order_session_id not in uploaded_data:
+            raise HTTPException(status_code=404, detail="Session de commandes non trouvée")
+        
+        # Get order data
+        order_data = uploaded_data[request.order_session_id]['data']
+        order_df = pd.DataFrame(order_data)
+        order_df['Date de Commande'] = pd.to_datetime(order_df['Date de Commande'])
+        
+        # Apply filters to order data
+        if request.product_filter and len(request.product_filter) > 0:
+            order_df = order_df[order_df['Désignation Article'].isin(request.product_filter)]
+        
+        if request.packaging_filter and len(request.packaging_filter) > 0:
+            order_df = order_df[order_df['Type Emballage'].isin(request.packaging_filter)]
+        
+        if order_df.empty:
+            return {
+                "calculations": [],
+                "inventory_status": "no_inventory_data",
+                "summary": {
+                    "total_depots": 0,
+                    "total_products": 0,
+                    "message": "Aucune donnée trouvée avec les filtres appliqués"
+                }
+            }
+        
+        # Calculate requirements (existing logic)
+        date_range_days = (order_df['Date de Commande'].max() - order_df['Date de Commande'].min()).days + 1
+        
+        grouped = order_df.groupby(['Nom Division', 'Article', 'Désignation Article', 'Type Emballage']).agg({
+            'Quantité Commandée': 'sum',
+            'Stock Utilisation Libre': 'last',
+            'Date de Commande': ['min', 'max']
+        }).reset_index()
+        
+        grouped.columns = [
+            'depot', 'article_code', 'article_name', 'packaging_type',
+            'total_ordered', 'current_stock', 'first_date', 'last_date'
+        ]
+        
+        # Calculate basic requirements
+        results = []
+        for _, row in grouped.iterrows():
+            adc = row['total_ordered'] / date_range_days if date_range_days > 0 else 0
+            doc = row['current_stock'] / adc if adc > 0 else float('inf')
+            required_stock = request.days * adc
+            quantity_to_send = max(0, required_stock - row['current_stock'])
+            
+            if doc == float('inf'):
+                priority = 'low'
+                priority_text = 'Faible'
+            elif doc < 7:
+                priority = 'high'
+                priority_text = 'Critique'
+            elif doc < 15:
+                priority = 'medium'
+                priority_text = 'Moyen'
+            else:
+                priority = 'low'
+                priority_text = 'Faible'
+            
+            item_id = f"{row['depot']}_{row['article_code']}_{row['packaging_type']}"
+            
+            result_item = {
+                'id': item_id,
+                'depot': row['depot'],
+                'article_code': row['article_code'],
+                'article_name': row['article_name'],
+                'packaging_type': row['packaging_type'],
+                'average_daily_consumption': round(adc, 2),
+                'days_of_coverage': round(doc, 1) if doc != float('inf') else 'Infinie',
+                'current_stock': row['current_stock'],
+                'required_for_x_days': round(required_stock, 2),
+                'quantity_to_send': round(quantity_to_send, 2),
+                'total_ordered_in_period': row['total_ordered'],
+                'priority': priority,
+                'priority_text': priority_text,
+                'selected': False
+            }
+            
+            # Add inventory availability if inventory data is provided
+            if request.inventory_session_id and request.inventory_session_id in inventory_data:
+                inventory_df = pd.DataFrame(inventory_data[request.inventory_session_id]['data'])
+                
+                # Find matching article in inventory
+                matching_inventory = inventory_df[inventory_df['Article'].astype(str) == str(row['article_code'])]
+                
+                if not matching_inventory.empty:
+                    total_available = matching_inventory['STOCK À DATE'].sum()
+                    result_item['inventory_available'] = total_available
+                    result_item['can_fulfill'] = total_available >= quantity_to_send
+                    
+                    if total_available >= quantity_to_send:
+                        result_item['inventory_status'] = 'sufficient'
+                        result_item['inventory_status_text'] = '✅ Suffisant'
+                        result_item['inventory_status_color'] = 'text-green-600 bg-green-50'
+                    elif total_available > 0:
+                        result_item['inventory_status'] = 'partial'
+                        result_item['inventory_status_text'] = '⚠️ Partiel'
+                        result_item['inventory_status_color'] = 'text-yellow-600 bg-yellow-50'
+                        result_item['inventory_shortage'] = quantity_to_send - total_available
+                    else:
+                        result_item['inventory_status'] = 'insufficient'
+                        result_item['inventory_status_text'] = '❌ Insuffisant'
+                        result_item['inventory_status_color'] = 'text-red-600 bg-red-50'
+                        result_item['inventory_shortage'] = quantity_to_send
+                else:
+                    result_item['inventory_available'] = 0
+                    result_item['can_fulfill'] = False
+                    result_item['inventory_status'] = 'not_found'
+                    result_item['inventory_status_text'] = '❓ Non trouvé'
+                    result_item['inventory_status_color'] = 'text-gray-600 bg-gray-50'
+                    result_item['inventory_shortage'] = quantity_to_send
+            else:
+                result_item['inventory_status'] = 'no_data'
+                result_item['inventory_status_text'] = '📋 Pas de données'
+                result_item['inventory_status_color'] = 'text-blue-600 bg-blue-50'
+            
+            results.append(result_item)
+        
+        # Sort by inventory availability and priority
+        if request.inventory_session_id:
+            # Priority order: insufficient/not_found first, then by priority
+            def sort_key(x):
+                inventory_priority = {
+                    'insufficient': 0,
+                    'not_found': 1,
+                    'partial': 2,
+                    'sufficient': 3,
+                    'no_data': 4
+                }
+                business_priority = {'high': 0, 'medium': 1, 'low': 2}
+                return (inventory_priority.get(x.get('inventory_status', 'no_data'), 4), 
+                        business_priority[x['priority']], 
+                        -x['quantity_to_send'])
+            results.sort(key=sort_key)
+        else:
+            # Original sorting
+            priority_order = {'high': 0, 'medium': 1, 'low': 2}
+            results.sort(key=lambda x: (priority_order[x['priority']], -x['quantity_to_send']))
+        
+        # Calculate summary statistics
+        summary = {
+            "total_depots": len(order_df['Nom Division'].unique()),
+            "total_products": len(results),
+            "date_range_days": date_range_days,
+            "requested_days": request.days,
+            "high_priority": [r for r in results if r['priority'] == 'high'],
+            "medium_priority": [r for r in results if r['priority'] == 'medium'],
+            "low_priority": [r for r in results if r['priority'] == 'low'],
+            "no_stock_needed": [r for r in results if r['quantity_to_send'] == 0]
+        }
+        
+        # Add inventory-specific summary if available
+        if request.inventory_session_id and request.inventory_session_id in inventory_data:
+            inventory_summary = {
+                "sufficient_items": len([r for r in results if r.get('inventory_status') == 'sufficient']),
+                "partial_items": len([r for r in results if r.get('inventory_status') == 'partial']),
+                "insufficient_items": len([r for r in results if r.get('inventory_status') == 'insufficient']),
+                "not_found_items": len([r for r in results if r.get('inventory_status') == 'not_found']),
+                "total_inventory_shortage": sum([r.get('inventory_shortage', 0) for r in results])
+            }
+            summary.update(inventory_summary)
+            summary["inventory_status"] = "available"
+        else:
+            summary["inventory_status"] = "no_inventory_data"
+        
+        return {
+            "calculations": results,
+            "summary": summary,
+            "inventory_status": summary["inventory_status"]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du calcul amélioré: {str(e)}")
+
 @app.post("/api/calculate/{session_id}")
 async def calculate_requirements(session_id: str, request: CalculationRequest):
     try:
