@@ -157,6 +157,8 @@ async def upload_inventory_excel(file: UploadFile = File(...)):
             "summary": inventory_data[session_id]['summary']
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du traitement du fichier d'inventaire: {str(e)}")
 
