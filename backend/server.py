@@ -14,7 +14,10 @@ from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 from io import BytesIO
 import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+import openpyxl.comments
+import openpyxl.styles
 
 # Configure Gemini API
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', "AIzaSyDaUyWzYQEDBqFwuniG8KiqKHgtk-l5Dco")
