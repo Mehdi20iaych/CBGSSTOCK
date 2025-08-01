@@ -110,6 +110,12 @@
   - Column D: STOCK À DATE (current stock quantity)
   
   The system should cross-reference order requirements with inventory availability and show fulfillment status.
+  
+  LATEST ENHANCEMENT: Added 20-palette minimum delivery constraint per depot for logistics optimization. 
+  - System now calculates total palettes needed per depot
+  - If depot has <20 palettes, system suggests additional products to reach minimum
+  - Priorities are modified based on delivery efficiency (efficient depots get priority boost, inefficient get reduced priority)
+  - Frontend displays delivery optimization summary and efficiency status per item
 
 ## backend:
   - task: "Add inventory Excel upload endpoint"
