@@ -57,6 +57,7 @@ class ExportRequest(BaseModel):
 
 # Store uploaded data temporarily
 uploaded_data = {}
+inventory_data = {}
 
 @app.get("/")
 async def root():
