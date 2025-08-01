@@ -174,6 +174,7 @@
         - working: "NA"
           agent: "main"
           comment: "MAJOR ENHANCEMENT: Added sophisticated 20-palette minimum delivery constraint system. Backend now calculates total palettes per depot, suggests additional 'filler' products when depot doesn't reach 20 palettes, and modifies priorities based on delivery efficiency. Features: (1) Depot grouping and palette calculation, (2) Smart filler suggestion algorithm that finds additional products from same depot needing restocking, (3) Priority modification - inefficient depots get reduced priority, efficient depots get priority boost, (4) New response fields: palette_quantity, delivery_efficient, delivery_status, delivery_status_color, (5) Comprehensive depot summaries with suggested items and palettes needed. Applied to both /api/calculate and /api/enhanced-calculate endpoints."
+  - task: "Improve AI assistant context and prompting"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -190,6 +191,18 @@
         - working: "NA"
           agent: "main"
           comment: "UPDATED: Optimized AI context specifically for single-day data analysis to avoid multi-day assumptions. Focused on daily activity insights."
+
+  - task: "Add delivery optimization UI with depot summaries and efficiency indicators"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "COMPREHENSIVE UI ENHANCEMENT: Added sophisticated delivery optimization dashboard to frontend. Features: (1) New 'Optimisation des Livraisons' summary section with purple gradient theme showing efficient/inefficient depots, total palettes, and 20-palette minimum, (2) Detailed depot breakdown with status indicators, palette counts, and item counts, (3) Smart suggestions display for inefficient depots showing recommended additional items with quantities and palette info, (4) New table columns: 'Palettes' column showing palette quantities with color coding (green for efficient, orange for inefficient), 'Livraison' column showing delivery efficiency status with visual indicators, (5) Optimization warnings when depots don't meet 20-palette minimum. Maintains existing design consistency while adding powerful logistics optimization insights."
 
 ## frontend:
   - task: "Add dual file upload for order and inventory data"
