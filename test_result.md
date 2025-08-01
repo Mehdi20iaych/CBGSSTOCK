@@ -170,12 +170,48 @@
           comment: "UPDATED: Optimized AI context specifically for single-day data analysis to avoid multi-day assumptions. Focused on daily activity insights."
 
 ## frontend:
-  - task: "Add select all option to products filter"
+  - task: "Add dual file upload for order and inventory data"
     implemented: true
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added separate upload sections for order data and inventory data with status indicators and file validation"
+
+  - task: "Enhanced results table with inventory status"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Updated results table to show inventory availability columns (Stock Inventaire, Disponibilité) with status indicators (✅ Suffisant, ⚠️ Partiel, ❌ Insuffisant, ❓ Non trouvé)"
+
+  - task: "Inventory summary statistics"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added inventory status summary showing sufficient/partial/insufficient/not_found item counts and total inventory shortage"
+
+  - task: "Add select all option to products filter"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
     needs_retesting: true
     status_history:
         - working: "NA"
@@ -187,7 +223,7 @@
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
-    priority: "medium"
+    priority: "low"
     needs_retesting: true
     status_history:
         - working: "NA"
