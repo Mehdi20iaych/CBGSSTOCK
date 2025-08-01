@@ -241,8 +241,11 @@
 
 ## test_plan:
   current_focus:
-    - "Add select all option to products filter"
-    - "Improve AI assistant interface"
+    - "Add inventory Excel upload endpoint"
+    - "Enhanced calculation with inventory cross-reference" 
+    - "Add dual file upload for order and inventory data"
+    - "Enhanced results table with inventory status"
+    - "Inventory summary statistics"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
