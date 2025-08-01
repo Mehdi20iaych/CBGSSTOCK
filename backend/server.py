@@ -542,6 +542,17 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du calcul des exigences: {str(e)}")
 
+@app.get("/api/inventory/{session_id}")
+async def get_inventory_data(session_id: str):
+    try:
+        if session_id not in inventory_data:
+            raise HTTPException(status_code=404, detail="Session d'inventaire non trouvée")
+        
+        return inventory_data[session_id]
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des données d'inventaire: {str(e)}")
+
 @app.get("/api/filters/{session_id}")
 async def get_filters(session_id: str):
     try:
