@@ -311,7 +311,12 @@ function App() {
     if (showCriticalOnly) {
       return calculations.calculations.filter(item => item.priority === 'high');
     }
-    return calculations.calculations;
+    
+    // Ensure critical priority items always appear first
+    const criticalItems = calculations.calculations.filter(item => item.priority === 'high');
+    const otherItems = calculations.calculations.filter(item => item.priority !== 'high');
+    
+    return [...criticalItems, ...otherItems];
   };
 
   return (
