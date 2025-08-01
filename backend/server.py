@@ -123,11 +123,28 @@ async def upload_inventory_excel(file: UploadFile = File(...)):
             }
         }
         
+        # Convert DataFrame to dict with Python native types for MongoDB
+        data_records = []
+        for _, row in df.iterrows():
+            record = {}
+            for col in df.columns:
+                value = row[col]
+                # Convert numpy types to Python native types
+                if pd.isna(value):
+                    record[col] = None
+                elif isinstance(value, (np.integer, np.int64)):
+                    record[col] = int(value)
+                elif isinstance(value, (np.floating, np.float64)):
+                    record[col] = float(value)
+                else:
+                    record[col] = value
+            data_records.append(record)
+        
         # Save to MongoDB
         document = {
             'session_id': session_id,
             'type': 'inventory',
-            'data': df.to_dict('records'),
+            'data': data_records,
             'upload_time': datetime.now(),
             'summary': inventory_data[session_id]['summary']
         }
