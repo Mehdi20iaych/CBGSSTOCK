@@ -113,13 +113,15 @@ function App() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/calculate/${sessionId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/enhanced-calculate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           days: parseInt(days),
+          order_session_id: sessionId,
+          inventory_session_id: inventorySessionId,
           product_filter: selectedProducts.length > 0 ? selectedProducts : null,
           packaging_filter: selectedPackaging.length > 0 ? selectedPackaging : null,
         }),
