@@ -86,12 +86,42 @@ async def upload_inventory_excel(file: UploadFile = File(...)):
         # Validate required columns for inventory data
         required_columns = ['Division', 'Article', 'Désignation article', 'STOCK À DATE']
         
-        missing_columns = [col for col in required_columns if col not in df.columns]
+        # Handle potential variations in column names (especially accented characters)
+        df_columns = df.columns.tolist()
+        
+        # Check for column variations
+        column_mapping = {}
+        for required_col in required_columns:
+            found = False
+            for df_col in df_columns:
+                if required_col == df_col:
+                    column_mapping[required_col] = df_col
+                    found = True
+                    break
+                elif required_col == 'STOCK À DATE' and df_col in ['STOCK A DATE', 'STOCK À DATE', 'STOCK A DATE']:
+                    column_mapping[required_col] = df_col
+                    found = True
+                    break
+                elif required_col == 'Désignation article' and df_col in ['Designation article', 'Désignation article']:
+                    column_mapping[required_col] = df_col
+                    found = True
+                    break
+            
+            if not found:
+                column_mapping[required_col] = None
+        
+        missing_columns = [col for col, mapped in column_mapping.items() if mapped is None]
         if missing_columns:
+            available_columns = ', '.join(df.columns.tolist())
             raise HTTPException(
                 status_code=400, 
-                detail=f"Colonnes manquantes pour les données d'inventaire: {', '.join(missing_columns)}"
+                detail=f"Colonnes manquantes pour les données d'inventaire: {', '.join(missing_columns)}. Colonnes disponibles: {available_columns}"
             )
+        
+        # Rename columns to standard names if needed
+        rename_dict = {v: k for k, v in column_mapping.items() if v != k and v is not None}
+        if rename_dict:
+            df = df.rename(columns=rename_dict)
         
         # Clean and process inventory data
         df['Article'] = df['Article'].astype(str)
