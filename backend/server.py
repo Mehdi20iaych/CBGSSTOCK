@@ -224,6 +224,7 @@ async def upload_excel(file: UploadFile = File(...)):
         # Save to MongoDB
         document = {
             'session_id': session_id,
+            'type': 'orders',
             'data': df.to_dict('records'),
             'upload_time': datetime.now(),
             'date_range': uploaded_data[session_id]['date_range'],
