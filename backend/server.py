@@ -689,7 +689,7 @@ async def export_critical_items(session_id: str, request: ExportRequest):
         headers = [
             'Dépôt', 'Code Article', 'Désignation Article', 'Type Emballage',
             'Stock Actuel', 'Consommation Quotidienne', 'Jours de Couverture',
-            'Quantité Requise', 'Priorité', 'Action Recommandée'
+            'Quantité Requise', 'Sourcing', 'Priorité', 'Action Recommandée'
         ]
         
         row_num = 5
