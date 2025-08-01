@@ -721,6 +721,7 @@ async def export_critical_items(session_id: str, request: ExportRequest):
                 item['average_daily_consumption'],
                 item['days_of_coverage'],
                 item['quantity_to_send'],
+                item.get('sourcing_text', 'Non défini'),
                 item['priority_text'],
                 action
             ]
