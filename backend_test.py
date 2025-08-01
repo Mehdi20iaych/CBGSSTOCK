@@ -9,6 +9,7 @@ class StockManagementAPITester:
     def __init__(self, base_url="https://83758c24-bcda-4a92-895c-e1aff3c57fe0.preview.emergentagent.com"):
         self.base_url = base_url
         self.session_id = None
+        self.inventory_session_id = None
         self.tests_run = 0
         self.tests_passed = 0
 
