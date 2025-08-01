@@ -440,6 +440,8 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             "inventory_status": summary["inventory_status"]
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du calcul amélioré: {str(e)}")
 
