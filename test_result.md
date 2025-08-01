@@ -254,6 +254,18 @@
           agent: "testing"
           comment: "✅ BACKEND TESTING COMPLETED: All backend API endpoints work perfectly after frontend changes to display article codes. Comprehensive testing verified: (1) /api/upload-excel returns proper article_code and article_name fields, (2) /api/calculate returns both article_code and article_name in all calculation results, (3) /api/enhanced-calculate maintains both fields with inventory cross-reference functionality, (4) Export functionality works correctly with article codes, (5) Data consistency verified across all endpoints - same article codes return same article names. All 22 comprehensive backend tests + 18 focused article field tests passed (40/40 total). Backend APIs properly provide both article_code and article_name fields, ensuring frontend can safely display article_code while maintaining full functionality. No breaking changes detected."
 
+  - task: "Add local production vs external sourcing intelligence"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py, /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added comprehensive sourcing intelligence system. Backend: Added LOCALLY_MADE_ARTICLES list with 57 article codes, enhanced calculation endpoints to include sourcing_status, sourcing_text, and is_locally_made fields. Frontend: Added Sourcing column in results table with visual indicators (green for local production, orange for external sourcing), added sourcing summary dashboard showing local vs external breakdown with warning alerts for external sourcing needs."
+
 ## metadata:
   created_by: "main_agent"
   version: "1.0"
