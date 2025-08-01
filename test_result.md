@@ -239,6 +239,18 @@
           agent: "main"
           comment: "UPDATED: Redesigned predefined questions to focus on single-day data analysis. Removed multi-day assumptions and focused on daily activity insights."
 
+  - task: "Replace article name with article code in results display"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Changed results table to display article codes instead of article names. Updated table header from 'Produit' to 'Code Article' and table cell content from item.article_name to item.article_code for more reliable display and matching."
+
 ## metadata:
   created_by: "main_agent"
   version: "1.0"
