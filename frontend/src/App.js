@@ -219,7 +219,9 @@ function App() {
 
   const resetApp = () => {
     setSessionId(null);
+    setInventorySessionId(null);
     setUploadedData(null);
+    setInventoryData(null);
     setCalculations(null);
     setGeminiResponse(null);
     setAvailableFilters(null);
@@ -233,6 +235,9 @@ function App() {
     setShowCriticalOnly(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+    if (inventoryFileInputRef.current) {
+      inventoryFileInputRef.current.value = '';
     }
   };
 
