@@ -11,7 +11,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 class ArticleCodeFieldTester:
-    def __init__(self, base_url="https://0074d26a-4347-4a2b-89d5-e02409ba89c8.preview.emergentagent.com"):
+    def __init__(self, base_url="https://bc29ffe2-f838-4ec2-9a92-e8c982f67493.preview.emergentagent.com"):
         self.base_url = base_url
         self.session_id = None
         self.inventory_session_id = None
