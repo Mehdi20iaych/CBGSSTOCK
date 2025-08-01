@@ -260,6 +260,8 @@ async def upload_excel(file: UploadFile = File(...)):
             "filters": uploaded_data[session_id]['filters']
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du traitement du fichier: {str(e)}")
 
