@@ -592,6 +592,13 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             "sourcing_summary": {
                 "local_items": len([r for r in results if r['is_locally_made']]),
                 "external_items": len([r for r in results if not r['is_locally_made']])
+            },
+            # Add delivery optimization summary
+            "delivery_optimization": {
+                "efficient_depots": len([d for d in depot_summaries if d['delivery_status'] == 'efficient']),
+                "inefficient_depots": len([d for d in depot_summaries if d['delivery_status'] == 'inefficient']),
+                "total_palettes": sum([d['total_palettes'] for d in depot_summaries]),
+                "depot_summaries": depot_summaries
             }
         }
         
