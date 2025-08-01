@@ -760,7 +760,7 @@ function App() {
                       <tr className="bg-gray-100">
                         <th className="border border-gray-300 p-3 text-left">Sélection</th>
                         <th className="border border-gray-300 p-3 text-left">Dépôt</th>
-                        <th className="border border-gray-300 p-3 text-left">Produit</th>
+                        <th className="border border-gray-300 p-3 text-left">Code Article</th>
                         <th className="border border-gray-300 p-3 text-left">Emballage</th>
                         <th className="border border-gray-300 p-3 text-right">CQM</th>
                         <th className="border border-gray-300 p-3 text-right">Jours Couv.</th>
