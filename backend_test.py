@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 class StockManagementAPITester:
-    def __init__(self, base_url="https://2d6836d9-0796-449b-9723-925ba54a5187.preview.emergentagent.com"):
+    def __init__(self, base_url="https://0074d26a-4347-4a2b-89d5-e02409ba89c8.preview.emergentagent.com"):
         self.base_url = base_url
         self.session_id = None
         self.inventory_session_id = None
