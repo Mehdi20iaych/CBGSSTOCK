@@ -281,20 +281,17 @@
           agent: "main"
           comment: "Updated getDisplayedCalculations() function to ensure critical priority items (priority === 'high') always appear first in results table, regardless of other sorting criteria like inventory status. This addresses the requirement that 'Priorité critique should be always on top in voir resultat'."
 
-  - task: "Add sourcing information to Excel export"
+  - task: "Professional Excel export with comprehensive reporting"
     implemented: true
-    working: true
+    working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "Enhanced Excel export functionality to include 'Sourcing' column showing 'Production Locale' for locally made articles and 'Sourcing Externe' for external articles. Modified export-critical endpoint headers and data rows to include sourcing_text field, addressing requirement for sourcing information in exported Excel files."
-        - working: true
-          agent: "testing"
-          comment: "✅ EXCEL EXPORT SOURCING ENHANCEMENT TESTED: All Excel export functionality working perfectly! Comprehensive testing verified: (1) /api/export-critical/{session_id} endpoint successfully includes new 'Sourcing' column in Excel exports, (2) Excel files now contain 11 columns including the new Sourcing column, (3) Sourcing logic correctly implemented - articles in LOCALLY_MADE_ARTICLES list (like 1011, 1016, 1021, 1033) show 'Production Locale', articles NOT in list (like 9999, 8888) show 'Sourcing Externe', (4) Excel file downloads correctly with proper filename format and content-type headers, (5) All existing functionality maintained - regression testing confirmed all 11 expected columns present with correct data, (6) Sourcing information properly populated from sourcing_text field in calculation results. Excel export enhancement successfully implemented with no breaking changes to existing features."
+          comment: "MAJOR UPGRADE: Completely redesigned Excel export with professional multi-sheet reporting. Features: (1) Executive Summary sheet with statistical analysis, priority/sourcing breakdown, and logistics impact, (2) Enhanced Critical Items sheet with 12 columns, professional styling, conditional formatting, hover descriptions, and auto-filter, (3) Detailed Analysis sheet with depot-specific breakdowns, (4) Professional color scheme and typography, (5) Frozen panes, borders, comments, and print-friendly formatting, (6) Smart sorting (critical items first), (7) Enhanced filename and error handling. Transforms basic export into comprehensive business reporting tool."
 
 ## metadata:
   created_by: "main_agent"
