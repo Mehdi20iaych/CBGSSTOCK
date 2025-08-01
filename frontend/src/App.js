@@ -789,7 +789,7 @@ function App() {
                             )}
                           </td>
                           <td className="border border-gray-300 p-3 font-medium">{item.depot}</td>
-                          <td className="border border-gray-300 p-3">{item.article_name}</td>
+                          <td className="border border-gray-300 p-3">{item.article_code}</td>
                           <td className="border border-gray-300 p-3">{item.packaging_type}</td>
                           <td className="border border-gray-300 p-3 text-right">{formatNumber(item.average_daily_consumption)}</td>
                           <td className="border border-gray-300 p-3 text-right">
