@@ -925,6 +925,7 @@ function App() {
                           </>
                         )}
                         <th className="border border-gray-300 p-3 text-center">Sourcing</th>
+                        <th className="border border-gray-300 p-3 text-center">Livraison</th>
                         <th className="border border-gray-300 p-3 text-center">Priorité</th>
                       </tr>
                     </thead>
