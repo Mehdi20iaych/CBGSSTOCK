@@ -989,6 +989,13 @@ function App() {
                             </span>
                           </td>
                           <td className="border border-gray-300 p-3 text-center">
+                            {item.delivery_status && (
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.delivery_status_color}`}>
+                                {item.delivery_efficient ? '✅ Efficace' : '⚠️ Inefficace'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="border border-gray-300 p-3 text-center">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
                               {item.priority_text}
                             </span>
