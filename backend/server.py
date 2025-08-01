@@ -47,6 +47,13 @@ class CalculationRequest(BaseModel):
     product_filter: Optional[List[str]] = None
     packaging_filter: Optional[List[str]] = None
 
+class EnhancedCalculationRequest(BaseModel):
+    days: int
+    order_session_id: str
+    inventory_session_id: Optional[str] = None
+    product_filter: Optional[List[str]] = None
+    packaging_filter: Optional[List[str]] = None
+
 class GeminiQueryRequest(BaseModel):
     query: str
     session_id: str
