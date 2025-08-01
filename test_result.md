@@ -246,12 +246,7 @@
   run_ui: false
 
 ## test_plan:
-  current_focus:
-    - "Add inventory Excel upload endpoint"
-    - "Enhanced calculation with inventory cross-reference" 
-    - "Add dual file upload for order and inventory data"
-    - "Enhanced results table with inventory status"
-    - "Inventory summary statistics"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
