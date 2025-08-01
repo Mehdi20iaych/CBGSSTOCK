@@ -562,6 +562,8 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
             }
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du calcul des exigences: {str(e)}")
 
