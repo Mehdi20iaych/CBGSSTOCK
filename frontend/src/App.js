@@ -42,6 +42,37 @@ function App() {
     }
   };
 
+  const handleInventoryFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/upload-inventory-excel`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Erreur HTTP! statut: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setInventorySessionId(data.session_id);
+      setInventoryData(data);
+    } catch (err) {
+      setError(`Échec du téléchargement d'inventaire: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
