@@ -1003,6 +1003,12 @@ def main():
         ("Get Available Filters", tester.test_get_filters),
         ("Calculate Requirements", tester.test_calculate_requirements),
         ("Calculate with Packaging Filters", tester.test_calculate_with_packaging_filters),
+        # Sourcing Intelligence Tests
+        ("Sourcing Intelligence - Basic Calculate", tester.test_sourcing_intelligence_basic_calculate),
+        ("Sourcing Intelligence - Enhanced Calculate", tester.test_sourcing_intelligence_enhanced_calculate),
+        ("Sourcing Data Consistency", tester.test_sourcing_data_consistency),
+        ("Sourcing Specific Articles", tester.test_sourcing_specific_articles),
+        # AI and other tests
         ("Enhanced Gemini AI Queries", tester.test_gemini_query_enhanced),
         ("Gemini AI Query (French)", tester.test_gemini_query_french),
         ("Invalid Session ID", tester.test_invalid_session_id),
