@@ -346,12 +346,13 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
         grouped = order_df.groupby(['Nom Division', 'Article', 'Désignation Article', 'Type Emballage']).agg({
             'Quantité Commandée': 'sum',
             'Stock Utilisation Libre': 'last',
+            'Quantité en Palette': 'last',  # Add palette quantity
             'Date de Commande': ['min', 'max']
         }).reset_index()
         
         grouped.columns = [
             'depot', 'article_code', 'article_name', 'packaging_type',
-            'total_ordered', 'current_stock', 'first_date', 'last_date'
+            'total_ordered', 'current_stock', 'palette_quantity', 'first_date', 'last_date'
         ]
         
         # Calculate basic requirements
