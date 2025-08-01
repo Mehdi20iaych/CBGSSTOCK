@@ -163,7 +163,17 @@
           agent: "testing"
           comment: "✅ TESTED: Packaging filter enhancement working correctly. Upload endpoint returns only allowed packaging types (verre, pet, ciel) that exist in data. Sample file with mixed packaging types (including Canette, Tétra) correctly filtered to show only Pet and Verre. Display names properly formatted (e.g., 'Pet' -> 'Bouteille en Plastique (PET)'). Calculation endpoints work correctly with packaging filters."
   
-  - task: "Improve AI assistant context and prompting"
+  - task: "Add 20-palette delivery optimization constraint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"  
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "MAJOR ENHANCEMENT: Added sophisticated 20-palette minimum delivery constraint system. Backend now calculates total palettes per depot, suggests additional 'filler' products when depot doesn't reach 20 palettes, and modifies priorities based on delivery efficiency. Features: (1) Depot grouping and palette calculation, (2) Smart filler suggestion algorithm that finds additional products from same depot needing restocking, (3) Priority modification - inefficient depots get reduced priority, efficient depots get priority boost, (4) New response fields: palette_quantity, delivery_efficient, delivery_status, delivery_status_color, (5) Comprehensive depot summaries with suggested items and palettes needed. Applied to both /api/calculate and /api/enhanced-calculate endpoints."
     implemented: true
     working: true
     file: "/app/backend/server.py"
