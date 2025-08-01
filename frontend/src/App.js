@@ -703,6 +703,40 @@ function App() {
                   </div>
                 )}
 
+                {/* Sourcing Summary */}
+                {calculations.summary.sourcing_summary && (
+                  <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4">
+                    <h3 className="font-medium text-blue-800 mb-3">🏭 Analyse du Sourcing</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">🏭</span>
+                        <div>
+                          <div className="font-bold text-green-600">
+                            {formatNumber(calculations.summary.sourcing_summary.local_items || 0)}
+                          </div>
+                          <div className="text-green-700">Production Locale</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">🌍</span>
+                        <div>
+                          <div className="font-bold text-orange-600">
+                            {formatNumber(calculations.summary.sourcing_summary.external_items || 0)}
+                          </div>
+                          <div className="text-orange-700">Sourcing Externe</div>
+                        </div>
+                      </div>
+                    </div>
+                    {calculations.summary.sourcing_summary.external_items > 0 && (
+                      <div className="mt-3 p-3 bg-orange-100 rounded border border-orange-300">
+                        <p className="text-sm text-orange-800">
+                          ⚠️ <strong>Attention:</strong> {calculations.summary.sourcing_summary.external_items} article(s) nécessitent un sourcing externe.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {calculations.summary.inventory_status === 'no_inventory_data' && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <p className="text-sm text-yellow-800">
