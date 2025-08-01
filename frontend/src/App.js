@@ -398,42 +398,90 @@ function App() {
             {/* Upload Tab */}
             {activeTab === 'upload' && (
               <div className="space-y-6">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="file-upload"
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center space-y-2"
-                  >
-                    <div className="text-4xl text-gray-400">📊</div>
-                    <div className="text-lg font-medium text-gray-700">
-                      Télécharger Fichier Excel
+                {/* Order Data Upload */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-medium text-blue-800 mb-3">📊 1. Télécharger Données de Commandes</h3>
+                  <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="order-file-upload"
+                    />
+                    <label
+                      htmlFor="order-file-upload"
+                      className="cursor-pointer flex flex-col items-center space-y-2"
+                    >
+                      <div className="text-3xl text-blue-400">📈</div>
+                      <div className="text-lg font-medium text-blue-700">
+                        Fichier de Commandes Excel
+                      </div>
+                      <div className="text-sm text-blue-600">
+                        Avec colonnes: Date de Commande, Article, Quantité Commandée, etc.
+                      </div>
+                    </label>
+                  </div>
+
+                  {uploadedData && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                      <h4 className="font-medium text-green-800 mb-2">✅ Données de Commandes Chargées!</h4>
+                      <div className="text-sm text-green-700 space-y-1">
+                        <p>Enregistrements: <strong>{formatNumber(uploadedData.records_count)}</strong></p>
+                        <p>Période: <strong>{uploadedData.date_range.start}</strong> à <strong>{uploadedData.date_range.end}</strong></p>
+                        <p>Dépôts: <strong>{uploadedData.filters.depots.length}</strong> | Produits: <strong>{uploadedData.filters.products.length}</strong></p>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      Choisissez un fichier .xlsx ou .xls avec les données de stock et de commande
-                    </div>
-                  </label>
+                  )}
                 </div>
 
-                {uploadedData && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h3 className="font-medium text-green-800 mb-2">✅ Téléchargement Réussi!</h3>
-                    <div className="text-sm text-green-700 space-y-1">
-                      <p>Enregistrements traités: <strong>{formatNumber(uploadedData.records_count)}</strong></p>
-                      <p>Plage de dates: <strong>{uploadedData.date_range.start}</strong> à <strong>{uploadedData.date_range.end}</strong></p>
-                      <p>Total des jours: <strong>{uploadedData.date_range.total_days}</strong></p>
-                      <p>Dépôts: <strong>{uploadedData.filters.depots.length}</strong></p>
-                      <p>Produits: <strong>{uploadedData.filters.products.length}</strong></p>
-                      <p>Types d'emballage: <strong>{uploadedData.filters.packaging.length}</strong></p>
-                    </div>
+                {/* Inventory Data Upload */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h3 className="font-medium text-green-800 mb-3">📦 2. Télécharger Données d'Inventaire (Optionnel)</h3>
+                  <div className="border-2 border-dashed border-green-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+                    <input
+                      ref={inventoryFileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleInventoryFileUpload}
+                      className="hidden"
+                      id="inventory-file-upload"
+                    />
+                    <label
+                      htmlFor="inventory-file-upload"
+                      className="cursor-pointer flex flex-col items-center space-y-2"
+                    >
+                      <div className="text-3xl text-green-400">🏪</div>
+                      <div className="text-lg font-medium text-green-700">
+                        Fichier d'Inventaire Excel
+                      </div>
+                      <div className="text-sm text-green-600">
+                        Avec colonnes: Division, Article, Désignation article, STOCK À DATE
+                      </div>
+                    </label>
                   </div>
-                )}
+
+                  {inventoryData && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                      <h4 className="font-medium text-green-800 mb-2">✅ Données d'Inventaire Chargées!</h4>
+                      <div className="text-sm text-green-700 space-y-1">
+                        <p>Enregistrements: <strong>{formatNumber(inventoryData.records_count)}</strong></p>
+                        <p>Articles: <strong>{inventoryData.summary.articles_count}</strong></p>
+                        <p>Stock Total: <strong>{formatNumber(inventoryData.summary.total_stock)}</strong></p>
+                        <p>Divisions: <strong>{inventoryData.summary.divisions.join(', ')}</strong></p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!inventoryData && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
+                      <p className="text-sm text-yellow-700">
+                        💡 <strong>Recommandé:</strong> Téléchargez les données d'inventaire pour voir la disponibilité des stocks et identifier les articles manquants.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
