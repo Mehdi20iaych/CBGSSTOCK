@@ -393,6 +393,9 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                 'total_ordered_in_period': row['total_ordered'],
                 'priority': priority,
                 'priority_text': priority_text,
+                'sourcing_status': sourcing_status,
+                'sourcing_text': sourcing_text,
+                'is_locally_made': is_locally_made,
                 'selected': False
             }
             
