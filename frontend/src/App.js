@@ -959,6 +959,17 @@ function App() {
                               {formatNumber(item.quantity_to_send)}
                             </span>
                           </td>
+                          <td className="border border-gray-300 p-3 text-right">
+                            <span className={`font-medium ${
+                              item.palette_quantity > 0 
+                                ? item.delivery_efficient 
+                                  ? 'text-green-600' 
+                                  : 'text-orange-600'
+                                : 'text-gray-500'
+                            }`}>
+                              {item.palette_quantity || 0}
+                            </span>
+                          </td>
                           {calculations.summary.inventory_status === 'available' && (
                             <>
                               <td className="border border-gray-300 p-3 text-right">
