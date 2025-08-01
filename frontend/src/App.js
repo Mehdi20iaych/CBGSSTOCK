@@ -827,6 +827,15 @@ function App() {
                             </>
                           )}
                           <td className="border border-gray-300 p-3 text-center">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              item.is_locally_made 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-orange-100 text-orange-800'
+                            }`}>
+                              {item.sourcing_text || (item.is_locally_made ? 'Production Locale' : 'Sourcing Externe')}
+                            </span>
+                          </td>
+                          <td className="border border-gray-300 p-3 text-center">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
                               {item.priority_text}
                             </span>
