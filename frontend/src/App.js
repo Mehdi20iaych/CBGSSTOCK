@@ -742,6 +742,119 @@ function App() {
                   </div>
                 )}
 
+                {/* Delivery Optimization Summary */}
+                {calculations.summary.delivery_optimization && (
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+                    <h3 className="font-medium text-purple-800 mb-3">🚛 Optimisation des Livraisons (Contrainte 20 Palettes)</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">✅</span>
+                        <div>
+                          <div className="font-bold text-green-600">
+                            {formatNumber(calculations.summary.delivery_optimization.efficient_depots || 0)}
+                          </div>
+                          <div className="text-green-700">Dépôts Efficaces</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">⚠️</span>
+                        <div>
+                          <div className="font-bold text-orange-600">
+                            {formatNumber(calculations.summary.delivery_optimization.inefficient_depots || 0)}
+                          </div>
+                          <div className="text-orange-700">Dépôts Inefficaces</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">📦</span>
+                        <div>
+                          <div className="font-bold text-blue-600">
+                            {formatNumber(calculations.summary.delivery_optimization.total_palettes || 0)}
+                          </div>
+                          <div className="text-blue-700">Total Palettes</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">🎯</span>
+                        <div>
+                          <div className="font-bold text-purple-600">20</div>
+                          <div className="text-purple-700">Min. par Dépôt</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Depot Details */}
+                    {calculations.summary.delivery_optimization.depot_summaries && calculations.summary.delivery_optimization.depot_summaries.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="font-medium text-purple-800 mb-2">Détail par Dépôt:</h4>
+                        <div className="space-y-2">
+                          {calculations.summary.delivery_optimization.depot_summaries.map((depot, index) => (
+                            <div key={index} className={`p-3 rounded-lg border ${
+                              depot.delivery_status === 'efficient' 
+                                ? 'bg-green-50 border-green-200' 
+                                : 'bg-orange-50 border-orange-200'
+                            }`}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                  <span className={`text-lg ${
+                                    depot.delivery_status === 'efficient' ? 'text-green-600' : 'text-orange-600'
+                                  }`}>
+                                    {depot.delivery_status === 'efficient' ? '✅' : '⚠️'}
+                                  </span>
+                                  <span className="font-medium">{depot.depot_name}</span>
+                                  <span className={`text-sm px-2 py-1 rounded ${
+                                    depot.delivery_status === 'efficient'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-orange-100 text-orange-800'
+                                  }`}>
+                                    {depot.total_palettes} palettes
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {depot.items_count} article{depot.items_count !== 1 ? 's' : ''}
+                                </div>
+                              </div>
+                              
+                              {/* Suggestions for inefficient depots */}
+                              {depot.delivery_status === 'inefficient' && depot.suggested_items && depot.suggested_items.length > 0 && (
+                                <div className="mt-3 p-2 bg-white rounded border">
+                                  <div className="text-sm font-medium text-orange-800 mb-2">
+                                    💡 Suggestions pour atteindre 20 palettes ({depot.palettes_needed} palettes manquantes):
+                                  </div>
+                                  <div className="space-y-1">
+                                    {depot.suggested_items.slice(0, 3).map((suggestion, sugIndex) => (
+                                      <div key={sugIndex} className="text-xs text-gray-700 flex justify-between">
+                                        <span>{suggestion.article_code} - {suggestion.packaging_type}</span>
+                                        <span className="font-medium">
+                                          {formatNumber(suggestion.quantity_to_send)} unités ({suggestion.palette_quantity} pal.)
+                                        </span>
+                                      </div>
+                                    ))}
+                                    {depot.suggested_items.length > 3 && (
+                                      <div className="text-xs text-gray-500 italic">
+                                        ... et {depot.suggested_items.length - 3} autre(s) suggestion(s)
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {calculations.summary.delivery_optimization.inefficient_depots > 0 && (
+                      <div className="mt-3 p-3 bg-orange-100 rounded border border-orange-300">
+                        <p className="text-sm text-orange-800">
+                          🚛 <strong>Optimisation:</strong> {calculations.summary.delivery_optimization.inefficient_depots} dépôt(s) n'atteignent pas le minimum de 20 palettes. 
+                          Considérez ajouter les articles suggérés pour optimiser les coûts de livraison.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {calculations.summary.inventory_status === 'no_inventory_data' && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <p className="text-sm text-yellow-800">
