@@ -730,6 +730,7 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                 'required_for_x_days': round(required_stock, 2),
                 'quantity_to_send': round(quantity_to_send, 2),
                 'total_ordered_in_period': row['total_ordered'],
+                'palette_quantity': palettes_needed,
                 'priority': priority,
                 'priority_text': priority_text,
                 'sourcing_status': sourcing_status,
