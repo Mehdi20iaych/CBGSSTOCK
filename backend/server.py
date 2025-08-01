@@ -598,6 +598,9 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                 'total_ordered_in_period': row['total_ordered'],
                 'priority': priority,
                 'priority_text': priority_text,
+                'sourcing_status': sourcing_status,
+                'sourcing_text': sourcing_text,
+                'is_locally_made': is_locally_made,
                 'selected': False
             })
         
