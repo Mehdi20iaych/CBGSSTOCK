@@ -669,91 +669,350 @@ async def export_critical_items(session_id: str, request: ExportRequest):
         if session_id not in uploaded_data:
             raise HTTPException(status_code=404, detail="Session non trouvée")
         
-        # Create Excel workbook
+        # Create Excel workbook with multiple sheets
         wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Articles Critiques CBGS"
         
-        # Company header
-        ws['A1'] = "CBGS - Rapport d'Articles Critiques"
-        ws['A2'] = f"Date de génération: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
-        ws['A3'] = f"Nombre d'articles critiques: {len(request.selected_items)}"
+        # Remove default sheet and create custom sheets
+        wb.remove(wb.active)
         
-        # Style for header
-        header_font = Font(bold=True, size=14)
-        ws['A1'].font = header_font
-        ws['A2'].font = Font(bold=True)
-        ws['A3'].font = Font(bold=True)
+        # Create sheets
+        summary_sheet = wb.create_sheet("Résumé Exécutif")
+        critical_sheet = wb.create_sheet("Articles Critiques")
+        analysis_sheet = wb.create_sheet("Analyse Détaillée")
         
-        # Table headers
-        headers = [
-            'Dépôt', 'Code Article', 'Désignation Article', 'Type Emballage',
-            'Stock Actuel', 'Consommation Quotidienne', 'Jours de Couverture',
-            'Quantité Requise', 'Sourcing', 'Priorité', 'Action Recommandée'
+        # Professional color scheme
+        colors = {
+            'header_bg': "2E4C85",      # Professional blue
+            'header_text': "FFFFFF",     # White text
+            'critical_bg': "FFE6E6",     # Light red for critical
+            'medium_bg': "FFF2CC",       # Light yellow for medium
+            'low_bg': "E6F3E6",         # Light green for low
+            'local_bg': "E6F7FF",       # Light blue for local
+            'external_bg': "FFF7E6",    # Light orange for external
+            'summary_bg': "F8F9FA",     # Light gray for summary
+            'accent': "4A90E2"          # Accent blue
+        }
+        
+        # Professional fonts
+        header_font = Font(name="Calibri", size=12, bold=True, color=colors['header_text'])
+        title_font = Font(name="Calibri", size=16, bold=True, color=colors['header_bg'])
+        subtitle_font = Font(name="Calibri", size=11, bold=True, color=colors['header_bg'])
+        data_font = Font(name="Calibri", size=10)
+        
+        # ==================== SUMMARY SHEET ====================
+        current_row = 1
+        
+        # Company header with professional styling
+        summary_sheet.merge_cells(f'A{current_row}:H{current_row}')
+        header_cell = summary_sheet[f'A{current_row}']
+        header_cell.value = "CBGS - RAPPORT D'ANALYSE DES STOCKS CRITIQUES"
+        header_cell.font = Font(name="Calibri", size=18, bold=True, color=colors['header_bg'])
+        header_cell.alignment = Alignment(horizontal="center", vertical="center")
+        header_cell.fill = PatternFill(start_color=colors['summary_bg'], end_color=colors['summary_bg'], fill_type="solid")
+        summary_sheet.row_dimensions[current_row].height = 30
+        current_row += 2
+        
+        # Report metadata
+        metadata = [
+            ["Date de génération:", datetime.now().strftime('%d/%m/%Y à %H:%M')],
+            ["Nombre d'articles analysés:", len(request.selected_items)],
+            ["Session d'analyse:", session_id[:8] + "..."],
+            ["Période de couverture demandée:", "30 jours (standard)"]
         ]
         
-        row_num = 5
-        for col_num, header in enumerate(headers, 1):
-            cell = ws.cell(row=row_num, column=col_num, value=header)
-            cell.font = Font(bold=True)
-            cell.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
-            cell.font = Font(bold=True, color="FFFFFF")
-            cell.alignment = Alignment(horizontal="center")
+        for label, value in metadata:
+            summary_sheet[f'A{current_row}'] = label
+            summary_sheet[f'A{current_row}'].font = subtitle_font
+            summary_sheet[f'B{current_row}'] = value
+            summary_sheet[f'B{current_row}'].font = data_font
+            current_row += 1
+        current_row += 1
         
-        # Add data rows
-        for idx, item in enumerate(request.selected_items, 1):
-            row_num = 5 + idx
-            
-            # Determine action based on priority
-            if item['priority'] == 'high':
-                action = "URGENT - Réapprovisionnement immédiat"
-            elif item['priority'] == 'medium':
-                action = "Planifier réapprovisionnement"
+        # Calculate summary statistics
+        priority_counts = {'high': 0, 'medium': 0, 'low': 0}
+        sourcing_counts = {'local': 0, 'external': 0}
+        total_stock_needed = 0
+        total_current_stock = 0
+        
+        for item in request.selected_items:
+            priority_counts[item.get('priority', 'low')] += 1
+            if item.get('is_locally_made', False):
+                sourcing_counts['local'] += 1
             else:
-                action = "Surveiller"
+                sourcing_counts['external'] += 1
+            total_stock_needed += item.get('quantity_to_send', 0)
+            total_current_stock += item.get('current_stock', 0)
+        
+        # Summary statistics section
+        summary_sheet[f'A{current_row}'] = "RÉSUMÉ STATISTIQUE"
+        summary_sheet[f'A{current_row}'].font = title_font
+        summary_sheet.merge_cells(f'A{current_row}:H{current_row}')
+        current_row += 2
+        
+        # Priority breakdown
+        summary_sheet[f'A{current_row}'] = "Répartition par Priorité:"
+        summary_sheet[f'A{current_row}'].font = subtitle_font
+        current_row += 1
+        
+        priority_data = [
+            ["🔴 Priorité Critique:", priority_counts['high'], "Réapprovisionnement URGENT requis"],
+            ["🟡 Priorité Moyenne:", priority_counts['medium'], "Planification nécessaire"],
+            ["🟢 Priorité Faible:", priority_counts['low'], "Surveillance recommandée"]
+        ]
+        
+        for desc, count, action in priority_data:
+            summary_sheet[f'A{current_row}'] = desc
+            summary_sheet[f'A{current_row}'].font = data_font
+            summary_sheet[f'B{current_row}'] = count
+            summary_sheet[f'B{current_row}'].font = Font(name="Calibri", size=11, bold=True)
+            summary_sheet[f'C{current_row}'] = action
+            summary_sheet[f'C{current_row}'].font = data_font
+            current_row += 1
+        current_row += 1
+        
+        # Sourcing breakdown
+        summary_sheet[f'A{current_row}'] = "Analyse du Sourcing:"
+        summary_sheet[f'A{current_row}'].font = subtitle_font
+        current_row += 1
+        
+        sourcing_data = [
+            ["🏭 Production Locale:", sourcing_counts['local'], f"{(sourcing_counts['local']/len(request.selected_items)*100):.1f}%"],
+            ["🌍 Sourcing Externe:", sourcing_counts['external'], f"{(sourcing_counts['external']/len(request.selected_items)*100):.1f}%"]
+        ]
+        
+        for desc, count, percentage in sourcing_data:
+            summary_sheet[f'A{current_row}'] = desc
+            summary_sheet[f'A{current_row}'].font = data_font
+            summary_sheet[f'B{current_row}'] = count
+            summary_sheet[f'B{current_row}'].font = Font(name="Calibri", size=11, bold=True)
+            summary_sheet[f'C{current_row}'] = percentage
+            summary_sheet[f'C{current_row}'].font = data_font
+            current_row += 1
+        current_row += 1
+        
+        # Financial impact section
+        summary_sheet[f'A{current_row}'] = "Impact Logistique:"
+        summary_sheet[f'A{current_row}'].font = subtitle_font
+        current_row += 1
+        
+        impact_data = [
+            ["Stock actuel total:", f"{total_current_stock:,.0f} unités"],
+            ["Quantité à réapprovisionner:", f"{total_stock_needed:,.0f} unités"],
+            ["Ratio de réapprovisionnement:", f"{(total_stock_needed/total_current_stock*100):.1f}%" if total_current_stock > 0 else "N/A"]
+        ]
+        
+        for label, value in impact_data:
+            summary_sheet[f'A{current_row}'] = label
+            summary_sheet[f'A{current_row}'].font = data_font
+            summary_sheet[f'B{current_row}'] = value
+            summary_sheet[f'B{current_row}'].font = Font(name="Calibri", size=11, bold=True)
+            current_row += 1
+        
+        # Format summary sheet columns
+        for col in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']:
+            summary_sheet.column_dimensions[col].width = 25
+        
+        # ==================== CRITICAL ITEMS SHEET ====================
+        current_row = 1
+        
+        # Sheet header
+        critical_sheet.merge_cells(f'A{current_row}:L{current_row}')
+        header_cell = critical_sheet[f'A{current_row}']
+        header_cell.value = "DÉTAIL DES ARTICLES CRITIQUES"
+        header_cell.font = title_font
+        header_cell.alignment = Alignment(horizontal="center", vertical="center")
+        header_cell.fill = PatternFill(start_color=colors['summary_bg'], end_color=colors['summary_bg'], fill_type="solid")
+        critical_sheet.row_dimensions[current_row].height = 25
+        current_row += 2
+        
+        # Enhanced table headers
+        headers = [
+            ('Dépôt', 'Nom du dépôt concerné'),
+            ('Code Article', 'Référence produit unique'),
+            ('Désignation', 'Description complète du produit'),
+            ('Emballage', 'Type de conditionnement'),
+            ('Stock Actuel', 'Quantité en stock actuelle'),
+            ('Conso. Quotidienne', 'Consommation moyenne par jour'),
+            ('Jours Couverture', 'Autonomie actuelle en jours'),
+            ('Quantité Requise', 'Quantité à réapprovisionner'),
+            ('Sourcing', 'Mode d\'approvisionnement'),
+            ('Priorité', 'Niveau d\'urgence'),
+            ('Statut', 'État de criticité'),
+            ('Action Recommandée', 'Mesure à prendre')
+        ]
+        
+        # Create header row with professional styling
+        for col_num, (header, description) in enumerate(headers, 1):
+            cell = critical_sheet.cell(row=current_row, column=col_num, value=header)
+            cell.font = header_font
+            cell.fill = PatternFill(start_color=colors['header_bg'], end_color=colors['header_bg'], fill_type="solid")
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = openpyxl.styles.Border(
+                left=openpyxl.styles.Side(style='thin'),
+                right=openpyxl.styles.Side(style='thin'),
+                top=openpyxl.styles.Side(style='thin'),
+                bottom=openpyxl.styles.Side(style='thin')
+            )
+            
+            # Add description as comment
+            comment = openpyxl.comments.Comment(description, "CBGS System")
+            comment.width = 200
+            comment.height = 50
+            cell.comment = comment
+        
+        critical_sheet.row_dimensions[current_row].height = 20
+        current_row += 1
+        
+        # Sort items by priority (critical first) then by quantity needed
+        sorted_items = sorted(request.selected_items, 
+                            key=lambda x: (0 if x.get('priority') == 'high' else 1 if x.get('priority') == 'medium' else 2, 
+                                         -x.get('quantity_to_send', 0)))
+        
+        # Add data rows with enhanced formatting
+        for idx, item in enumerate(sorted_items, 1):
+            # Determine action and status based on priority and data
+            priority = item.get('priority', 'low')
+            if priority == 'high':
+                action = "🚨 URGENT - Réapprovisionnement IMMÉDIAT"
+                status = "CRITIQUE"
+                row_fill = colors['critical_bg']
+            elif priority == 'medium':
+                action = "⚠️ Planifier réapprovisionnement sous 7 jours"
+                status = "ATTENTION"
+                row_fill = colors['medium_bg']
+            else:
+                action = "✅ Surveiller évolution"
+                status = "STABLE"
+                row_fill = colors['low_bg']
+            
+            # Determine sourcing background
+            if item.get('is_locally_made', False):
+                sourcing_fill = colors['local_bg']
+            else:
+                sourcing_fill = colors['external_bg']
             
             row_data = [
-                item['depot'],
-                item['article_code'],
-                item['article_name'],
-                item['packaging_type'],
-                item['current_stock'],
-                item['average_daily_consumption'],
-                item['days_of_coverage'],
-                item['quantity_to_send'],
+                item.get('depot', ''),
+                item.get('article_code', ''),
+                item.get('article_name', ''),
+                item.get('packaging_type', ''),
+                item.get('current_stock', 0),
+                round(item.get('average_daily_consumption', 0), 2),
+                item.get('days_of_coverage', 0),
+                round(item.get('quantity_to_send', 0), 2),
                 item.get('sourcing_text', 'Non défini'),
-                item['priority_text'],
+                item.get('priority_text', ''),
+                status,
                 action
             ]
             
             for col_num, value in enumerate(row_data, 1):
-                cell = ws.cell(row=row_num, column=col_num, value=value)
-                if item['priority'] == 'high':
-                    cell.fill = PatternFill(start_color="FFE6E6", end_color="FFE6E6", fill_type="solid")
-                elif item['priority'] == 'medium':
-                    cell.fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+                cell = critical_sheet.cell(row=current_row, column=col_num, value=value)
+                cell.font = data_font
+                cell.alignment = Alignment(horizontal="left" if col_num <= 4 else "center" if col_num >= 10 else "right")
+                
+                # Apply conditional formatting
+                if col_num == 9:  # Sourcing column
+                    cell.fill = PatternFill(start_color=sourcing_fill, end_color=sourcing_fill, fill_type="solid")
+                elif col_num == 10:  # Priority column
+                    if priority == 'high':
+                        cell.font = Font(name="Calibri", size=10, bold=True, color="CC0000")
+                    elif priority == 'medium':
+                        cell.font = Font(name="Calibri", size=10, bold=True, color="FF8C00")
+                elif col_num == 11:  # Status column
+                    cell.fill = PatternFill(start_color=row_fill, end_color=row_fill, fill_type="solid")
+                    cell.font = Font(name="Calibri", size=10, bold=True)
+                
+                # Add borders
+                cell.border = openpyxl.styles.Border(
+                    left=openpyxl.styles.Side(style='thin'),
+                    right=openpyxl.styles.Side(style='thin'),
+                    top=openpyxl.styles.Side(style='thin'),
+                    bottom=openpyxl.styles.Side(style='thin')
+                )
+            
+            current_row += 1
         
-        # Auto-adjust column widths
-        for column in ws.columns:
-            max_length = 0
-            column_letter = column[0].column_letter
-            for cell in column:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except:
-                    pass
-            adjusted_width = min(max_length + 2, 50)
-            ws.column_dimensions[column_letter].width = adjusted_width
+        # ==================== ANALYSIS SHEET ====================
+        current_row = 1
+        
+        # Sheet header
+        analysis_sheet.merge_cells(f'A{current_row}:F{current_row}')
+        header_cell = analysis_sheet[f'A{current_row}']
+        header_cell.value = "ANALYSE APPROFONDIE PAR CATÉGORIE"
+        header_cell.font = title_font
+        header_cell.alignment = Alignment(horizontal="center", vertical="center")
+        header_cell.fill = PatternFill(start_color=colors['summary_bg'], end_color=colors['summary_bg'], fill_type="solid")
+        analysis_sheet.row_dimensions[current_row].height = 25
+        current_row += 2
+        
+        # Group items by depot
+        depot_groups = {}
+        for item in request.selected_items:
+            depot = item.get('depot', 'Non spécifié')
+            if depot not in depot_groups:
+                depot_groups[depot] = []
+            depot_groups[depot].append(item)
+        
+        # Depot analysis
+        for depot, items in depot_groups.items():
+            analysis_sheet[f'A{current_row}'] = f"DÉPÔT: {depot}"
+            analysis_sheet[f'A{current_row}'].font = subtitle_font
+            analysis_sheet.merge_cells(f'A{current_row}:F{current_row}')
+            current_row += 1
+            
+            # Depot statistics
+            depot_critical = len([item for item in items if item.get('priority') == 'high'])
+            depot_total_needed = sum([item.get('quantity_to_send', 0) for item in items])
+            depot_local = len([item for item in items if item.get('is_locally_made', False)])
+            
+            stats = [
+                ["Articles critiques:", depot_critical],
+                ["Total à réapprovisionner:", f"{depot_total_needed:,.0f} unités"],
+                ["Production locale:", f"{depot_local}/{len(items)} articles"],
+                ["Taux de criticité:", f"{(depot_critical/len(items)*100):.1f}%"]
+            ]
+            
+            for label, value in stats:
+                analysis_sheet[f'B{current_row}'] = label
+                analysis_sheet[f'B{current_row}'].font = data_font
+                analysis_sheet[f'C{current_row}'] = value
+                analysis_sheet[f'C{current_row}'].font = Font(name="Calibri", size=10, bold=True)
+                current_row += 1
+            
+            current_row += 1
+        
+        # Professional column widths and formatting
+        column_widths = {
+            'critical': [15, 12, 25, 12, 12, 15, 12, 15, 18, 12, 12, 35],
+            'summary': [25, 20, 30, 15, 15, 15, 15, 15],
+            'analysis': [20, 25, 20, 15, 15, 15]
+        }
+        
+        # Apply column widths
+        for i, width in enumerate(column_widths['critical'], 1):
+            critical_sheet.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+        
+        for i, width in enumerate(column_widths['summary'], 1):
+            summary_sheet.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+            
+        for i, width in enumerate(column_widths['analysis'], 1):
+            analysis_sheet.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+        
+        # Freeze panes for better navigation
+        critical_sheet.freeze_panes = 'A4'
+        
+        # Add auto-filter to critical items
+        critical_sheet.auto_filter.ref = f"A3:L{len(sorted_items) + 3}"
         
         # Save to BytesIO
         excel_buffer = BytesIO()
         wb.save(excel_buffer)
         excel_buffer.seek(0)
         
-        # Create filename with timestamp
+        # Create professional filename with timestamp
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"CBGS_Articles_Critiques_{timestamp}.xlsx"
+        filename = f"CBGS_Rapport_Stocks_Critiques_{timestamp}.xlsx"
         
         # Return file as download
         return StreamingResponse(
@@ -763,7 +1022,7 @@ async def export_critical_items(session_id: str, request: ExportRequest):
         )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'export professionnel: {str(e)}")
 
 @app.post("/api/gemini-query/{session_id}")
 async def gemini_query(session_id: str, request: GeminiQueryRequest):
