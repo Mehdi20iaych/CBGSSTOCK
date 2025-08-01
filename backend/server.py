@@ -100,13 +100,16 @@ async def upload_inventory_excel(file: UploadFile = File(...)):
         # Remove rows with invalid data
         df = df.dropna(subset=['Article', 'STOCK À DATE'])
         
+        # Convert numpy types to Python native types for MongoDB compatibility
+        df['STOCK À DATE'] = df['STOCK À DATE'].astype(float)
+        
         # Generate session ID for this inventory upload
         session_id = str(uuid.uuid4())
         
         # Get unique values for overview
         unique_divisions = sorted(df['Division'].unique().tolist())
         unique_articles = sorted(df['Article'].unique().tolist())
-        total_stock = df['STOCK À DATE'].sum()
+        total_stock = float(df['STOCK À DATE'].sum())  # Convert to Python float
         
         # Store inventory data temporarily
         inventory_data[session_id] = {
