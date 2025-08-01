@@ -269,6 +269,30 @@
           agent: "testing"
           comment: "✅ COMPREHENSIVE SOURCING INTELLIGENCE TESTING COMPLETED: All sourcing functionality working perfectly! Executed 31 total tests (28 comprehensive backend tests + 3 focused sourcing tests) - ALL PASSED. Key findings: (1) Basic calculation endpoint (/api/calculate) correctly returns sourcing_status, sourcing_text, and is_locally_made fields for all items, (2) Enhanced calculation endpoint (/api/enhanced-calculate) includes sourcing fields with inventory cross-reference functionality, (3) Sourcing logic validation confirmed - articles 1011, 1016, 1021, 1033 correctly identified as local (is_locally_made=true, sourcing_status='local', sourcing_text='Production Locale'), articles 9999, 8888 correctly identified as external (is_locally_made=false, sourcing_status='external', sourcing_text='Sourcing Externe'), (4) Summary statistics include sourcing_summary with accurate local_items and external_items counts (4 local, 2 external in test), (5) Data consistency verified - sourcing fields are identical between basic and enhanced calculations. LOCALLY_MADE_ARTICLES list with 57 article codes working correctly. System ready for production use with full sourcing intelligence capabilities."
 
+  - task: "Ensure critical priority items always appear first in results display"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Updated getDisplayedCalculations() function to ensure critical priority items (priority === 'high') always appear first in results table, regardless of other sorting criteria like inventory status. This addresses the requirement that 'Priorité critique should be always on top in voir resultat'."
+
+  - task: "Add sourcing information to Excel export"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Enhanced Excel export functionality to include 'Sourcing' column showing 'Production Locale' for locally made articles and 'Sourcing Externe' for external articles. Modified export-critical endpoint headers and data rows to include sourcing_text field, addressing requirement for sourcing information in exported Excel files."
+
 ## metadata:
   created_by: "main_agent"
   version: "1.0"
