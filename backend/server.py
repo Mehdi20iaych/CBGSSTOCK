@@ -571,6 +571,8 @@ async def get_inventory_data(session_id: str):
         
         return inventory_data[session_id]
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des données d'inventaire: {str(e)}")
 
