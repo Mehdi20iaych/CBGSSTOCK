@@ -58,6 +58,33 @@ class StockManagementAPITester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
+    def create_sample_inventory_excel_file(self):
+        """Create a sample inventory Excel file for testing"""
+        # Create sample inventory data with required columns
+        inventory_data = {
+            'Division': ['M210', 'M210', 'M210', 'M210', 'M210', 'M210', 'M210'],
+            'Article': ['ART001', 'ART002', 'ART003', 'ART004', 'ART005', 'ART006', 'ART007'],
+            'Désignation article': [
+                'COCA-COLA 33CL VERRE',
+                'PEPSI 50CL PET', 
+                'SPRITE 33CL VERRE',
+                'FANTA 33CL VERRE',
+                'ORANGINA 25CL VERRE',
+                'COCA-COLA ZERO 33CL PET',
+                'PEPSI MAX 50CL PET'
+            ],
+            'STOCK À DATE': [1500, 800, 600, 1200, 300, 900, 450]
+        }
+        
+        df = pd.DataFrame(inventory_data)
+        
+        # Create Excel file in memory
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        return excel_buffer
+
     def create_sample_excel_file(self):
         """Create a sample Excel file for testing with various packaging types"""
         # Create sample data with required columns including non-allowed packaging types
