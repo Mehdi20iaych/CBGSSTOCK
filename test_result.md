@@ -112,12 +112,36 @@
   The system should cross-reference order requirements with inventory availability and show fulfillment status.
 
 ## backend:
+  - task: "Add inventory Excel upload endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added /api/upload-inventory-excel endpoint to handle inventory data with columns Division, Article, Désignation article, STOCK À DATE"
+
+  - task: "Enhanced calculation with inventory cross-reference"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high" 
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added /api/enhanced-calculate endpoint that matches order requirements with inventory availability, shows fulfillment status (sufficient/partial/insufficient/not_found)"
+
   - task: "Filter packaging types to only verre, pet, ciel"
     implemented: true
     working: true  
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "high"
+    priority: "medium"
     needs_retesting: false
     status_history:
         - working: "NA"
@@ -132,7 +156,7 @@
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "medium"  
+    priority: "low"  
     needs_retesting: false
     status_history:
         - working: "NA"
