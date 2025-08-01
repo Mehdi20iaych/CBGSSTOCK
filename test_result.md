@@ -332,7 +332,9 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: []
+  current_focus:
+    - "Add 20-palette delivery optimization constraint"
+    - "Add delivery optimization UI with depot summaries and efficiency indicators"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
