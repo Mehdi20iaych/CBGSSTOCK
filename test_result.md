@@ -114,27 +114,33 @@
 ## backend:
   - task: "Add inventory Excel upload endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Added /api/upload-inventory-excel endpoint to handle inventory data with columns Division, Article, Désignation article, STOCK À DATE"
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Inventory Excel upload endpoint working perfectly. Successfully uploads inventory data with required columns (Division, Article, Désignation article, STOCK À DATE). Returns proper session_id and summary statistics including divisions, articles_count, total_stock, and records_count. Error handling works correctly for missing columns (returns 400 status). MongoDB serialization issues fixed by converting numpy types to Python native types. Tested with 7 inventory records totaling 5750 units."
 
   - task: "Enhanced calculation with inventory cross-reference"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high" 
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Added /api/enhanced-calculate endpoint that matches order requirements with inventory availability, shows fulfillment status (sufficient/partial/insufficient/not_found)"
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Enhanced calculation with inventory cross-reference working excellently. Successfully matches order requirements with inventory availability using article codes. Returns proper inventory status fields (inventory_available, can_fulfill, inventory_status, inventory_status_text, inventory_status_color). Inventory shortage calculations work correctly. Summary statistics include sufficient_items, partial_items, insufficient_items, not_found_items counts. Works with and without inventory data. Proper error handling for invalid sessions (404). Filters work correctly with inventory data. All 6 test items showed 'sufficient' status with proper inventory matching."
 
   - task: "Filter packaging types to only verre, pet, ciel"
     implemented: true
