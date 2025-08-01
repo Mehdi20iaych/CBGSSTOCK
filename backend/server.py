@@ -357,9 +357,9 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                 matching_inventory = inventory_df[inventory_df['Article'].astype(str) == str(row['article_code'])]
                 
                 if not matching_inventory.empty:
-                    total_available = matching_inventory['STOCK À DATE'].sum()
+                    total_available = float(matching_inventory['STOCK À DATE'].sum())
                     result_item['inventory_available'] = total_available
-                    result_item['can_fulfill'] = total_available >= quantity_to_send
+                    result_item['can_fulfill'] = bool(total_available >= quantity_to_send)
                     
                     if total_available >= quantity_to_send:
                         result_item['inventory_status'] = 'sufficient'
@@ -369,19 +369,19 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                         result_item['inventory_status'] = 'partial'
                         result_item['inventory_status_text'] = '⚠️ Partiel'
                         result_item['inventory_status_color'] = 'text-yellow-600 bg-yellow-50'
-                        result_item['inventory_shortage'] = quantity_to_send - total_available
+                        result_item['inventory_shortage'] = float(quantity_to_send - total_available)
                     else:
                         result_item['inventory_status'] = 'insufficient'
                         result_item['inventory_status_text'] = '❌ Insuffisant'
                         result_item['inventory_status_color'] = 'text-red-600 bg-red-50'
-                        result_item['inventory_shortage'] = quantity_to_send
+                        result_item['inventory_shortage'] = float(quantity_to_send)
                 else:
-                    result_item['inventory_available'] = 0
+                    result_item['inventory_available'] = 0.0
                     result_item['can_fulfill'] = False
                     result_item['inventory_status'] = 'not_found'
                     result_item['inventory_status_text'] = '❓ Non trouvé'
                     result_item['inventory_status_color'] = 'text-gray-600 bg-gray-50'
-                    result_item['inventory_shortage'] = quantity_to_send
+                    result_item['inventory_shortage'] = float(quantity_to_send)
             else:
                 result_item['inventory_status'] = 'no_data'
                 result_item['inventory_status_text'] = '📋 Pas de données'
