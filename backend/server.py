@@ -374,6 +374,11 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             
             item_id = f"{row['depot']}_{row['article_code']}_{row['packaging_type']}"
             
+            # Check if article is locally made
+            is_locally_made = str(row['article_code']) in LOCALLY_MADE_ARTICLES
+            sourcing_status = 'local' if is_locally_made else 'external'
+            sourcing_text = 'Production Locale' if is_locally_made else 'Sourcing Externe'
+            
             result_item = {
                 'id': item_id,
                 'depot': row['depot'],
