@@ -2415,6 +2415,13 @@ def main():
         ("Get Available Filters", tester.test_get_filters),
         ("Calculate Requirements", tester.test_calculate_requirements),
         ("Calculate with Packaging Filters", tester.test_calculate_with_packaging_filters),
+        # 20-Palette Delivery Optimization Tests
+        ("20-Palette Delivery Optimization - Basic", tester.test_20_palette_delivery_optimization_basic),
+        ("20-Palette Delivery Optimization - Enhanced", tester.test_20_palette_delivery_optimization_enhanced),
+        ("20-Palette Edge Cases", tester.test_20_palette_edge_cases),
+        ("20-Palette Filler Suggestions Logic", tester.test_20_palette_filler_suggestions_logic),
+        ("20-Palette Priority Modifications", tester.test_20_palette_priority_modifications),
+        ("20-Palette Response Structure", tester.test_20_palette_response_structure),
         # Sourcing Intelligence Tests
         ("Sourcing Intelligence - Basic Calculate", tester.test_sourcing_intelligence_basic_calculate),
         ("Sourcing Intelligence - Enhanced Calculate", tester.test_sourcing_intelligence_enhanced_calculate),
