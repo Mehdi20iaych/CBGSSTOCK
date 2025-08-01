@@ -103,10 +103,13 @@
 #====================================================================================================
 
 ## user_problem_statement: |
-  User requested improvements to the CBGS stock management system:
-  1. Add "select all" option to "Filtrer par Produits" section
-  2. Modify "Filtrer par Emballage" to only show verre, pet, and ciel (dynamically based on Excel data)
-  3. Improve AI assistant but keep design unchanged
+  User requested to add Excel import functionality for inventory data to complement existing order data:
+  - Column A: Division (M210 for local production)
+  - Column B: Article (unique product code)  
+  - Column C: Désignation article (product name and packaging details)
+  - Column D: STOCK À DATE (current stock quantity)
+  
+  The system should cross-reference order requirements with inventory availability and show fulfillment status.
 
 ## backend:
   - task: "Filter packaging types to only verre, pet, ciel"
