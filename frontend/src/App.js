@@ -766,6 +766,12 @@ function App() {
                         <th className="border border-gray-300 p-3 text-right">Jours Couv.</th>
                         <th className="border border-gray-300 p-3 text-right">Stock Actuel</th>
                         <th className="border border-gray-300 p-3 text-right">Quantité à Envoyer</th>
+                        {calculations.summary.inventory_status === 'available' && (
+                          <>
+                            <th className="border border-gray-300 p-3 text-right">Stock Inventaire</th>
+                            <th className="border border-gray-300 p-3 text-center">Disponibilité</th>
+                          </>
+                        )}
                         <th className="border border-gray-300 p-3 text-center">Priorité</th>
                       </tr>
                     </thead>
@@ -798,6 +804,27 @@ function App() {
                               {formatNumber(item.quantity_to_send)}
                             </span>
                           </td>
+                          {calculations.summary.inventory_status === 'available' && (
+                            <>
+                              <td className="border border-gray-300 p-3 text-right">
+                                <span className="font-medium">
+                                  {item.inventory_available !== undefined ? formatNumber(item.inventory_available) : '-'}
+                                </span>
+                                {item.inventory_shortage > 0 && (
+                                  <div className="text-xs text-red-600 mt-1">
+                                    Manque: {formatNumber(item.inventory_shortage)}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="border border-gray-300 p-3 text-center">
+                                {item.inventory_status && (
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.inventory_status_color}`}>
+                                    {item.inventory_status_text}
+                                  </span>
+                                )}
+                              </td>
+                            </>
+                          )}
                           <td className="border border-gray-300 p-3 text-center">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
                               {item.priority_text}
