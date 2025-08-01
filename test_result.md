@@ -283,15 +283,18 @@
 
   - task: "Add sourcing information to Excel export"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Enhanced Excel export functionality to include 'Sourcing' column showing 'Production Locale' for locally made articles and 'Sourcing Externe' for external articles. Modified export-critical endpoint headers and data rows to include sourcing_text field, addressing requirement for sourcing information in exported Excel files."
+        - working: true
+          agent: "testing"
+          comment: "✅ EXCEL EXPORT SOURCING ENHANCEMENT TESTED: All Excel export functionality working perfectly! Comprehensive testing verified: (1) /api/export-critical/{session_id} endpoint successfully includes new 'Sourcing' column in Excel exports, (2) Excel files now contain 11 columns including the new Sourcing column, (3) Sourcing logic correctly implemented - articles in LOCALLY_MADE_ARTICLES list (like 1011, 1016, 1021, 1033) show 'Production Locale', articles NOT in list (like 9999, 8888) show 'Sourcing Externe', (4) Excel file downloads correctly with proper filename format and content-type headers, (5) All existing functionality maintained - regression testing confirmed all 11 expected columns present with correct data, (6) Sourcing information properly populated from sourcing_text field in calculation results. Excel export enhancement successfully implemented with no breaking changes to existing features."
 
 ## metadata:
   created_by: "main_agent"
