@@ -739,6 +739,113 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                 'selected': False
             })
         
+        # ==================== 20-PALETTE DELIVERY OPTIMIZATION ====================
+        # Group results by depot to calculate delivery efficiency
+        depot_groups = {}
+        for item in results:
+            depot = item['depot']
+            if depot not in depot_groups:
+                depot_groups[depot] = {
+                    'items': [],
+                    'total_palettes': 0,
+                    'delivery_status': 'efficient',
+                    'suggested_items': []
+                }
+            depot_groups[depot]['items'].append(item)
+            depot_groups[depot]['total_palettes'] += item['palette_quantity']
+        
+        # Process each depot for 20-palette minimum constraint
+        for depot_name, depot_info in depot_groups.items():
+            if depot_info['total_palettes'] < 20:
+                depot_info['delivery_status'] = 'inefficient'
+                palettes_needed = 20 - depot_info['total_palettes']
+                
+                # Find potential filler items from the same depot
+                depot_all_items = df[df['Nom Division'] == depot_name]
+                
+                # Get items that are not already in results
+                current_item_codes = {item['article_code'] for item in depot_info['items']}
+                potential_fillers = depot_all_items[~depot_all_items['Article'].astype(str).isin(current_item_codes)]
+                
+                # Calculate potential filler suggestions
+                filler_suggestions = []
+                if not potential_fillers.empty:
+                    # Group potential fillers and calculate basic metrics
+                    filler_grouped = potential_fillers.groupby(['Article', 'Désignation Article', 'Type Emballage']).agg({
+                        'Quantité Commandée': 'sum',
+                        'Stock Utilisation Libre': 'last',
+                        'Quantité en Palette': 'last'
+                    }).reset_index()
+                    
+                    # Calculate priority for each potential filler
+                    for _, filler_row in filler_grouped.iterrows():
+                        filler_adc = filler_row['Quantité Commandée'] / date_range_days if date_range_days > 0 else 0
+                        filler_doc = filler_row['Stock Utilisation Libre'] / filler_adc if filler_adc > 0 else float('inf')
+                        filler_required = request.days * filler_adc
+                        filler_to_send = max(0, filler_required - filler_row['Stock Utilisation Libre'])
+                        
+                        if filler_to_send > 0:  # Only suggest items that actually need restocking
+                            filler_suggestions.append({
+                                'article_code': filler_row['Article'],
+                                'article_name': filler_row['Désignation Article'],
+                                'packaging_type': filler_row['Type Emballage'],
+                                'current_stock': filler_row['Stock Utilisation Libre'],
+                                'quantity_to_send': round(filler_to_send, 2),
+                                'palette_quantity': filler_row['Quantité en Palette'],
+                                'days_of_coverage': round(filler_doc, 1) if filler_doc != float('inf') else 'Infinie',
+                                'average_daily_consumption': round(filler_adc, 2)
+                            })
+                    
+                    # Sort by days of coverage (lowest first - most urgent)
+                    filler_suggestions.sort(key=lambda x: x['days_of_coverage'] if isinstance(x['days_of_coverage'], (int, float)) else float('inf'))
+                
+                depot_info['suggested_items'] = filler_suggestions[:5]  # Limit to top 5 suggestions
+                depot_info['palettes_needed_to_reach_minimum'] = palettes_needed
+                
+                # Modify priority of existing items in inefficient depots
+                for item in depot_info['items']:
+                    if item['priority'] == 'medium':
+                        item['priority'] = 'low'
+                        item['priority_text'] = 'Faible (Livr. Inefficace)'
+                    elif item['priority'] == 'high':
+                        item['priority'] = 'medium' 
+                        item['priority_text'] = 'Moyen (Livr. Inefficace)'
+                    # Add delivery efficiency flags
+                    item['delivery_efficient'] = False
+                    item['delivery_status'] = 'Livraison inefficace (<20 palettes)'
+                    item['delivery_status_color'] = 'text-orange-600 bg-orange-50'
+            else:
+                # Efficient delivery - boost priority for urgent items
+                for item in depot_info['items']:
+                    if item['priority'] == 'medium':
+                        item['priority'] = 'high'
+                        item['priority_text'] = 'Critique (Livr. Efficace)'
+                    # Add delivery efficiency flags
+                    item['delivery_efficient'] = True
+                    item['delivery_status'] = 'Livraison efficace (≥20 palettes)'
+                    item['delivery_status_color'] = 'text-green-600 bg-green-50'
+        
+        # Update results with delivery optimization information
+        optimized_results = []
+        depot_summaries = []
+        
+        for depot_name, depot_info in depot_groups.items():
+            # Add depot summary
+            depot_summaries.append({
+                'depot_name': depot_name,
+                'total_palettes': depot_info['total_palettes'],
+                'delivery_status': depot_info['delivery_status'],
+                'items_count': len(depot_info['items']),
+                'suggested_items': depot_info['suggested_items'],
+                'palettes_needed': depot_info.get('palettes_needed_to_reach_minimum', 0)
+            })
+            
+            # Add items to optimized results
+            optimized_results.extend(depot_info['items'])
+        
+        # Replace original results with optimized results
+        results = optimized_results
+        
         # Sort by priority (high first) and then by quantity needed (descending)
         priority_order = {'high': 0, 'medium': 1, 'low': 2}
         results.sort(key=lambda x: (priority_order[x['priority']], -x['quantity_to_send']))
@@ -759,6 +866,13 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                 "sourcing_summary": {
                     "local_items": len([r for r in results if r['is_locally_made']]),
                     "external_items": len([r for r in results if not r['is_locally_made']])
+                },
+                # Add delivery optimization summary
+                "delivery_optimization": {
+                    "efficient_depots": len([d for d in depot_summaries if d['delivery_status'] == 'efficient']),
+                    "inefficient_depots": len([d for d in depot_summaries if d['delivery_status'] == 'inefficient']), 
+                    "total_palettes": sum([d['total_palettes'] for d in depot_summaries]),
+                    "depot_summaries": depot_summaries
                 }
             }
         }
