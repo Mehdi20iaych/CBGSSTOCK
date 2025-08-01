@@ -469,7 +469,13 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             "high_priority": [r for r in results if r['priority'] == 'high'],
             "medium_priority": [r for r in results if r['priority'] == 'medium'],
             "low_priority": [r for r in results if r['priority'] == 'low'],
-            "no_stock_needed": [r for r in results if r['quantity_to_send'] == 0]
+            "no_stock_needed": [r for r in results if r['quantity_to_send'] == 0],
+            "locally_made": [r for r in results if r['is_locally_made']],
+            "external_sourcing": [r for r in results if not r['is_locally_made']],
+            "sourcing_summary": {
+                "local_items": len([r for r in results if r['is_locally_made']]),
+                "external_items": len([r for r in results if not r['is_locally_made']])
+            }
         }
         
         # Add inventory-specific summary if available
