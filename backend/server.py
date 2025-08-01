@@ -670,13 +670,14 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
         grouped = df.groupby(['Nom Division', 'Article', 'Désignation Article', 'Type Emballage']).agg({
             'Quantité Commandée': 'sum',
             'Stock Utilisation Libre': 'last',  # Take the most recent stock level
+            'Quantité en Palette': 'last',  # Add palette quantity
             'Date de Commande': ['min', 'max']
         }).reset_index()
         
         # Flatten column names
         grouped.columns = [
             'depot', 'article_code', 'article_name', 'packaging_type',
-            'total_ordered', 'current_stock', 'first_date', 'last_date'
+            'total_ordered', 'current_stock', 'palette_quantity', 'first_date', 'last_date'
         ]
         
         # Calculate metrics
