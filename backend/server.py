@@ -440,7 +440,7 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                     result_item['inventory_status'] = 'not_found'
                     result_item['inventory_status_text'] = '❓ Non trouvé'
                     result_item['inventory_status_color'] = 'text-gray-600 bg-gray-50'
-                    result_item['inventory_shortage'] = float(quantity_to_send)
+                    result_item['inventory_shortage'] = round(quantity_to_send, 2)
             else:
                 result_item['inventory_status'] = 'no_data'
                 result_item['inventory_status_text'] = '📋 Pas de données'
