@@ -356,49 +356,53 @@ function App() {
 
           <div className="p-6">
             {/* Tab Navigation */}
-            <div className="flex space-x-4 mb-6">
+            <div className="flex space-x-2 mb-6 bg-slate-100 p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab('upload')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'upload'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                📄 Télécharger Données
+                <DocumentIcon className="w-4 h-4" />
+                <span>Télécharger Données</span>
               </button>
               <button
                 onClick={() => setActiveTab('calculate')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'calculate'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
                 } ${!sessionId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!sessionId}
               >
-                🧮 Calculer Besoins
+                <ChartPieIcon className="w-4 h-4" />
+                <span>Calculer Besoins</span>
               </button>
               <button
                 onClick={() => setActiveTab('results')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'results'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
                 } ${!calculations ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!calculations}
               >
-                📊 Voir Résultats
+                <ChartBarIcon className="w-4 h-4" />
+                <span>Voir Résultats</span>
               </button>
               <button
                 onClick={() => setActiveTab('ai')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'ai'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
                 } ${!sessionId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!sessionId}
               >
-                🤖 Analyses IA
+                <MagnifyingGlassIcon className="w-4 h-4" />
+                <span>Analyses IA</span>
               </button>
             </div>
 
