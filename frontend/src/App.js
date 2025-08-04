@@ -672,7 +672,7 @@ function App() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-2xl">⚠️</span>
+                        <span className="text-2xl font-bold text-yellow-600">[!]</span>
                         <div>
                           <div className="font-bold text-yellow-600">
                             {formatNumber(calculations.summary.partial_items || 0)}
