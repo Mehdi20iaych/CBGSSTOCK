@@ -301,7 +301,8 @@ function App() {
 
   const formatNumber = (num) => {
     if (typeof num === 'number') {
-      return num.toLocaleString('fr-FR');
+      // Round to 2 decimal places and use French locale formatting
+      return Number(num.toFixed(2)).toLocaleString('fr-FR');
     }
     return num;
   };
