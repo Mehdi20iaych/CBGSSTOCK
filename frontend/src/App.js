@@ -1197,12 +1197,13 @@ function App() {
 
             {/* Reset Button */}
             {sessionId && (
-              <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="mt-8 pt-6 border-t border-slate-200">
                 <button
                   onClick={resetApp}
-                  className="bg-gray-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors"
+                  className="bg-slate-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-600 transition-colors flex items-center space-x-2"
                 >
-                  🔄 Nouvelle Analyse
+                  <ArrowPathIcon className="w-4 h-4" />
+                  <span>Nouvelle Analyse</span>
                 </button>
               </div>
             )}
