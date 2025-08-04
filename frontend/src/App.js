@@ -663,7 +663,7 @@ function App() {
                     <h3 className="font-medium text-green-800 mb-3">📦 État de l'Inventaire</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
-                        <span className="text-2xl">✅</span>
+                        <span className="text-2xl font-bold text-green-600">[OK]</span>
                         <div>
                           <div className="font-bold text-green-600">
                             {formatNumber(calculations.summary.sufficient_items || 0)}
