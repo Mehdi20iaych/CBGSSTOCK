@@ -1180,14 +1180,14 @@ function App() {
                 </div>
 
                 {geminiResponse && (
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
-                    <h4 className="font-medium text-green-800 mb-3 flex items-center">
-                      🎯 <span className="ml-2">Analyse Experte:</span>
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h4 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
+                      <TargetIcon className="w-5 h-5 text-slate-600" />
+                      <span>Analyse Experte:</span>
                     </h4>
-                    <div className="text-sm text-green-700 leading-relaxed bg-white p-4 rounded border">
-                      {geminiResponse.response}
+                    <div className="text-sm text-slate-700 leading-relaxed bg-white p-4 rounded border border-slate-200">{geminiResponse.response}
                     </div>
-                    <div className="mt-3 text-xs text-green-600">
+                    <div className="mt-3 text-xs text-slate-600">
                       Question analysée: "{geminiResponse.query}"
                     </div>
                   </div>
