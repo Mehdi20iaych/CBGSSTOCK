@@ -578,26 +578,26 @@ function App() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                       Jours à Couvrir
                     </label>
                     <input
                       type="number"
                       value={days}
                       onChange={(e) => setDays(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                       min="1"
                       max="365"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                       Filtrer par Produits ({selectedProducts.length} sélectionné{selectedProducts.length !== 1 ? 's' : ''})
                     </label>
-                    <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-2">
+                    <div className="max-h-40 overflow-y-auto border border-slate-300 rounded-lg p-2">
                       {/* Select All Option */}
-                      <label className="flex items-center space-x-2 py-1 hover:bg-gray-50 cursor-pointer border-b border-gray-200 mb-2">
+                      <label className="flex items-center space-x-2 py-1 hover:bg-slate-50 cursor-pointer border-b border-slate-200 mb-2">
                         <input
                           type="checkbox"
                           checked={selectedProducts.length === availableFilters?.products?.length && availableFilters?.products?.length > 0}
