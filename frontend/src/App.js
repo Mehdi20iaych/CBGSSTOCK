@@ -915,8 +915,9 @@ function App() {
 
                 {calculations.summary.inventory_status === 'no_inventory_data' && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="text-sm text-yellow-800">
-                      💡 <strong>Info:</strong> Aucune donnée d'inventaire disponible. Les calculs sont basés uniquement sur les données de commandes.
+                    <p className="text-sm text-amber-800 flex items-start space-x-2">
+                      <LightBulbIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span><strong>Info:</strong> Aucune donnée d'inventaire disponible. Les calculs sont basés uniquement sur les données de commandes.</span>
                     </p>
                   </div>
                 )}
