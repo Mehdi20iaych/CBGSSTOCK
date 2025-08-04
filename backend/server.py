@@ -417,7 +417,7 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                 
                 if not matching_inventory.empty:
                     total_available = float(matching_inventory['STOCK À DATE'].sum())
-                    result_item['inventory_available'] = total_available
+                    result_item['inventory_available'] = round(total_available, 2)
                     result_item['can_fulfill'] = bool(total_available >= quantity_to_send)
                     
                     if total_available >= quantity_to_send:
