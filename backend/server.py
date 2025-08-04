@@ -1122,7 +1122,7 @@ async def export_critical_items(session_id: str, request: ExportRequest):
                 status = "CRITIQUE"
                 row_fill = colors['critical_bg']
             elif priority == 'medium':
-                action = "[!] Planifier réapprovisionnement sous 7 jours"
+                action = "PLANIFIER RÉAPPROVISIONNEMENT URGENT"
                 status = "ATTENTION"
                 row_fill = colors['medium_bg']
             else:
