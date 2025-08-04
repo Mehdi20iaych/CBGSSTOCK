@@ -1118,8 +1118,9 @@ function App() {
                     onClick={() => setGeminiQuery('Analysez la répartition des commandes par dépôt pour aujourd\'hui.')}
                     className="p-4 text-left bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
                   >
-                    <div className="font-medium text-blue-800 flex items-center">
-                      📊 <span className="ml-2">Répartition Dépôts</span>
+                    <div className="font-medium text-blue-800 flex items-center space-x-2">
+                      <ChartBarIcon className="w-4 h-4" />
+                      <span>Répartition Dépôts</span>
                     </div>
                     <div className="text-sm text-blue-600 mt-1">Volume par dépôt</div>
                   </button>
