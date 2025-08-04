@@ -496,7 +496,7 @@ function App() {
               <div className="space-y-6">
                 {/* Status Overview */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="font-medium text-blue-800 mb-2">📋 État des Données</h3>
+                  <h3 className="font-medium text-blue-800 mb-2">[i] État des Données</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center space-x-2">
                       <span className="text-blue-600">📊</span>
