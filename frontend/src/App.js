@@ -903,10 +903,10 @@ function App() {
                     )}
                     
                     {calculations.summary.delivery_optimization.inefficient_depots > 0 && (
-                      <div className="mt-3 p-3 bg-orange-100 rounded border border-orange-300">
-                        <p className="text-sm text-orange-800">
-                          🚛 <strong>Optimisation:</strong> {calculations.summary.delivery_optimization.inefficient_depots} dépôt(s) n'atteignent pas le minimum de 20 palettes. 
-                          Considérez ajouter les articles suggérés pour optimiser les coûts de livraison.
+                      <div className="mt-3 p-3 bg-amber-50 rounded border border-amber-200">
+                        <p className="text-sm text-amber-800 flex items-start space-x-2">
+                          <TruckIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                          <span><strong>Optimisation:</strong> {calculations.summary.delivery_optimization.inefficient_depots} dépôt(s) n'atteignent pas le minimum de 20 palettes. Considérez ajouter les articles suggérés pour optimiser les coûts de livraison.</span>
                         </p>
                       </div>
                     )}
