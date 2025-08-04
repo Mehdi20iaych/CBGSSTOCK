@@ -525,9 +525,10 @@ function App() {
                   )}
 
                   {!inventoryData && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
-                      <p className="text-sm text-yellow-700">
-                        💡 <strong>Recommandé:</strong> Téléchargez les données d'inventaire pour voir la disponibilité des stocks et identifier les articles manquants.
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
+                      <p className="text-sm text-amber-700 flex items-start space-x-2">
+                        <LightBulbIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span><strong>Recommandé:</strong> Téléchargez les données d'inventaire pour voir la disponibilité des stocks et identifier les articles manquants.</span>
                       </p>
                     </div>
                   )}
