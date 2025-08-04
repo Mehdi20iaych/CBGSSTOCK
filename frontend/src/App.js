@@ -840,13 +840,13 @@ function App() {
                     {/* Depot Details */}
                     {calculations.summary.delivery_optimization.depot_summaries && calculations.summary.delivery_optimization.depot_summaries.length > 0 && (
                       <div className="mt-4">
-                        <h4 className="font-medium text-purple-800 mb-2">Détail par Dépôt:</h4>
+                        <h4 className="font-medium text-slate-800 mb-2">Détail par Dépôt:</h4>
                         <div className="space-y-2">
                           {calculations.summary.delivery_optimization.depot_summaries.map((depot, index) => (
                             <div key={index} className={`p-3 rounded-lg border ${
                               depot.delivery_status === 'efficient' 
-                                ? 'bg-green-50 border-green-200' 
-                                : 'bg-orange-50 border-orange-200'
+                                ? 'bg-emerald-50 border-emerald-200' 
+                                : 'bg-amber-50 border-amber-200'
                             }`}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
