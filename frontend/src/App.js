@@ -706,8 +706,11 @@ function App() {
 
                 {/* Inventory Status Summary */}
                 {calculations.summary.inventory_status === 'available' && (
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
-                    <h3 className="font-medium text-green-800 mb-3">📦 État de l'Inventaire</h3>
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <h3 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
+                      <ArchiveBoxIcon className="w-5 h-5 text-slate-600" />
+                      <span>État de l'Inventaire</span>
+                    </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
                         <span className="text-2xl font-bold text-green-600">STOCK</span>
