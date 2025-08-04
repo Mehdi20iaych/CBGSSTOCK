@@ -681,7 +681,7 @@ function App() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-2xl">❌</span>
+                        <span className="text-2xl font-bold text-red-600">[X]</span>
                         <div>
                           <div className="font-bold text-red-600">
                             {formatNumber(calculations.summary.insufficient_items || 0)}
