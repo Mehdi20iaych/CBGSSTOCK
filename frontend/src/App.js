@@ -736,7 +736,7 @@ function App() {
                     {calculations.summary.sourcing_summary.external_items > 0 && (
                       <div className="mt-3 p-3 bg-orange-100 rounded border border-orange-300">
                         <p className="text-sm text-orange-800">
-                          ⚠️ <strong>Attention:</strong> {calculations.summary.sourcing_summary.external_items} article(s) nécessitent un sourcing externe.
+                          [!] <strong>Attention:</strong> {calculations.summary.sourcing_summary.external_items} article(s) nécessitent un sourcing externe.
                         </p>
                       </div>
                     )}
