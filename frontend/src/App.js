@@ -342,14 +342,14 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-lg">
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div className="p-6 border-b border-slate-200">
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">
               Système de Gestion des Stocks - CBGS
             </h1>
-            <p className="text-gray-600">
+            <p className="text-slate-600">
               Téléchargez des fichiers Excel pour analyser les niveaux de stock et calculer les besoins des dépôts
             </p>
           </div>
