@@ -800,7 +800,7 @@ function App() {
                                   <span className={`text-lg ${
                                     depot.delivery_status === 'efficient' ? 'text-green-600' : 'text-orange-600'
                                   }`}>
-                                    {depot.delivery_status === 'efficient' ? '✅' : '⚠️'}
+                                    {depot.delivery_status === 'efficient' ? '[OK]' : '[!]'}
                                   </span>
                                   <span className="font-medium">{depot.depot_name}</span>
                                   <span className={`text-sm px-2 py-1 rounded ${
