@@ -1129,8 +1129,9 @@ function App() {
                     onClick={() => setGeminiQuery('Quels produits nécessitent un réapprovisionnement immédiat basé sur les stocks actuels?')}
                     className="p-4 text-left bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors"
                   >
-                    <div className="font-medium text-green-800 flex items-center">
-                      💡 <span className="ml-2">Réapprovisionnement</span>
+                    <div className="font-medium text-green-800 flex items-center space-x-2">
+                      <LightBulbIcon className="w-4 h-4" />
+                      <span>Réapprovisionnement</span>
                     </div>
                     <div className="text-sm text-green-600 mt-1">Actions urgentes</div>
                   </button>
