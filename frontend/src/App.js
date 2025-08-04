@@ -749,7 +749,7 @@ function App() {
                       </div>
                     </div>
                     {calculations.summary.total_inventory_shortage > 0 && (
-                      <div className="mt-3 p-3 bg-red-100 rounded border border-red-300">
+                      <div className="mt-3 p-3 bg-red-50 rounded border border-red-200">
                         <p className="text-sm text-red-800 flex items-start space-x-2">
                           <ExclamationTriangleIcon className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                           <span><strong>Manque Total:</strong> {formatNumber(calculations.summary.total_inventory_shortage)} unités manquantes en inventaire.</span>
