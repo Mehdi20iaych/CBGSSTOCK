@@ -422,7 +422,7 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                     
                     if total_available >= quantity_to_send:
                         result_item['inventory_status'] = 'sufficient'
-                        result_item['inventory_status_text'] = '✅ Suffisant'
+                        result_item['inventory_status_text'] = '[OK] Suffisant'
                         result_item['inventory_status_color'] = 'text-green-600 bg-green-50'
                     elif total_available > 0:
                         result_item['inventory_status'] = 'partial'
