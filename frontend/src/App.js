@@ -1107,8 +1107,9 @@ function App() {
                     onClick={() => setGeminiQuery('Quels sont les 5 produits les plus commandés aujourd\'hui?')}
                     className="p-4 text-left bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 transition-colors"
                   >
-                    <div className="font-medium text-orange-800 flex items-center">
-                      📈 <span className="ml-2">Top Commandes</span>
+                    <div className="font-medium text-orange-800 flex items-center space-x-2">
+                      <ArrowTrendingUpIcon className="w-4 h-4" />
+                      <span>Top Commandes</span>
                     </div>
                     <div className="text-sm text-orange-600 mt-1">Produits les plus demandés</div>
                   </button>
