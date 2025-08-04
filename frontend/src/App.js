@@ -1183,7 +1183,7 @@ function App() {
                 {geminiResponse && (
                   <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
                     <h4 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
-                      <TargetIcon className="w-5 h-5 text-slate-600" />
+                      <CursorArrowRaysIcon className="w-5 h-5 text-slate-600" />
                       <span>Analyse Experte:</span>
                     </h4>
                     <div className="text-sm text-slate-700 leading-relaxed bg-white p-4 rounded border border-slate-200">{geminiResponse.response}
