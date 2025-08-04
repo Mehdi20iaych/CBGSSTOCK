@@ -428,7 +428,7 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                         result_item['inventory_status'] = 'partial'
                         result_item['inventory_status_text'] = '⚠️ Partiel'
                         result_item['inventory_status_color'] = 'text-yellow-600 bg-yellow-50'
-                        result_item['inventory_shortage'] = float(quantity_to_send - total_available)
+                        result_item['inventory_shortage'] = round(quantity_to_send - total_available, 2)
                     else:
                         result_item['inventory_status'] = 'insufficient'
                         result_item['inventory_status_text'] = '❌ Insuffisant'
