@@ -925,8 +925,9 @@ function App() {
                 {calculations.summary.high_priority.length > 0 && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-red-800">
-                        🚨 Articles Critiques - Sélection pour Export
+                      <h3 className="text-lg font-semibold text-red-800 flex items-center space-x-2">
+                        <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+                        <span>Articles Critiques - Sélection pour Export</span>
                       </h3>
                       <div className="flex items-center space-x-2">
                         <label className="flex items-center space-x-2">
