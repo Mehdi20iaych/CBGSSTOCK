@@ -433,9 +433,12 @@ function App() {
             {activeTab === 'upload' && (
               <div className="space-y-6">
                 {/* Order Data Upload */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="font-medium text-blue-800 mb-3">📊 1. Télécharger Données de Commandes</h3>
-                  <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                  <h3 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
+                    <ChartBarIcon className="w-5 h-5 text-slate-600" />
+                    <span>1. Télécharger Données de Commandes</span>
+                  </h3>
+                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-slate-400 transition-colors">
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -448,20 +451,25 @@ function App() {
                       htmlFor="order-file-upload"
                       className="cursor-pointer flex flex-col items-center space-y-2"
                     >
-                      <div className="text-3xl text-blue-400">📈</div>
-                      <div className="text-lg font-medium text-blue-700">
+                      <div className="text-slate-400">
+                        <TrendingUpIcon className="w-12 h-12" />
+                      </div>
+                      <div className="text-lg font-medium text-slate-700">
                         Fichier de Commandes Excel
                       </div>
-                      <div className="text-sm text-blue-600">
+                      <div className="text-sm text-slate-600">
                         Avec colonnes: Date de Commande, Article, Quantité Commandée, etc.
                       </div>
                     </label>
                   </div>
 
                   {uploadedData && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-                      <h4 className="font-medium text-green-800 mb-2">DONNÉES DE COMMANDES CHARGÉES</h4>
-                      <div className="text-sm text-green-700 space-y-1">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mt-4">
+                      <h4 className="font-medium text-emerald-800 mb-2 flex items-center space-x-2">
+                        <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
+                        <span>DONNÉES DE COMMANDES CHARGÉES</span>
+                      </h4>
+                      <div className="text-sm text-emerald-700 space-y-1">
                         <p>Enregistrements: <strong>{formatNumber(uploadedData.records_count)}</strong></p>
                         <p>Période: <strong>{uploadedData.date_range.start}</strong> à <strong>{uploadedData.date_range.end}</strong></p>
                         <p>Dépôts: <strong>{uploadedData.filters.depots.length}</strong> | Produits: <strong>{uploadedData.filters.products.length}</strong></p>
