@@ -408,19 +408,22 @@ function App() {
 
             {/* Error Display */}
             {error && (
-              <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                <div className="flex">
-                  <span className="mr-2">ERREUR:</span>
-                  <span>{error}</span>
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+                <div className="flex items-start space-x-2">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-medium">ERREUR:</span>
+                    <span className="ml-2">{error}</span>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Loading Display */}
             {loading && (
-              <div className="mb-6 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg">
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                   <span>Traitement en cours...</span>
                 </div>
               </div>
