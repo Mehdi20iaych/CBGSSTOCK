@@ -1004,7 +1004,7 @@ function App() {
                           <td className="border border-gray-300 p-3 text-center">
                             {item.delivery_status && (
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.delivery_status_color}`}>
-                                {item.delivery_efficient ? '✅ Efficace' : '⚠️ Inefficace'}
+                                {item.delivery_efficient ? '[OK] Efficace' : '[!] Inefficace'}
                               </span>
                             )}
                           </td>
