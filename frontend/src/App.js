@@ -1140,8 +1140,9 @@ function App() {
                     onClick={() => setGeminiQuery('Comparez les volumes commandés par type d\'emballage aujourd\'hui.')}
                     className="p-4 text-left bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors"
                   >
-                    <div className="font-medium text-indigo-800 flex items-center">
-                      📦 <span className="ml-2">Analyse Emballages</span>
+                    <div className="font-medium text-indigo-800 flex items-center space-x-2">
+                      <ArchiveBoxIcon className="w-4 h-4" />
+                      <span>Analyse Emballages</span>
                     </div>
                     <div className="text-sm text-indigo-600 mt-1">Volumes par packaging</div>
                   </button>
