@@ -385,7 +385,7 @@ function App() {
             {error && (
               <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
                 <div className="flex">
-                  <span className="mr-2">[X]</span>
+                  <span className="mr-2">ERREUR:</span>
                   <span>{error}</span>
                 </div>
               </div>
