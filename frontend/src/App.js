@@ -451,7 +451,7 @@ function App() {
                       className="cursor-pointer flex flex-col items-center space-y-2"
                     >
                       <div className="text-slate-400">
-                        <TrendingUpIcon className="w-12 h-12" />
+                        <ArrowTrendingUpIcon className="w-12 h-12" />
                       </div>
                       <div className="text-lg font-medium text-slate-700">
                         Fichier de Commandes Excel
