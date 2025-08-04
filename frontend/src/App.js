@@ -1,5 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
+import { 
+  DocumentIcon, 
+  ChartBarIcon, 
+  TrendingUpIcon,
+  ArchiveBoxIcon,
+  LightBulbIcon,
+  TargetIcon,
+  ExclamationTriangleIcon,
+  TruckIcon,
+  MagnifyingGlassIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ExclamationCircleIcon,
+  QuestionMarkCircleIcon,
+  BuildingOfficeIcon,
+  ShoppingCartIcon,
+  ChartPieIcon,
+  ArrowTrendingUpIcon,
+  ClipboardDocumentListIcon
+} from '@heroicons/react/24/outline';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
