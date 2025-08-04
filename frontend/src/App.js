@@ -957,9 +957,10 @@ function App() {
                       <button
                         onClick={handleExportCritical}
                         disabled={selectedCriticalItems.length === 0 || loading}
-                        className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                       >
-                        📄 Exporter CBGS ({selectedCriticalItems.length} sélectionnés)
+                        <DocumentIcon className="w-4 h-4" />
+                        <span>Exporter CBGS ({selectedCriticalItems.length} sélectionnés)</span>
                       </button>
                     </div>
                   </div>
