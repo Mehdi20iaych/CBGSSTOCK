@@ -559,16 +559,18 @@ function App() {
                     </div>
                   </div>
                   {inventoryData && (
-                    <div className="mt-3 p-3 bg-green-100 rounded border border-green-300">
-                      <p className="text-sm text-green-800">
-                        🎯 <strong>Mode Avancé Activé:</strong> Le système vérifiera la disponibilité en inventaire pour chaque article demandé.
+                    <div className="mt-3 p-3 bg-emerald-50 rounded border border-emerald-200">
+                      <p className="text-sm text-emerald-800 flex items-start space-x-2">
+                        <TargetIcon className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span><strong>Mode Avancé Activé:</strong> Le système vérifiera la disponibilité en inventaire pour chaque article demandé.</span>
                       </p>
                     </div>
                   )}
                   {!inventoryData && (
-                    <div className="mt-3 p-3 bg-yellow-100 rounded border border-yellow-300">
-                      <p className="text-sm text-yellow-800">
-                        💡 <strong>Mode Standard:</strong> Calculs basés uniquement sur les données de commandes. Pour vérifier la disponibilité, téléchargez les données d'inventaire.
+                    <div className="mt-3 p-3 bg-amber-50 rounded border border-amber-200">
+                      <p className="text-sm text-amber-800 flex items-start space-x-2">
+                        <LightBulbIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span><strong>Mode Standard:</strong> Calculs basés uniquement sur les données de commandes. Pour vérifier la disponibilité, téléchargez les données d'inventaire.</span>
                       </p>
                     </div>
                   )}
