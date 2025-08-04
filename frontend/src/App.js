@@ -313,10 +313,10 @@ function App() {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'high': return 'text-red-600 bg-red-50';
-      case 'medium': return 'text-yellow-600 bg-yellow-50';
-      case 'low': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'high': return 'text-red-700 bg-red-100 border-red-200';
+      case 'medium': return 'text-amber-700 bg-amber-100 border-amber-200';
+      case 'low': return 'text-emerald-700 bg-emerald-100 border-emerald-200';
+      default: return 'text-slate-600 bg-slate-100 border-slate-200';
     }
   };
 
