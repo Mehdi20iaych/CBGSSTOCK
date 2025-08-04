@@ -695,8 +695,8 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
             quantity_to_send = max(0, required_stock - row['current_stock'])
             
             # Calculate palettes needed for this item
-            # Formula: number of palettes = 30 / Quantité à Envoyer
-            palettes_needed = round(30 / quantity_to_send, 2) if quantity_to_send > 0 else 0
+            # Formula: number of palettes = Quantité à Envoyer / 30
+            palettes_needed = round(quantity_to_send / 30, 2) if quantity_to_send > 0 else 0
             
             # Determine priority based on days of coverage
             if doc == float('inf'):
