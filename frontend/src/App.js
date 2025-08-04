@@ -499,8 +499,8 @@ function App() {
                   <h3 className="font-medium text-blue-800 mb-2">ÉTAT DES DONNÉES</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center space-x-2">
-                      <span className="text-blue-600">[i]</span>
-                      <span>Données de commandes: <strong className="text-green-600">[OK] Chargées</strong></span>
+                      <span className="text-blue-600 font-medium">INFO</span>
+                      <span>Données de commandes: <strong className="text-green-600">CHARGÉES</strong></span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-green-600">📦</span>
