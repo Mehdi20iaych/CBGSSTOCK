@@ -802,37 +802,37 @@ function App() {
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
-                        <span className="text-2xl font-bold text-green-600">[OK]</span>
+                        <CheckCircleIcon className="w-6 h-6 text-emerald-600" />
                         <div>
-                          <div className="font-bold text-green-600">
+                          <div className="font-bold text-emerald-600">
                             {formatNumber(calculations.summary.delivery_optimization.efficient_depots || 0)}
                           </div>
-                          <div className="text-green-700">Dépôts Efficaces</div>
+                          <div className="text-emerald-700">Dépôts Efficaces</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-2xl font-bold text-yellow-600">[!]</span>
+                        <ExclamationTriangleIcon className="w-6 h-6 text-amber-600" />
                         <div>
-                          <div className="font-bold text-orange-600">
+                          <div className="font-bold text-amber-600">
                             {formatNumber(calculations.summary.delivery_optimization.inefficient_depots || 0)}
                           </div>
-                          <div className="text-orange-700">Dépôts Inefficaces</div>
+                          <div className="text-amber-700">Dépôts Inefficaces</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-2xl">📦</span>
+                        <ArchiveBoxIcon className="w-6 h-6 text-slate-600" />
                         <div>
-                          <div className="font-bold text-blue-600">
+                          <div className="font-bold text-slate-600">
                             {formatNumber(calculations.summary.delivery_optimization.total_palettes || 0)}
                           </div>
-                          <div className="text-blue-700">Total Palettes</div>
+                          <div className="text-slate-700">Total Palettes</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-2xl">🎯</span>
+                        <TargetIcon className="w-6 h-6 text-slate-600" />
                         <div>
-                          <div className="font-bold text-purple-600">20</div>
-                          <div className="text-purple-700">Min. par Dépôt</div>
+                          <div className="font-bold text-slate-600">20</div>
+                          <div className="text-slate-700">Min. par Dépôt</div>
                         </div>
                       </div>
                     </div>
