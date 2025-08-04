@@ -660,7 +660,7 @@ function App() {
                 <button
                   onClick={handleCalculate}
                   disabled={loading}
-                  className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-slate-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Calcul en cours...' : 'Calculer les Besoins'}
                 </button>
