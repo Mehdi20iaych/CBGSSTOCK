@@ -1151,8 +1151,9 @@ function App() {
                     onClick={() => setGeminiQuery('Donnez-moi un résumé des performances commerciales du jour avec les chiffres clés.')}
                     className="p-4 text-left bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors"
                   >
-                    <div className="font-medium text-purple-800 flex items-center">
-                      📈 <span className="ml-2">Résumé Journalier</span>
+                    <div className="font-medium text-purple-800 flex items-center space-x-2">
+                      <ClipboardDocumentListIcon className="w-4 h-4" />
+                      <span>Résumé Journalier</span>
                     </div>
                     <div className="text-sm text-purple-600 mt-1">Performance du jour</div>
                   </button>
