@@ -672,32 +672,32 @@ function App() {
               <div className="space-y-6">
                 {/* Summary Statistics */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <div className="text-2xl font-bold text-slate-600">
                       {formatNumber(calculations.summary.total_depots)}
                     </div>
-                    <div className="text-sm text-blue-700">Dépôts Totaux</div>
+                    <div className="text-sm text-slate-700">Dépôts Totaux</div>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
+                  <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+                    <div className="text-2xl font-bold text-emerald-600">
                       {formatNumber(calculations.summary.total_products)}
                     </div>
-                    <div className="text-sm text-green-700">Produits Totaux</div>
+                    <div className="text-sm text-emerald-700">Produits Totaux</div>
                   </div>
-                  <div className="bg-red-50 p-4 rounded-lg">
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                     <div className="text-2xl font-bold text-red-600">
                       {formatNumber(calculations.summary.high_priority?.length || 0)}
                     </div>
                     <div className="text-sm text-red-700">Priorité Critique</div>
                   </div>
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-600">
+                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                    <div className="text-2xl font-bold text-amber-600">
                       {formatNumber(calculations.summary.medium_priority?.length || 0)}
                     </div>
-                    <div className="text-sm text-yellow-700">Priorité Moyenne</div>
+                    <div className="text-sm text-amber-700">Priorité Moyenne</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-600">
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <div className="text-2xl font-bold text-slate-600">
                       {formatNumber(calculations.summary.no_stock_needed?.length || 0)}
                     </div>
                     <div className="text-sm text-gray-700">Stock Suffisant</div>
