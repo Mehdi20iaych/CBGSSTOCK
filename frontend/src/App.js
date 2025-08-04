@@ -828,7 +828,7 @@ function App() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <TargetIcon className="w-6 h-6 text-slate-600" />
+                        <CursorArrowRaysIcon className="w-6 h-6 text-slate-600" />
                         <div>
                           <div className="font-bold text-slate-600">20</div>
                           <div className="text-slate-700">Min. par Dépôt</div>
