@@ -1170,7 +1170,10 @@ function App() {
                           <span>Analyse...</span>
                         </div>
                       ) : (
-                        '🔍 Analyser'
+                        <div className="flex items-center space-x-2">
+                          <MagnifyingGlassIcon className="w-4 h-4" />
+                          <span>Analyser</span>
+                        </div>
                       )}
                     </button>
                   </div>
