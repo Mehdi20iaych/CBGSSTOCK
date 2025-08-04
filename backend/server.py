@@ -426,7 +426,7 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                         result_item['inventory_status_color'] = 'text-green-600 bg-green-50'
                     elif total_available > 0:
                         result_item['inventory_status'] = 'partial'
-                        result_item['inventory_status_text'] = '[!] Partiel'
+                        result_item['inventory_status_text'] = 'STOCK FAIBLE'
                         result_item['inventory_status_color'] = 'text-yellow-600 bg-yellow-50'
                         result_item['inventory_shortage'] = round(quantity_to_send - total_available, 2)
                     else:
