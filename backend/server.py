@@ -443,7 +443,7 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                     result_item['inventory_shortage'] = round(quantity_to_send, 2)
             else:
                 result_item['inventory_status'] = 'no_data'
-                result_item['inventory_status_text'] = '[i] Pas de données'
+                result_item['inventory_status_text'] = 'DONNÉES MANQUANTES'
                 result_item['inventory_status_color'] = 'text-blue-600 bg-blue-50'
             
             results.append(result_item)
