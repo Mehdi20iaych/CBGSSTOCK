@@ -1096,8 +1096,9 @@ function App() {
                     onClick={() => setGeminiQuery('Quels dépôts ont les plus faibles niveaux de stock aujourd\'hui?')}
                     className="p-4 text-left bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors"
                   >
-                    <div className="font-medium text-red-800 flex items-center">
-                      🚨 <span className="ml-2">Stocks Critiques</span>
+                    <div className="font-medium text-red-800 flex items-center space-x-2">
+                      <ExclamationTriangleIcon className="w-4 h-4" />
+                      <span>Stocks Critiques</span>
                     </div>
                     <div className="text-sm text-red-600 mt-1">Dépôts avec faibles stocks</div>
                   </button>
