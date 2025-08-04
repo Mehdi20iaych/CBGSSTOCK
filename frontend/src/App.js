@@ -506,9 +506,9 @@ function App() {
                       <span className="text-green-600">📦</span>
                       <span>Données d'inventaire: 
                         {inventoryData ? (
-                          <strong className="text-green-600"> ✅ Chargées</strong>
+                          <strong className="text-green-600"> [OK] Chargées</strong>
                         ) : (
-                          <strong className="text-yellow-600"> ⚠️ Non chargées</strong>
+                          <strong className="text-yellow-600"> [!] Non chargées</strong>
                         )}
                       </span>
                     </div>
