@@ -479,9 +479,12 @@ function App() {
                 </div>
 
                 {/* Inventory Data Upload */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="font-medium text-green-800 mb-3">📦 2. Télécharger Données d'Inventaire</h3>
-                  <div className="border-2 border-dashed border-green-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                  <h3 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
+                    <ArchiveBoxIcon className="w-5 h-5 text-slate-600" />
+                    <span>2. Télécharger Données d'Inventaire</span>
+                  </h3>
+                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-slate-400 transition-colors">
                     <input
                       ref={inventoryFileInputRef}
                       type="file"
@@ -494,20 +497,25 @@ function App() {
                       htmlFor="inventory-file-upload"
                       className="cursor-pointer flex flex-col items-center space-y-2"
                     >
-                      <div className="text-3xl text-green-400">🏪</div>
-                      <div className="text-lg font-medium text-green-700">
+                      <div className="text-slate-400">
+                        <BuildingOfficeIcon className="w-12 h-12" />
+                      </div>
+                      <div className="text-lg font-medium text-slate-700">
                         Fichier d'Inventaire Excel
                       </div>
-                      <div className="text-sm text-green-600">
+                      <div className="text-sm text-slate-600">
                         Avec colonnes: Division, Article, Désignation article, STOCK À DATE
                       </div>
                     </label>
                   </div>
 
                   {inventoryData && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-                      <h4 className="font-medium text-green-800 mb-2">DONNÉES D'INVENTAIRE CHARGÉES</h4>
-                      <div className="text-sm text-green-700 space-y-1">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mt-4">
+                      <h4 className="font-medium text-emerald-800 mb-2 flex items-center space-x-2">
+                        <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
+                        <span>DONNÉES D'INVENTAIRE CHARGÉES</span>
+                      </h4>
+                      <div className="text-sm text-emerald-700 space-y-1">
                         <p>Enregistrements: <strong>{formatNumber(inventoryData.records_count)}</strong></p>
                         <p>Articles: <strong>{inventoryData.summary.articles_count}</strong></p>
                         <p>Stock Total: <strong>{formatNumber(inventoryData.summary.total_stock)}</strong></p>
