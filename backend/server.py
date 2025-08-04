@@ -438,7 +438,7 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                     result_item['inventory_available'] = 0.00
                     result_item['can_fulfill'] = False
                     result_item['inventory_status'] = 'not_found'
-                    result_item['inventory_status_text'] = '[?] Non trouvé'
+                    result_item['inventory_status_text'] = 'ARTICLE INTROUVABLE'
                     result_item['inventory_status_color'] = 'text-gray-600 bg-gray-50'
                     result_item['inventory_shortage'] = round(quantity_to_send, 2)
             else:
