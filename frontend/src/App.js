@@ -560,7 +560,7 @@ function App() {
                   {inventoryData && (
                     <div className="mt-3 p-3 bg-emerald-50 rounded border border-emerald-200">
                       <p className="text-sm text-emerald-800 flex items-start space-x-2">
-                        <TargetIcon className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <CursorArrowRaysIcon className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                         <span><strong>Mode Avancé Activé:</strong> Le système vérifiera la disponibilité en inventaire pour chaque article demandé.</span>
                       </p>
                     </div>
