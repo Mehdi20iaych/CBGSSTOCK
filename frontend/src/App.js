@@ -850,21 +850,24 @@ function App() {
                             }`}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
-                                  <span className={`text-lg ${
-                                    depot.delivery_status === 'efficient' ? 'text-green-600' : 'text-orange-600'
+                                  <span className={`${
+                                    depot.delivery_status === 'efficient' ? 'text-emerald-600' : 'text-amber-600'
                                   }`}>
-                                    {depot.delivery_status === 'efficient' ? '[OK]' : '[!]'}
+                                    {depot.delivery_status === 'efficient' 
+                                      ? <CheckCircleIcon className="w-5 h-5" />
+                                      : <ExclamationTriangleIcon className="w-5 h-5" />
+                                    }
                                   </span>
                                   <span className="font-medium">{depot.depot_name}</span>
                                   <span className={`text-sm px-2 py-1 rounded ${
                                     depot.delivery_status === 'efficient'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-orange-100 text-orange-800'
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : 'bg-amber-100 text-amber-800'
                                   }`}>
                                     {depot.total_palettes} palettes
                                   </span>
                                 </div>
-                                <div className="text-sm text-gray-600">
+                                <div className="text-sm text-slate-600">
                                   {depot.items_count} article{depot.items_count !== 1 ? 's' : ''}
                                 </div>
                               </div>
@@ -872,12 +875,13 @@ function App() {
                               {/* Suggestions for inefficient depots */}
                               {depot.delivery_status === 'inefficient' && depot.suggested_items && depot.suggested_items.length > 0 && (
                                 <div className="mt-3 p-2 bg-white rounded border">
-                                  <div className="text-sm font-medium text-orange-800 mb-2">
-                                    💡 Suggestions pour atteindre 20 palettes ({depot.palettes_needed} palettes manquantes):
+                                  <div className="text-sm font-medium text-amber-800 mb-2 flex items-start space-x-1">
+                                    <LightBulbIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                                    <span>Suggestions pour atteindre 20 palettes ({depot.palettes_needed} palettes manquantes):</span>
                                   </div>
                                   <div className="space-y-1">
                                     {depot.suggested_items.slice(0, 3).map((suggestion, sugIndex) => (
-                                      <div key={sugIndex} className="text-xs text-gray-700 flex justify-between">
+                                      <div key={sugIndex} className="text-xs text-slate-700 flex justify-between">
                                         <span>{suggestion.article_code} - {suggestion.packaging_type}</span>
                                         <span className="font-medium">
                                           {formatNumber(suggestion.quantity_to_send)} unités ({suggestion.palette_quantity} pal.)
@@ -885,7 +889,7 @@ function App() {
                                       </div>
                                     ))}
                                     {depot.suggested_items.length > 3 && (
-                                      <div className="text-xs text-gray-500 italic">
+                                      <div className="text-xs text-slate-500 italic">
                                         ... et {depot.suggested_items.length - 3} autre(s) suggestion(s)
                                       </div>
                                     )}
