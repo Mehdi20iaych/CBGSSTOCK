@@ -364,7 +364,8 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             quantity_to_send = max(0, required_stock - row['current_stock'])
             
             # Calculate palettes needed for this item
-            palettes_needed = round(row['palette_quantity'], 2) if quantity_to_send > 0 else 0
+            # Formula: number of palettes = 30 / Quantité à Envoyer
+            palettes_needed = round(30 / quantity_to_send, 2) if quantity_to_send > 0 else 0
             
             if doc == float('inf'):
                 priority = 'low'
