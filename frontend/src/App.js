@@ -470,7 +470,7 @@ function App() {
 
                   {inventoryData && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-                      <h4 className="font-medium text-green-800 mb-2">✅ Données d'Inventaire Chargées!</h4>
+                      <h4 className="font-medium text-green-800 mb-2">[OK] Données d'Inventaire Chargées!</h4>
                       <div className="text-sm text-green-700 space-y-1">
                         <p>Enregistrements: <strong>{formatNumber(inventoryData.records_count)}</strong></p>
                         <p>Articles: <strong>{inventoryData.summary.articles_count}</strong></p>
