@@ -1126,7 +1126,7 @@ async def export_critical_items(session_id: str, request: ExportRequest):
                 status = "ATTENTION"
                 row_fill = colors['medium_bg']
             else:
-                action = "✅ Surveiller évolution"
+                action = "[OK] Surveiller évolution"
                 status = "STABLE"
                 row_fill = colors['low_bg']
             
