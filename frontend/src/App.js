@@ -3,10 +3,10 @@ import './App.css';
 import { 
   DocumentIcon, 
   ChartBarIcon, 
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   ArchiveBoxIcon,
   LightBulbIcon,
-  TargetIcon,
+  CursorArrowRaysIcon,
   ExclamationTriangleIcon,
   TruckIcon,
   MagnifyingGlassIcon,
@@ -18,7 +18,6 @@ import {
   BuildingOfficeIcon,
   ShoppingCartIcon,
   ChartPieIcon,
-  ArrowTrendingUpIcon,
   ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 
