@@ -849,13 +849,30 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
             
             # Required Quantity for X days
             required_stock = request.days * adc
-            quantity_to_send = max(0, required_stock - row['current_stock'])
+            
+            # Get transit stock for this article and depot
+            transit_available = 0
+            if request.transit_session_id and request.transit_session_id in transit_data:
+                transit_df = pd.DataFrame(transit_data[request.transit_session_id]['data'])
+                
+                # Find matching article AND depot in transit data
+                matching_transit = transit_df[
+                    (transit_df['Article'].astype(str) == str(row['article_code'])) &
+                    (transit_df['Division'].astype(str) == str(row['depot']))
+                ]
+                
+                if not matching_transit.empty:
+                    transit_available = float(matching_transit['Quantité'].sum())
+            
+            # Calculate quantity to send considering current stock + transit stock
+            total_available = row['current_stock'] + transit_available
+            quantity_to_send = max(0, required_stock - total_available)
             
             # Calculate palettes needed for this item
             # Formula: number of palettes = Quantité à Envoyer / 30
             palettes_needed = round(quantity_to_send / 30, 2) if quantity_to_send > 0 else 0
             
-            # Determine priority based on days of coverage
+            # Determine priority based on days of coverage (using current stock only for priority calculation)
             if doc == float('inf'):
                 priority = 'low'
                 priority_text = 'Faible'
