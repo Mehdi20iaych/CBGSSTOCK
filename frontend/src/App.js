@@ -829,10 +829,12 @@ function App() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <CursorArrowRaysIcon className="w-6 h-6 text-slate-600" />
+                        <TruckIcon className="w-6 h-6 text-slate-600" />
                         <div>
-                          <div className="font-bold text-slate-600">20</div>
-                          <div className="text-slate-700">Min. par Dépôt</div>
+                          <div className="font-bold text-slate-600">
+                            {formatNumber(calculations.summary.delivery_optimization.total_trucks || 0)}
+                          </div>
+                          <div className="text-slate-700">Total Camions</div>
                         </div>
                       </div>
                     </div>
