@@ -635,7 +635,7 @@ function App() {
                 {/* Status Overview */}
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                   <h3 className="font-medium text-slate-800 mb-2">ÉTAT DES DONNÉES</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div className="flex items-center space-x-2">
                       <span className="text-slate-600 font-medium">INFO</span>
                       <span>Données de commandes: <strong className="text-emerald-600">CHARGÉES</strong></span>
@@ -647,6 +647,16 @@ function App() {
                           <strong className="text-emerald-600"> CHARGÉES</strong>
                         ) : (
                           <strong className="text-amber-600"> NON CHARGÉES</strong>
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <TruckIcon className="w-4 h-4 text-blue-600" />
+                      <span>Stock en transit: 
+                        {transitData ? (
+                          <strong className="text-blue-600"> CHARGÉ</strong>
+                        ) : (
+                          <strong className="text-gray-600"> NON CHARGÉ</strong>
                         )}
                       </span>
                     </div>
