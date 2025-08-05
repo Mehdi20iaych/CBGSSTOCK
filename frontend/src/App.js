@@ -861,13 +861,23 @@ function App() {
                                     }
                                   </span>
                                   <span className="font-medium">{depot.depot_name}</span>
-                                  <span className={`text-sm px-2 py-1 rounded ${
-                                    depot.delivery_status === 'efficient'
-                                      ? 'bg-emerald-100 text-emerald-800'
-                                      : 'bg-amber-100 text-amber-800'
-                                  }`}>
-                                    {depot.total_palettes} palettes
-                                  </span>
+                                  <div className="flex items-center space-x-2">
+                                    <span className={`text-sm px-2 py-1 rounded ${
+                                      depot.delivery_status === 'efficient'
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : 'bg-amber-100 text-amber-800'
+                                    }`}>
+                                      {depot.total_palettes} palettes
+                                    </span>
+                                    <span className={`text-sm px-2 py-1 rounded border ${
+                                      depot.delivery_status === 'efficient'
+                                        ? 'border-emerald-300 text-emerald-800'
+                                        : 'border-amber-300 text-amber-800'
+                                    }`}>
+                                      <TruckIcon className="w-3 h-3 inline mr-1" />
+                                      {depot.trucks_needed} camion{depot.trucks_needed !== 1 ? 's' : ''}
+                                    </span>
+                                  </div>
                                 </div>
                                 <div className="text-sm text-slate-600">
                                   {depot.items_count} article{depot.items_count !== 1 ? 's' : ''}
