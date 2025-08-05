@@ -903,6 +903,8 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                 'average_daily_consumption': round(adc, 2),
                 'days_of_coverage': round(doc, 1) if doc != float('inf') else 'Infinie',
                 'current_stock': row['current_stock'],
+                'transit_available': round(transit_available, 2),
+                'total_available': round(total_available, 2),
                 'required_for_x_days': round(required_stock, 2),
                 'quantity_to_send': round(quantity_to_send, 2),
                 'total_ordered_in_period': row['total_ordered'],
