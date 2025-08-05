@@ -1110,6 +1110,9 @@ function App() {
                         <th className="border border-gray-300 p-3 text-right">CQM</th>
                         <th className="border border-gray-300 p-3 text-right">Jours Couv.</th>
                         <th className="border border-gray-300 p-3 text-right">Stock Actuel</th>
+                        {transitData && (
+                          <th className="border border-gray-300 p-3 text-right">Stock Transit</th>
+                        )}
                         <th className="border border-gray-300 p-3 text-right">Quantité à Envoyer</th>
                         <th className="border border-gray-300 p-3 text-right">Palettes</th>
                         {calculations.summary.inventory_status === 'available' && (
