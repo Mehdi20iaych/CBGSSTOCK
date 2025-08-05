@@ -725,7 +725,7 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
         # Replace original results with optimized results
         results = optimized_results
         
-        # Sort by inventory availability and priority
+        # Sort by depot first, then by inventory availability and priority within each depot
         if request.inventory_session_id:
             # Priority order: insufficient/not_found first, then by priority
             def sort_key(x):
@@ -737,14 +737,15 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                     'no_data': 4
                 }
                 business_priority = {'high': 0, 'medium': 1, 'low': 2}
-                return (inventory_priority.get(x.get('inventory_status', 'no_data'), 4), 
+                return (x['depot'],  # Group by depot first
+                        inventory_priority.get(x.get('inventory_status', 'no_data'), 4), 
                         business_priority[x['priority']], 
                         -x['quantity_to_send'])
             results.sort(key=sort_key)
         else:
-            # Original sorting
+            # Sort by depot first, then by priority within each depot
             priority_order = {'high': 0, 'medium': 1, 'low': 2}
-            results.sort(key=lambda x: (priority_order[x['priority']], -x['quantity_to_send']))
+            results.sort(key=lambda x: (x['depot'], priority_order[x['priority']], -x['quantity_to_send']))
         
         # Calculate summary statistics
         summary = {
