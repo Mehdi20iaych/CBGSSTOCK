@@ -1041,9 +1041,9 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
         # Replace original results with optimized results
         results = optimized_results
         
-        # Sort by priority (high first) and then by quantity needed (descending)
+        # Sort by depot first, then by priority within each depot
         priority_order = {'high': 0, 'medium': 1, 'low': 2}
-        results.sort(key=lambda x: (priority_order[x['priority']], -x['quantity_to_send']))
+        results.sort(key=lambda x: (x['depot'], priority_order[x['priority']], -x['quantity_to_send']))
         
         return {
             "calculations": results,
