@@ -336,8 +336,7 @@
 
 ## test_plan:
   current_focus:
-    - "Add 20-palette delivery optimization constraint"
-    - "Add delivery optimization UI with depot summaries and efficiency indicators"
+    - "Add truck calculation (pallets/24) for delivery optimization"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
