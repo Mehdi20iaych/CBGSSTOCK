@@ -60,6 +60,7 @@ class CalculationRequest(BaseModel):
     days: int
     product_filter: Optional[List[str]] = None
     packaging_filter: Optional[List[str]] = None
+    transit_session_id: Optional[str] = None
 
 class EnhancedCalculationRequest(BaseModel):
     days: int
