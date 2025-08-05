@@ -65,6 +65,7 @@ class EnhancedCalculationRequest(BaseModel):
     days: int
     order_session_id: str
     inventory_session_id: Optional[str] = None
+    transit_session_id: Optional[str] = None
     product_filter: Optional[List[str]] = None
     packaging_filter: Optional[List[str]] = None
 
