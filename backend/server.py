@@ -547,6 +547,14 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             # Calculate total available (inventory + transit)
             total_available = total_available_inventory + transit_available
             
+            # Recalculate quantity_to_send using total_available (inventory + transit)
+            quantity_to_send = max(0, required_stock - total_available)
+            result_item['quantity_to_send'] = round(quantity_to_send, 2)
+            
+            # Recalculate palettes needed based on updated quantity_to_send
+            palettes_needed = round(quantity_to_send / 30, 2) if quantity_to_send > 0 else 0
+            result_item['palette_quantity'] = palettes_needed
+            
             # Store transit information
             result_item['transit_available'] = round(transit_available, 2)
             result_item['inventory_available'] = round(total_available_inventory, 2)
