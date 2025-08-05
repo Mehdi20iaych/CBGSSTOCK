@@ -884,6 +884,7 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                     "efficient_depots": len([d for d in depot_summaries if d['delivery_status'] == 'efficient']),
                     "inefficient_depots": len([d for d in depot_summaries if d['delivery_status'] == 'inefficient']), 
                     "total_palettes": sum([d['total_palettes'] for d in depot_summaries]),
+                    "total_trucks": sum([d['trucks_needed'] for d in depot_summaries]),
                     "depot_summaries": depot_summaries
                 }
             }
