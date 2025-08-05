@@ -661,7 +661,15 @@ function App() {
                       </span>
                     </div>
                   </div>
-                  {inventoryData && (
+                  {inventoryData && transitData && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
+                      <p className="text-sm text-blue-800 flex items-start space-x-2">
+                        <TruckIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <span><strong>Mode Expert Activé:</strong> Le système considère l'inventaire disponible ET le stock en transit vers chaque dépôt pour optimiser les envois.</span>
+                      </p>
+                    </div>
+                  )}
+                  {inventoryData && !transitData && (
                     <div className="mt-3 p-3 bg-emerald-50 rounded border border-emerald-200">
                       <p className="text-sm text-emerald-800 flex items-start space-x-2">
                         <CursorArrowRaysIcon className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
@@ -669,11 +677,19 @@ function App() {
                       </p>
                     </div>
                   )}
-                  {!inventoryData && (
+                  {!inventoryData && transitData && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
+                      <p className="text-sm text-blue-800 flex items-start space-x-2">
+                        <TruckIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <span><strong>Mode Transit:</strong> Le système considère uniquement le stock en transit. Ajoutez les données d'inventaire pour un calcul complet.</span>
+                      </p>
+                    </div>
+                  )}
+                  {!inventoryData && !transitData && (
                     <div className="mt-3 p-3 bg-amber-50 rounded border border-amber-200">
                       <p className="text-sm text-amber-800 flex items-start space-x-2">
                         <LightBulbIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <span><strong>Mode Standard:</strong> Calculs basés uniquement sur les données de commandes. Pour vérifier la disponibilité, téléchargez les données d'inventaire.</span>
+                        <span><strong>Mode Standard:</strong> Calculs basés uniquement sur les données de commandes. Pour vérifier la disponibilité, téléchargez les données d'inventaire et/ou de transit.</span>
                       </p>
                     </div>
                   )}
