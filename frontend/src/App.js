@@ -275,8 +275,10 @@ function App() {
   const resetApp = () => {
     setSessionId(null);
     setInventorySessionId(null);
+    setTransitSessionId(null);
     setUploadedData(null);
     setInventoryData(null);
+    setTransitData(null);
     setCalculations(null);
     setGeminiResponse(null);
     setAvailableFilters(null);
@@ -293,6 +295,9 @@ function App() {
     }
     if (inventoryFileInputRef.current) {
       inventoryFileInputRef.current.value = '';
+    }
+    if (transitFileInputRef.current) {
+      transitFileInputRef.current.value = '';
     }
   };
 
