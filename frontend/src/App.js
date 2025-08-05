@@ -369,15 +369,35 @@ function App() {
 
   const getDisplayedCalculations = () => {
     if (!calculations) return [];
+    
     if (showCriticalOnly) {
       return calculations.calculations.filter(item => item.priority === 'high');
     }
     
-    // Ensure critical priority items always appear first
-    const criticalItems = calculations.calculations.filter(item => item.priority === 'high');
-    const otherItems = calculations.calculations.filter(item => item.priority !== 'high');
+    // Results are already sorted by depot from backend, but ensure critical items 
+    // still appear first within their depot group
+    const resultsByDepot = {};
     
-    return [...criticalItems, ...otherItems];
+    // Group items by depot
+    calculations.calculations.forEach(item => {
+      if (!resultsByDepot[item.depot]) {
+        resultsByDepot[item.depot] = { critical: [], other: [] };
+      }
+      if (item.priority === 'high') {
+        resultsByDepot[item.depot].critical.push(item);
+      } else {
+        resultsByDepot[item.depot].other.push(item);
+      }
+    });
+    
+    // Flatten back to array, maintaining depot grouping with critical items first in each group
+    const finalResults = [];
+    Object.keys(resultsByDepot).sort().forEach(depot => {
+      finalResults.push(...resultsByDepot[depot].critical);
+      finalResults.push(...resultsByDepot[depot].other);
+    });
+    
+    return finalResults;
   };
 
   return (
