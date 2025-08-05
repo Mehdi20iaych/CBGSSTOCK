@@ -2422,6 +2422,13 @@ def main():
         ("20-Palette Filler Suggestions Logic", tester.test_20_palette_filler_suggestions_logic),
         ("20-Palette Priority Modifications", tester.test_20_palette_priority_modifications),
         ("20-Palette Response Structure", tester.test_20_palette_response_structure),
+        # Truck Calculation Tests
+        ("Truck Calculation - Basic Endpoint", tester.test_truck_calculation_basic_endpoint),
+        ("Truck Calculation - Enhanced Endpoint", tester.test_truck_calculation_enhanced_endpoint),
+        ("Truck Calculation Mathematical Accuracy", tester.test_truck_calculation_mathematical_accuracy),
+        ("Truck Calculation Edge Cases", tester.test_truck_calculation_edge_cases),
+        ("Truck Calculation Consistency Between Endpoints", tester.test_truck_calculation_consistency_between_endpoints),
+        ("Truck Calculation Integration with 20-Palette System", tester.test_truck_calculation_integration_with_20_palette_system),
         # Sourcing Intelligence Tests
         ("Sourcing Intelligence - Basic Calculate", tester.test_sourcing_intelligence_basic_calculate),
         ("Sourcing Intelligence - Enhanced Calculate", tester.test_sourcing_intelligence_enhanced_calculate),
