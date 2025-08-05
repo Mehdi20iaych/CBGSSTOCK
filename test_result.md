@@ -195,17 +195,17 @@
           agent: "main"
           comment: "UPDATED: Optimized AI context specifically for single-day data analysis to avoid multi-day assumptions. Focused on daily activity insights."
 
-  - task: "Add delivery optimization UI with depot summaries and efficiency indicators"
+  - task: "Add truck calculation (pallets/24) for delivery optimization"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/App.js"
+    file: "/app/backend/server.py, /app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "COMPREHENSIVE UI ENHANCEMENT: Added sophisticated delivery optimization dashboard to frontend. Features: (1) New 'Optimisation des Livraisons' summary section with purple gradient theme showing efficient/inefficient depots, total palettes, and 20-palette minimum, (2) Detailed depot breakdown with status indicators, palette counts, and item counts, (3) Smart suggestions display for inefficient depots showing recommended additional items with quantities and palette info, (4) New table columns: 'Palettes' column showing palette quantities with color coding (green for efficient, orange for inefficient), 'Livraison' column showing delivery efficiency status with visual indicators, (5) Optimization warnings when depots don't meet 20-palette minimum. Maintains existing design consistency while adding powerful logistics optimization insights."
+          comment: "ENHANCEMENT: Added comprehensive truck calculation functionality. Backend: Added trucks_needed calculation to depot summaries (math.ceil(total_palettes / 24)) and total_trucks to delivery optimization summary. Frontend: Added 'Total Camions' display in delivery optimization summary and trucks display for each depot with proper French pluralization and styling based on delivery efficiency. System now calculates exactly how many trucks (24 pallets per truck) are needed for each depot and total deliveries."
 
 ## frontend:
   - task: "Add dual file upload for order and inventory data"
