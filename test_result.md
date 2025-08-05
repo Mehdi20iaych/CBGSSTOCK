@@ -197,15 +197,18 @@
 
   - task: "Add truck calculation (pallets/24) for delivery optimization"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py, /app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "ENHANCEMENT: Added comprehensive truck calculation functionality. Backend: Added trucks_needed calculation to depot summaries (math.ceil(total_palettes / 24)) and total_trucks to delivery optimization summary. Frontend: Added 'Total Camions' display in delivery optimization summary and trucks display for each depot with proper French pluralization and styling based on delivery efficiency. System now calculates exactly how many trucks (24 pallets per truck) are needed for each depot and total deliveries."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TRUCK CALCULATION TESTING COMPLETED: All truck calculation functionality working perfectly! Executed 52/52 backend tests with 100% pass rate. KEY ACHIEVEMENTS: (1) Basic & Enhanced Endpoints: Both /api/calculate and /api/enhanced-calculate endpoints correctly include trucks_needed in depot summaries and total_trucks in delivery optimization summary, (2) Mathematical Accuracy: Verified math.ceil(total_palettes / 24) formula working correctly - tested edge cases from 0 to 73 pallets, all calculations accurate, (3) Integration with 20-Palette System: Truck calculations properly integrated with delivery optimization - inefficient depots (<20 palettes) and efficient depots (≥20 palettes) both show correct truck requirements, (4) Consistency: Truck calculations identical between basic and enhanced endpoints, ensuring data consistency, (5) Response Structure: All required fields present (trucks_needed per depot, total_trucks in summary), proper data types and formatting, (6) Edge Cases: Handles 0 palettes (0 trucks), exactly 24 palettes (1 truck), 25 palettes (2 trucks), etc. - all mathematical edge cases verified. CRITICAL FIXES ALSO VERIFIED: (1) Data Reading Fix: Excel upload now properly processes ALL rows including those with missing 'Stock Utilisation Libre' values - missing stock data filled with 0, only essential data (Date de Commande, Quantité Commandée) causes row drops, (2) Depot Organization Fix: Both calculation endpoints now properly organize results by depot with items grouped together and critical items appearing first within each depot group. System ready for production use with complete truck calculation and delivery optimization capabilities."
 
 ## frontend:
   - task: "Add dual file upload for order and inventory data"
