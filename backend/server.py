@@ -343,12 +343,16 @@ async def upload_excel(file: UploadFile = File(...)):
             )
         
         # Clean and process data
-        df['Date de Commande'] = pd.to_datetime(df['Date de Commande'])
+        df['Date de Commande'] = pd.to_datetime(df['Date de Commande'], errors='coerce')
         df['Quantité Commandée'] = pd.to_numeric(df['Quantité Commandée'], errors='coerce')
         df['Stock Utilisation Libre'] = pd.to_numeric(df['Stock Utilisation Libre'], errors='coerce')
         
-        # Remove rows with invalid data
-        df = df.dropna(subset=['Date de Commande', 'Quantité Commandée', 'Stock Utilisation Libre'])
+        # Remove rows with invalid essential data (only Date and Quantité are essential)
+        # Keep rows even if Stock Utilisation Libre is missing - we'll handle this in calculations
+        df = df.dropna(subset=['Date de Commande', 'Quantité Commandée'])
+        
+        # Fill missing Stock Utilisation Libre with 0 (assume no current stock if not specified)
+        df['Stock Utilisation Libre'] = df['Stock Utilisation Libre'].fillna(0)
         
         # Generate session ID for this upload
         session_id = str(uuid.uuid4())
