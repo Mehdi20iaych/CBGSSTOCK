@@ -572,6 +572,60 @@ function App() {
                     </div>
                   )}
                 </div>
+
+                {/* Transit Stock Upload */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-medium text-blue-800 mb-3 flex items-center space-x-2">
+                    <TruckIcon className="w-5 h-5 text-blue-600" />
+                    <span>3. Télécharger Stock en Transit</span>
+                  </h3>
+                  <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                    <input
+                      ref={transitFileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleTransitFileUpload}
+                      className="hidden"
+                      id="transit-file-upload"
+                    />
+                    <label
+                      htmlFor="transit-file-upload"
+                      className="cursor-pointer flex flex-col items-center space-y-2"
+                    >
+                      <TruckIcon className="w-8 h-8 text-blue-400" />
+                      <div className="text-sm font-medium text-blue-800">
+                        Cliquez pour télécharger les données de stock en transit
+                      </div>
+                      <div className="text-sm text-blue-600">
+                        Avec colonnes: Article (Col. A), Division (Col. C), Quantité (Col. I)
+                      </div>
+                    </label>
+                  </div>
+
+                  {transitData && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                      <h4 className="font-medium text-blue-800 mb-2 flex items-center space-x-2">
+                        <CheckCircleIcon className="w-5 h-5 text-blue-600" />
+                        <span>STOCK EN TRANSIT CHARGÉ</span>
+                      </h4>
+                      <div className="text-sm text-blue-700 space-y-1">
+                        <p>Enregistrements: <strong>{formatNumber(transitData.records_count)}</strong></p>
+                        <p>Articles: <strong>{transitData.summary.articles_count}</strong></p>
+                        <p>Quantité Totale: <strong>{formatNumber(transitData.summary.total_transit_quantity)}</strong></p>
+                        <p>Divisions: <strong>{transitData.summary.divisions.join(', ')}</strong></p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!transitData && (
+                    <div className="bg-blue-100 border border-blue-300 rounded-lg p-3 mt-4">
+                      <p className="text-sm text-blue-700 flex items-start space-x-2">
+                        <LightBulbIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <span><strong>Optionnel:</strong> Téléchargez les données de stock en transit pour inclure les marchandises déjà expédiées vers les dépôts dans les calculs.</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
