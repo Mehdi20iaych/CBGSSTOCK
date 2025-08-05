@@ -176,6 +176,7 @@ function App() {
           days: parseInt(days),
           order_session_id: sessionId,
           inventory_session_id: inventorySessionId,
+          transit_session_id: transitSessionId,
           product_filter: selectedProducts.length > 0 ? selectedProducts : null,
           packaging_filter: selectedPackaging.length > 0 ? selectedPackaging : null,
         }),
