@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import os
 import uuid
 import json
+import math
 from typing import List, Dict, Optional
 import google.generativeai as genai
 from pymongo import MongoClient
