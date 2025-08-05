@@ -1150,6 +1150,15 @@ function App() {
                             </span>
                           </td>
                           <td className="border border-gray-300 p-3 text-right">{formatNumber(item.current_stock)}</td>
+                          {transitData && (
+                            <td className="border border-gray-300 p-3 text-right">
+                              <span className={`font-medium ${
+                                item.transit_available > 0 ? 'text-blue-600' : 'text-gray-500'
+                              }`}>
+                                {item.transit_available !== undefined ? formatNumber(item.transit_available) : '0'}
+                              </span>
+                            </td>
+                          )}
                           <td className="border border-gray-300 p-3 text-right">
                             <span className={item.quantity_to_send > 0 ? 'text-blue-600 font-bold' : 'text-gray-500'}>
                               {formatNumber(item.quantity_to_send)}
