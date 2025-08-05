@@ -207,6 +207,112 @@ async def upload_inventory_excel(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du traitement du fichier d'inventaire: {str(e)}")
 
+@app.post("/api/upload-transit-excel")
+async def upload_transit_excel(file: UploadFile = File(...)):
+    try:
+        # Validate file type
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="Veuillez télécharger un fichier Excel (.xlsx ou .xls)")
+        
+        # Read Excel file
+        contents = await file.read()
+        
+        # Parse Excel with pandas
+        df = pd.read_excel(contents)
+        
+        # Validate required columns for transit data
+        # Column A = Article, Column C = Division (depot), Column I = Quantité
+        df_columns = df.columns.tolist()
+        
+        if len(df_columns) < 9:  # Need at least 9 columns to access column I
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Le fichier doit avoir au moins 9 colonnes. Colonnes trouvées: {len(df_columns)}"
+            )
+        
+        # Access columns by position (0-indexed)
+        # Column A = index 0, Column C = index 2, Column I = index 8
+        article_col = df.iloc[:, 0]  # Column A
+        division_col = df.iloc[:, 2]  # Column C  
+        quantity_col = df.iloc[:, 8]  # Column I
+        
+        # Create processed dataframe
+        processed_df = pd.DataFrame({
+            'Article': article_col,
+            'Division': division_col,
+            'Quantité': quantity_col
+        })
+        
+        # Clean and process transit data
+        processed_df['Article'] = processed_df['Article'].astype(str)
+        processed_df['Quantité'] = pd.to_numeric(processed_df['Quantité'], errors='coerce')
+        
+        # Remove rows with invalid data
+        processed_df = processed_df.dropna(subset=['Article', 'Division', 'Quantité'])
+        processed_df = processed_df[processed_df['Quantité'] > 0]  # Only positive quantities
+        
+        # Convert numpy types to Python native types for MongoDB compatibility
+        processed_df['Quantité'] = processed_df['Quantité'].astype(float)
+        
+        # Generate session ID for this transit upload
+        session_id = str(uuid.uuid4())
+        
+        # Get unique values for overview
+        unique_divisions = sorted(processed_df['Division'].unique().tolist())
+        unique_articles = sorted(processed_df['Article'].unique().tolist())
+        total_transit_quantity = float(processed_df['Quantité'].sum())
+        
+        # Store transit data temporarily
+        transit_data[session_id] = {
+            'data': processed_df.to_dict('records'),
+            'upload_time': datetime.now(),
+            'summary': {
+                'divisions': unique_divisions,
+                'articles_count': len(unique_articles),
+                'total_transit_quantity': total_transit_quantity,
+                'records_count': len(processed_df)
+            }
+        }
+        
+        # Convert DataFrame to dict with Python native types for MongoDB
+        data_records = []
+        for _, row in processed_df.iterrows():
+            record = {}
+            for col in processed_df.columns:
+                value = row[col]
+                # Convert numpy types to Python native types
+                if pd.isna(value):
+                    record[col] = None
+                elif isinstance(value, (np.integer, np.int64)):
+                    record[col] = int(value)
+                elif isinstance(value, (np.floating, np.float64)):
+                    record[col] = float(value)
+                else:
+                    record[col] = value
+            data_records.append(record)
+        
+        # Save to MongoDB
+        document = {
+            'session_id': session_id,
+            'type': 'transit',
+            'data': data_records,
+            'upload_time': datetime.now(),
+            'summary': transit_data[session_id]['summary']
+        }
+        collection.insert_one(document)
+        
+        return {
+            "session_id": session_id,
+            "message": "Données de stock en transit téléchargées avec succès",
+            "records_count": len(processed_df),
+            "summary": transit_data[session_id]['summary']
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du traitement du fichier de stock en transit: {str(e)}")
+
 @app.post("/api/upload-excel")
 async def upload_excel(file: UploadFile = File(...)):
     try:
