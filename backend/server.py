@@ -518,6 +518,9 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             }
             
             # Add inventory availability if inventory data is provided
+            total_available_inventory = 0
+            transit_available = 0
+            
             if request.inventory_session_id and request.inventory_session_id in inventory_data:
                 inventory_df = pd.DataFrame(inventory_data[request.inventory_session_id]['data'])
                 
@@ -525,29 +528,68 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                 matching_inventory = inventory_df[inventory_df['Article'].astype(str) == str(row['article_code'])]
                 
                 if not matching_inventory.empty:
-                    total_available = float(matching_inventory['STOCK À DATE'].sum())
-                    result_item['inventory_available'] = round(total_available, 2)
-                    result_item['can_fulfill'] = bool(total_available >= quantity_to_send)
-                    
-                    if total_available >= quantity_to_send:
-                        result_item['inventory_status'] = 'sufficient'
-                        result_item['inventory_status_text'] = 'EN STOCK'
-                        result_item['inventory_status_color'] = 'text-green-600 bg-green-50'
-                    elif total_available > 0:
-                        result_item['inventory_status'] = 'partial'
-                        result_item['inventory_status_text'] = 'STOCK FAIBLE'
-                        result_item['inventory_status_color'] = 'text-yellow-600 bg-yellow-50'
-                        result_item['inventory_shortage'] = round(quantity_to_send - total_available, 2)
-                    else:
-                        result_item['inventory_status'] = 'insufficient'
-                        result_item['inventory_status_text'] = 'HORS STOCK'
-                        result_item['inventory_status_color'] = 'text-red-600 bg-red-50'
-                        result_item['inventory_shortage'] = round(quantity_to_send, 2)
+                    total_available_inventory = float(matching_inventory['STOCK À DATE'].sum())
+            
+            # Add transit stock if transit data is provided
+            if request.transit_session_id and request.transit_session_id in transit_data:
+                transit_df = pd.DataFrame(transit_data[request.transit_session_id]['data'])
+                
+                # Find matching article AND depot in transit data
+                matching_transit = transit_df[
+                    (transit_df['Article'].astype(str) == str(row['article_code'])) &
+                    (transit_df['Division'].astype(str) == str(row['depot']))
+                ]
+                
+                if not matching_transit.empty:
+                    transit_available = float(matching_transit['Quantité'].sum())
+            
+            # Calculate total available (inventory + transit)
+            total_available = total_available_inventory + transit_available
+            
+            # Store transit information
+            result_item['transit_available'] = round(transit_available, 2)
+            result_item['inventory_available'] = round(total_available_inventory, 2)
+            result_item['total_available'] = round(total_available, 2)
+            
+            # Update can_fulfill based on total availability (inventory + transit)
+            result_item['can_fulfill'] = bool(total_available >= quantity_to_send)
+            
+            if request.inventory_session_id and request.inventory_session_id in inventory_data:
+                if total_available >= quantity_to_send:
+                    result_item['inventory_status'] = 'sufficient'
+                    result_item['inventory_status_text'] = 'EN STOCK' + (f' (+{round(transit_available, 2)} transit)' if transit_available > 0 else '')
+                    result_item['inventory_status_color'] = 'text-green-600 bg-green-50'
+                elif total_available > 0:
+                    result_item['inventory_status'] = 'partial'
+                    result_item['inventory_status_text'] = 'STOCK FAIBLE' + (f' (+{round(transit_available, 2)} transit)' if transit_available > 0 else '')
+                    result_item['inventory_status_color'] = 'text-yellow-600 bg-yellow-50'
+                    result_item['inventory_shortage'] = round(quantity_to_send - total_available, 2)
                 else:
-                    result_item['inventory_available'] = 0.00
-                    result_item['can_fulfill'] = False
-                    result_item['inventory_status'] = 'not_found'
-                    result_item['inventory_status_text'] = 'ARTICLE INTROUVABLE'
+                    result_item['inventory_status'] = 'insufficient'
+                    result_item['inventory_status_text'] = 'HORS STOCK' + (f' (+{round(transit_available, 2)} transit)' if transit_available > 0 else '')
+                    result_item['inventory_status_color'] = 'text-red-600 bg-red-50'
+                    result_item['inventory_shortage'] = round(quantity_to_send - total_available, 2)
+                    
+                # Add special status if only transit data makes it sufficient
+                if total_available_inventory == 0 and transit_available >= quantity_to_send:
+                    result_item['inventory_status'] = 'transit_only'
+                    result_item['inventory_status_text'] = f'TRANSIT SUFFISANT ({round(transit_available, 2)})'
+                    result_item['inventory_status_color'] = 'text-blue-600 bg-blue-50'
+                    
+            elif request.transit_session_id and request.transit_session_id in transit_data:
+                # Only transit data available, no inventory data
+                if transit_available >= quantity_to_send:
+                    result_item['inventory_status'] = 'transit_sufficient'
+                    result_item['inventory_status_text'] = f'TRANSIT SUFFISANT ({round(transit_available, 2)})'
+                    result_item['inventory_status_color'] = 'text-blue-600 bg-blue-50'
+                elif transit_available > 0:
+                    result_item['inventory_status'] = 'transit_partial'
+                    result_item['inventory_status_text'] = f'TRANSIT PARTIEL ({round(transit_available, 2)})'
+                    result_item['inventory_status_color'] = 'text-yellow-600 bg-yellow-50'
+                    result_item['inventory_shortage'] = round(quantity_to_send - transit_available, 2)
+                else:
+                    result_item['inventory_status'] = 'no_transit'
+                    result_item['inventory_status_text'] = 'AUCUN TRANSIT'
                     result_item['inventory_status_color'] = 'text-gray-600 bg-gray-50'
                     result_item['inventory_shortage'] = round(quantity_to_send, 2)
             else:
