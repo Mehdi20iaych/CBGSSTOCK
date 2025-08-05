@@ -837,10 +837,14 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
         depot_summaries = []
         
         for depot_name, depot_info in depot_groups.items():
+            # Calculate trucks needed (pallets/24, rounded up)
+            trucks_needed = math.ceil(depot_info['total_palettes'] / 24) if depot_info['total_palettes'] > 0 else 0
+            
             # Add depot summary
             depot_summaries.append({
                 'depot_name': depot_name,
                 'total_palettes': depot_info['total_palettes'],
+                'trucks_needed': trucks_needed,
                 'delivery_status': depot_info['delivery_status'],
                 'items_count': len(depot_info['items']),
                 'suggested_items': depot_info['suggested_items'],
