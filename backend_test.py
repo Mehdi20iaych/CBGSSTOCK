@@ -2392,6 +2392,467 @@ class StockManagementAPITester:
         
         return False
 
+    def test_truck_calculation_basic_endpoint(self):
+        """Test truck calculation in basic /api/calculate endpoint"""
+        if not self.session_id:
+            print("❌ No session ID available for truck calculation test")
+            return False
+            
+        calculation_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Truck Calculation - Basic Calculate Endpoint",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'summary' in response:
+            summary = response['summary']
+            
+            # Check for delivery_optimization section
+            if 'delivery_optimization' not in summary:
+                print("❌ Missing delivery_optimization section in summary")
+                return False
+            
+            delivery_opt = summary['delivery_optimization']
+            
+            # Check for total_trucks field
+            if 'total_trucks' not in delivery_opt:
+                print("❌ Missing total_trucks field in delivery_optimization")
+                return False
+            
+            total_trucks = delivery_opt['total_trucks']
+            print(f"✅ Found total_trucks: {total_trucks}")
+            
+            # Check depot_summaries for trucks_needed
+            if 'depot_summaries' not in delivery_opt:
+                print("❌ Missing depot_summaries in delivery_optimization")
+                return False
+            
+            depot_summaries = delivery_opt['depot_summaries']
+            trucks_sum = 0
+            
+            for depot in depot_summaries:
+                if 'trucks_needed' not in depot:
+                    print(f"❌ Missing trucks_needed field in depot: {depot.get('depot_name', 'Unknown')}")
+                    return False
+                
+                depot_trucks = depot['trucks_needed']
+                depot_palettes = depot.get('total_palettes', 0)
+                
+                # Verify truck calculation: math.ceil(total_palettes / 24)
+                import math
+                expected_trucks = math.ceil(depot_palettes / 24) if depot_palettes > 0 else 0
+                
+                if depot_trucks != expected_trucks:
+                    print(f"❌ Incorrect truck calculation for depot {depot.get('depot_name')}: got {depot_trucks}, expected {expected_trucks} (palettes: {depot_palettes})")
+                    return False
+                
+                trucks_sum += depot_trucks
+                print(f"✅ Depot {depot.get('depot_name')}: {depot_palettes} palettes → {depot_trucks} trucks")
+            
+            # Verify total_trucks matches sum of individual depot trucks
+            if total_trucks != trucks_sum:
+                print(f"❌ Total trucks mismatch: summary shows {total_trucks}, depot sum is {trucks_sum}")
+                return False
+            
+            print(f"✅ Truck calculation verified: {trucks_sum} total trucks across all depots")
+            return True
+        
+        return False
+
+    def test_truck_calculation_enhanced_endpoint(self):
+        """Test truck calculation in enhanced /api/enhanced-calculate endpoint"""
+        if not self.session_id:
+            print("❌ No session ID available for enhanced truck calculation test")
+            return False
+            
+        calculation_data = {
+            "days": 30,
+            "order_session_id": self.session_id,
+            "inventory_session_id": self.inventory_session_id,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Truck Calculation - Enhanced Calculate Endpoint",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'summary' in response:
+            summary = response['summary']
+            
+            # Check for delivery_optimization section
+            if 'delivery_optimization' not in summary:
+                print("❌ Missing delivery_optimization section in enhanced summary")
+                return False
+            
+            delivery_opt = summary['delivery_optimization']
+            
+            # Check for total_trucks field
+            if 'total_trucks' not in delivery_opt:
+                print("❌ Missing total_trucks field in enhanced delivery_optimization")
+                return False
+            
+            total_trucks = delivery_opt['total_trucks']
+            print(f"✅ Enhanced endpoint found total_trucks: {total_trucks}")
+            
+            # Check depot_summaries for trucks_needed
+            if 'depot_summaries' not in delivery_opt:
+                print("❌ Missing depot_summaries in enhanced delivery_optimization")
+                return False
+            
+            depot_summaries = delivery_opt['depot_summaries']
+            trucks_sum = 0
+            
+            for depot in depot_summaries:
+                if 'trucks_needed' not in depot:
+                    print(f"❌ Missing trucks_needed field in enhanced depot: {depot.get('depot_name', 'Unknown')}")
+                    return False
+                
+                depot_trucks = depot['trucks_needed']
+                depot_palettes = depot.get('total_palettes', 0)
+                
+                # Verify truck calculation: math.ceil(total_palettes / 24)
+                import math
+                expected_trucks = math.ceil(depot_palettes / 24) if depot_palettes > 0 else 0
+                
+                if depot_trucks != expected_trucks:
+                    print(f"❌ Incorrect enhanced truck calculation for depot {depot.get('depot_name')}: got {depot_trucks}, expected {expected_trucks} (palettes: {depot_palettes})")
+                    return False
+                
+                trucks_sum += depot_trucks
+                print(f"✅ Enhanced - Depot {depot.get('depot_name')}: {depot_palettes} palettes → {depot_trucks} trucks")
+            
+            # Verify total_trucks matches sum of individual depot trucks
+            if total_trucks != trucks_sum:
+                print(f"❌ Enhanced total trucks mismatch: summary shows {total_trucks}, depot sum is {trucks_sum}")
+                return False
+            
+            print(f"✅ Enhanced truck calculation verified: {trucks_sum} total trucks across all depots")
+            return True
+        
+        return False
+
+    def test_truck_calculation_mathematical_accuracy(self):
+        """Test mathematical accuracy of truck calculation with various palette quantities"""
+        if not self.session_id:
+            print("❌ No session ID available for mathematical accuracy test")
+            return False
+        
+        # Test various scenarios to verify math.ceil(palettes / 24) logic
+        test_cases = [
+            {"palettes": 0, "expected_trucks": 0, "description": "0 pallets = 0 trucks"},
+            {"palettes": 1, "expected_trucks": 1, "description": "1 pallet = 1 truck"},
+            {"palettes": 24, "expected_trucks": 1, "description": "24 pallets = 1 truck"},
+            {"palettes": 25, "expected_trucks": 2, "description": "25 pallets = 2 trucks"},
+            {"palettes": 48, "expected_trucks": 2, "description": "48 pallets = 2 trucks"},
+            {"palettes": 49, "expected_trucks": 3, "description": "49 pallets = 3 trucks"},
+            {"palettes": 72, "expected_trucks": 3, "description": "72 pallets = 3 trucks"},
+            {"palettes": 73, "expected_trucks": 4, "description": "73 pallets = 4 trucks"}
+        ]
+        
+        print("🧮 Testing mathematical accuracy of truck calculation...")
+        
+        import math
+        all_passed = True
+        
+        for test_case in test_cases:
+            palettes = test_case["palettes"]
+            expected = test_case["expected_trucks"]
+            description = test_case["description"]
+            
+            # Calculate using the same formula as backend
+            calculated = math.ceil(palettes / 24) if palettes > 0 else 0
+            
+            if calculated == expected:
+                print(f"✅ {description}: {calculated} trucks")
+            else:
+                print(f"❌ {description}: got {calculated} trucks, expected {expected}")
+                all_passed = False
+        
+        # Now test with actual API data to see if we can find examples
+        calculation_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Get Data for Mathematical Verification",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'summary' in response:
+            delivery_opt = response['summary'].get('delivery_optimization', {})
+            depot_summaries = delivery_opt.get('depot_summaries', [])
+            
+            print("\n🔍 Verifying actual API calculations...")
+            for depot in depot_summaries:
+                depot_name = depot.get('depot_name', 'Unknown')
+                palettes = depot.get('total_palettes', 0)
+                trucks = depot.get('trucks_needed', 0)
+                
+                expected_trucks = math.ceil(palettes / 24) if palettes > 0 else 0
+                
+                if trucks == expected_trucks:
+                    print(f"✅ {depot_name}: {palettes} palettes → {trucks} trucks (correct)")
+                else:
+                    print(f"❌ {depot_name}: {palettes} palettes → {trucks} trucks (expected {expected_trucks})")
+                    all_passed = False
+        
+        return all_passed
+
+    def test_truck_calculation_edge_cases(self):
+        """Test edge cases for truck calculation"""
+        if not self.session_id:
+            print("❌ No session ID available for edge cases test")
+            return False
+        
+        print("🔍 Testing truck calculation edge cases...")
+        
+        # Test with filters that might result in 0 palettes
+        edge_case_data = {
+            "days": 30,
+            "product_filter": ["NON_EXISTENT_PRODUCT"],  # Should result in no data
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Truck Calculation Edge Case - No Data",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=edge_case_data
+        )
+        
+        if success:
+            calculations = response.get('calculations', [])
+            summary = response.get('summary', {})
+            
+            if len(calculations) == 0:
+                print("✅ No calculations returned for non-existent product filter")
+                
+                # Check that delivery optimization still works with empty data
+                delivery_opt = summary.get('delivery_optimization', {})
+                total_trucks = delivery_opt.get('total_trucks', -1)
+                
+                if total_trucks == 0:
+                    print("✅ Total trucks correctly calculated as 0 for empty data")
+                else:
+                    print(f"❌ Expected 0 total trucks for empty data, got {total_trucks}")
+                    return False
+            else:
+                print(f"⚠️ Expected no calculations but got {len(calculations)} items")
+        
+        # Test with very small quantities
+        small_quantity_data = {
+            "days": 1,  # Very short period
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success2, response2 = self.run_test(
+            "Truck Calculation Edge Case - Small Quantities",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=small_quantity_data
+        )
+        
+        if success2 and 'summary' in response2:
+            delivery_opt = response2['summary'].get('delivery_optimization', {})
+            depot_summaries = delivery_opt.get('depot_summaries', [])
+            
+            print("✅ Edge case testing with 1-day calculation period:")
+            for depot in depot_summaries:
+                depot_name = depot.get('depot_name', 'Unknown')
+                palettes = depot.get('total_palettes', 0)
+                trucks = depot.get('trucks_needed', 0)
+                
+                import math
+                expected_trucks = math.ceil(palettes / 24) if palettes > 0 else 0
+                
+                if trucks == expected_trucks:
+                    print(f"✅ {depot_name}: {palettes} palettes → {trucks} trucks")
+                else:
+                    print(f"❌ {depot_name}: incorrect calculation {palettes} → {trucks} (expected {expected_trucks})")
+                    return False
+        
+        return success and success2
+
+    def test_truck_calculation_consistency_between_endpoints(self):
+        """Test that truck calculations are consistent between basic and enhanced endpoints"""
+        if not self.session_id:
+            print("❌ No session ID available for consistency test")
+            return False
+        
+        print("🔄 Testing truck calculation consistency between endpoints...")
+        
+        # Get basic calculation results
+        basic_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success1, basic_response = self.run_test(
+            "Consistency Test - Basic Calculate",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=basic_data
+        )
+        
+        # Get enhanced calculation results
+        enhanced_data = {
+            "days": 30,
+            "order_session_id": self.session_id,
+            "inventory_session_id": self.inventory_session_id,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success2, enhanced_response = self.run_test(
+            "Consistency Test - Enhanced Calculate",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=enhanced_data
+        )
+        
+        if success1 and success2:
+            # Compare delivery optimization summaries
+            basic_delivery = basic_response.get('summary', {}).get('delivery_optimization', {})
+            enhanced_delivery = enhanced_response.get('summary', {}).get('delivery_optimization', {})
+            
+            basic_total_trucks = basic_delivery.get('total_trucks', -1)
+            enhanced_total_trucks = enhanced_delivery.get('total_trucks', -1)
+            
+            if basic_total_trucks == enhanced_total_trucks:
+                print(f"✅ Total trucks consistent: {basic_total_trucks} trucks")
+            else:
+                print(f"❌ Total trucks inconsistent: basic={basic_total_trucks}, enhanced={enhanced_total_trucks}")
+                return False
+            
+            # Compare depot summaries
+            basic_depots = {d['depot_name']: d for d in basic_delivery.get('depot_summaries', [])}
+            enhanced_depots = {d['depot_name']: d for d in enhanced_delivery.get('depot_summaries', [])}
+            
+            inconsistencies = 0
+            for depot_name in basic_depots:
+                if depot_name in enhanced_depots:
+                    basic_depot = basic_depots[depot_name]
+                    enhanced_depot = enhanced_depots[depot_name]
+                    
+                    basic_trucks = basic_depot.get('trucks_needed', -1)
+                    enhanced_trucks = enhanced_depot.get('trucks_needed', -1)
+                    basic_palettes = basic_depot.get('total_palettes', -1)
+                    enhanced_palettes = enhanced_depot.get('total_palettes', -1)
+                    
+                    if basic_trucks != enhanced_trucks:
+                        print(f"❌ Depot {depot_name} trucks inconsistent: basic={basic_trucks}, enhanced={enhanced_trucks}")
+                        inconsistencies += 1
+                    elif basic_palettes != enhanced_palettes:
+                        print(f"❌ Depot {depot_name} palettes inconsistent: basic={basic_palettes}, enhanced={enhanced_palettes}")
+                        inconsistencies += 1
+                    else:
+                        print(f"✅ Depot {depot_name}: {basic_palettes} palettes → {basic_trucks} trucks (consistent)")
+            
+            if inconsistencies == 0:
+                print(f"✅ All depot truck calculations are consistent between endpoints")
+                return True
+            else:
+                print(f"❌ Found {inconsistencies} inconsistencies between endpoints")
+                return False
+        
+        return False
+
+    def test_truck_calculation_integration_with_20_palette_system(self):
+        """Test that truck calculation works correctly with existing 20-palette delivery optimization"""
+        if not self.session_id:
+            print("❌ No session ID available for integration test")
+            return False
+        
+        print("🚛 Testing truck calculation integration with 20-palette system...")
+        
+        calculation_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Truck Calculation Integration Test",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'summary' in response:
+            delivery_opt = response['summary'].get('delivery_optimization', {})
+            depot_summaries = delivery_opt.get('depot_summaries', [])
+            
+            efficient_depots = 0
+            inefficient_depots = 0
+            
+            for depot in depot_summaries:
+                depot_name = depot.get('depot_name', 'Unknown')
+                palettes = depot.get('total_palettes', 0)
+                trucks = depot.get('trucks_needed', 0)
+                delivery_status = depot.get('delivery_status', 'unknown')
+                
+                # Verify 20-palette logic still works
+                expected_status = 'efficient' if palettes >= 20 else 'inefficient'
+                
+                if delivery_status == expected_status:
+                    print(f"✅ {depot_name}: {palettes} palettes → {delivery_status} (correct)")
+                    if delivery_status == 'efficient':
+                        efficient_depots += 1
+                    else:
+                        inefficient_depots += 1
+                else:
+                    print(f"❌ {depot_name}: {palettes} palettes → {delivery_status} (expected {expected_status})")
+                    return False
+                
+                # Verify truck calculation
+                import math
+                expected_trucks = math.ceil(palettes / 24) if palettes > 0 else 0
+                if trucks != expected_trucks:
+                    print(f"❌ {depot_name}: incorrect truck calculation {trucks} (expected {expected_trucks})")
+                    return False
+                
+                print(f"   📦 {palettes} palettes → 🚛 {trucks} trucks")
+            
+            # Verify summary counts
+            summary_efficient = delivery_opt.get('efficient_depots', -1)
+            summary_inefficient = delivery_opt.get('inefficient_depots', -1)
+            
+            if summary_efficient == efficient_depots and summary_inefficient == inefficient_depots:
+                print(f"✅ Summary counts correct: {efficient_depots} efficient, {inefficient_depots} inefficient depots")
+            else:
+                print(f"❌ Summary counts incorrect: expected {efficient_depots}/{inefficient_depots}, got {summary_efficient}/{summary_inefficient}")
+                return False
+            
+            print("✅ Truck calculation successfully integrated with 20-palette delivery optimization system")
+            return True
+        
+        return False
+
 def main():
     print("🚀 Starting Stock Management API Tests")
     print("=" * 50)
