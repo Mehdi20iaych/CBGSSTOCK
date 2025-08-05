@@ -338,8 +338,7 @@
   run_ui: false
 
 ## test_plan:
-  current_focus:
-    - "Add truck calculation (pallets/24) for delivery optimization"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
