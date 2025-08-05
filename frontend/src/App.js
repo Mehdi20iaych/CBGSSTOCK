@@ -96,6 +96,37 @@ function App() {
     }
   };
 
+  const handleTransitFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/upload-transit-excel`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Erreur HTTP! statut: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setTransitSessionId(data.session_id);
+      setTransitData(data);
+    } catch (err) {
+      setError(`Échec du téléchargement de stock en transit: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
