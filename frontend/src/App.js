@@ -26,8 +26,10 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001
 function App() {
   const [sessionId, setSessionId] = useState(null);
   const [inventorySessionId, setInventorySessionId] = useState(null);
+  const [transitSessionId, setTransitSessionId] = useState(null);
   const [uploadedData, setUploadedData] = useState(null);
   const [inventoryData, setInventoryData] = useState(null);
+  const [transitData, setTransitData] = useState(null);
   const [calculations, setCalculations] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -42,6 +44,7 @@ function App() {
   const [showCriticalOnly, setShowCriticalOnly] = useState(false);
   const fileInputRef = useRef(null);
   const inventoryFileInputRef = useRef(null);
+  const transitFileInputRef = useRef(null);
 
   // Fetch available filters when session is created
   useEffect(() => {
