@@ -442,7 +442,7 @@ class TransitStockTester:
             for test_case in test_cases:
                 found = False
                 for calc in calculations:
-                    if calc['article_code'] == test_case['article'] and calc['depot'] == test_case['depot']:
+                    if str(calc['article_code']) == test_case['article'] and calc['depot'] == test_case['depot']:
                         found = True
                         transit_available = calc['transit_available']
                         if transit_available == test_case['expected_transit']:
