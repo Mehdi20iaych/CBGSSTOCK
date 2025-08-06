@@ -2321,7 +2321,17 @@ class SimplifiedStockManagementTester:
             ("Edge Cases", self.test_edge_cases),
             ("Sourcing Intelligence Basic", self.test_sourcing_intelligence_basic),
             ("Sourcing Intelligence Comprehensive", self.test_sourcing_intelligence_comprehensive),
-            ("Sourcing Data Consistency", self.test_sourcing_data_consistency)
+            ("Sourcing Data Consistency", self.test_sourcing_data_consistency),
+            # New depot suggestions tests
+            ("Depot Suggestions - Missing depot_name", self.test_depot_suggestions_missing_depot_name),
+            ("Depot Suggestions - No Commandes Data", self.test_depot_suggestions_no_commandes_data),
+            ("Depot Suggestions - Valid Data", self.test_depot_suggestions_valid_data),
+            ("Depot Suggestions - Response Structure", self.test_depot_suggestions_response_structure),
+            ("Depot Suggestions - Logic Verification", self.test_depot_suggestions_logic),
+            ("Depot Suggestions - Feasibility Analysis", self.test_depot_suggestions_feasibility),
+            ("Depot Suggestions - No Orders for Depot", self.test_depot_suggestions_no_orders),
+            ("Depot Suggestions - High Palettes Depot", self.test_depot_suggestions_high_palettes),
+            ("Depot Suggestions - Mathematical Accuracy", self.test_depot_suggestions_mathematical_accuracy)
         ]
         
         for test_name, test_func in tests:
