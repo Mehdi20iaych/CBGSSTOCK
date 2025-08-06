@@ -2853,6 +2853,415 @@ class StockManagementAPITester:
         
         return False
 
+    def test_new_formula_basic_calculation(self):
+        """Test the new formula in basic calculation endpoint: quantity_to_send = required_stock - current_stock"""
+        if not self.session_id:
+            print("❌ No session ID available for new formula basic calculation test")
+            return False
+        
+        print("\n🧮 Testing NEW FORMULA in Basic Calculation...")
+        print("Formula: Quantité à Envoyer = (CQM x JOURS A COUVRIR) - Stock Actuel")
+        
+        # Test with 30 days to get predictable results
+        calculation_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "New Formula - Basic Calculation",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            print(f"📊 Testing formula on {len(calculations)} items...")
+            
+            for calc in calculations:
+                # Extract values
+                adc = calc['average_daily_consumption']
+                current_stock = calc['current_stock']
+                days = 30
+                required_stock = calc['required_for_x_days']
+                quantity_to_send = calc['quantity_to_send']
+                
+                # Calculate expected values
+                expected_required = days * adc
+                expected_quantity_to_send = expected_required - current_stock  # NEW FORMULA (no max(0, ...))
+                
+                print(f"\n📋 Article {calc['article_code']}:")
+                print(f"   ADC: {adc}, Current Stock: {current_stock}")
+                print(f"   Required for {days} days: {required_stock} (expected: {expected_required:.2f})")
+                print(f"   Quantity to Send: {quantity_to_send} (expected: {expected_quantity_to_send:.2f})")
+                
+                # Verify required stock calculation
+                if abs(required_stock - expected_required) > 0.01:
+                    print(f"❌ Required stock mismatch: got {required_stock}, expected {expected_required:.2f}")
+                    return False
+                
+                # Verify NEW FORMULA: quantity_to_send = required_stock - current_stock (allows negative)
+                if abs(quantity_to_send - expected_quantity_to_send) > 0.01:
+                    print(f"❌ NEW FORMULA FAILED: got {quantity_to_send}, expected {expected_quantity_to_send:.2f}")
+                    return False
+                
+                # Check if negative values are allowed (key requirement)
+                if current_stock > expected_required:
+                    if quantity_to_send >= 0:
+                        print(f"❌ NEW FORMULA should allow negative values when current_stock > required_stock")
+                        return False
+                    else:
+                        print(f"✅ NEW FORMULA correctly allows negative value: {quantity_to_send}")
+                
+                # Verify palette calculation handles negative quantities correctly
+                palette_quantity = calc['palette_quantity']
+                expected_palettes = round(quantity_to_send / 30, 2) if quantity_to_send > 0 else 0
+                
+                if abs(palette_quantity - expected_palettes) > 0.01:
+                    print(f"❌ Palette calculation error: got {palette_quantity}, expected {expected_palettes}")
+                    return False
+                
+                if quantity_to_send <= 0 and palette_quantity != 0:
+                    print(f"❌ Palette quantity should be 0 for negative/zero quantity_to_send")
+                    return False
+                
+                print(f"✅ NEW FORMULA verified for Article {calc['article_code']}")
+            
+            print("✅ NEW FORMULA working correctly in basic calculation endpoint")
+            return True
+        
+        return False
+
+    def test_new_formula_enhanced_calculation(self):
+        """Test the new formula in enhanced calculation endpoint with transit stock"""
+        if not self.session_id:
+            print("❌ No session ID available for new formula enhanced calculation test")
+            return False
+        
+        print("\n🧮 Testing NEW FORMULA in Enhanced Calculation...")
+        print("Formula: Quantité à Envoyer = (CQM x JOURS A COUVRIR) - Stock Transit - Stock Actuel")
+        
+        # Create transit stock data for testing
+        transit_file = self.create_sample_transit_excel_file()
+        
+        files = {
+            'file': ('sample_transit_data.xlsx', transit_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        # Upload transit data
+        transit_success, transit_response = self.run_test(
+            "Upload Transit Data for New Formula Test",
+            "POST",
+            "api/upload-transit-excel",
+            200,
+            files=files
+        )
+        
+        if not transit_success:
+            print("❌ Failed to upload transit data for new formula test")
+            return False
+        
+        transit_session_id = transit_response['session_id']
+        
+        # Test enhanced calculation with transit stock
+        calculation_data = {
+            "days": 30,
+            "order_session_id": self.session_id,
+            "inventory_session_id": self.inventory_session_id,
+            "transit_session_id": transit_session_id,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "New Formula - Enhanced Calculation with Transit",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            print(f"📊 Testing enhanced formula on {len(calculations)} items...")
+            
+            for calc in calculations:
+                # Extract values
+                adc = calc['average_daily_consumption']
+                current_stock = calc['current_stock']
+                transit_available = calc.get('transit_available', 0)
+                days = 30
+                required_stock = calc['required_for_x_days']
+                quantity_to_send = calc['quantity_to_send']
+                
+                # Calculate expected values using NEW FORMULA
+                expected_required = days * adc
+                expected_quantity_to_send = expected_required - transit_available - current_stock  # NEW FORMULA
+                
+                print(f"\n📋 Article {calc['article_code']}:")
+                print(f"   ADC: {adc}, Current Stock: {current_stock}, Transit: {transit_available}")
+                print(f"   Required for {days} days: {required_stock} (expected: {expected_required:.2f})")
+                print(f"   Quantity to Send: {quantity_to_send} (expected: {expected_quantity_to_send:.2f})")
+                
+                # Verify NEW ENHANCED FORMULA: quantity_to_send = required_stock - transit_available - current_stock
+                if abs(quantity_to_send - expected_quantity_to_send) > 0.01:
+                    print(f"❌ NEW ENHANCED FORMULA FAILED: got {quantity_to_send}, expected {expected_quantity_to_send:.2f}")
+                    return False
+                
+                # Check if negative values are allowed when total stock exceeds requirements
+                total_available = current_stock + transit_available
+                if total_available > expected_required:
+                    if quantity_to_send >= 0:
+                        print(f"❌ NEW ENHANCED FORMULA should allow negative values when total_available > required_stock")
+                        return False
+                    else:
+                        print(f"✅ NEW ENHANCED FORMULA correctly allows negative value: {quantity_to_send}")
+                
+                # Verify palette calculation handles negative quantities correctly
+                palette_quantity = calc['palette_quantity']
+                expected_palettes = round(quantity_to_send / 30, 2) if quantity_to_send > 0 else 0
+                
+                if abs(palette_quantity - expected_palettes) > 0.01:
+                    print(f"❌ Palette calculation error: got {palette_quantity}, expected {expected_palettes}")
+                    return False
+                
+                print(f"✅ NEW ENHANCED FORMULA verified for Article {calc['article_code']}")
+            
+            print("✅ NEW ENHANCED FORMULA working correctly in enhanced calculation endpoint")
+            return True
+        
+        return False
+
+    def create_sample_transit_excel_file(self):
+        """Create a sample transit Excel file for testing"""
+        # Create sample transit data with Column A=Article, Column C=Division, Column I=Quantité
+        data = {
+            'Article': ['1011', '1016', '1021', '1033', '2011', '2014'],
+            'B': ['', '', '', '', '', ''],  # Column B (empty)
+            'Division': ['M212', 'M212', 'M213', 'M212', 'M213', 'M212'],  # Column C
+            'D': ['', '', '', '', '', ''],  # Column D (empty)
+            'E': ['', '', '', '', '', ''],  # Column E (empty)
+            'F': ['', '', '', '', '', ''],  # Column F (empty)
+            'G': ['', '', '', '', '', ''],  # Column G (empty)
+            'H': ['', '', '', '', '', ''],  # Column H (empty)
+            'Quantité': [30, 20, 25, 15, 40, 10]  # Column I
+        }
+        
+        df = pd.DataFrame(data)
+        
+        # Create Excel file in memory
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        return excel_buffer
+
+    def test_new_formula_negative_scenarios(self):
+        """Test specific scenarios where the new formula should produce negative values"""
+        if not self.session_id:
+            print("❌ No session ID available for negative scenarios test")
+            return False
+        
+        print("\n🧮 Testing NEW FORMULA Negative Value Scenarios...")
+        
+        # Create test data with high current stock to force negative quantity_to_send
+        high_stock_data = {
+            'Date de Commande': [datetime.now() - timedelta(days=10)],
+            'Article': ['TEST001'],
+            'Désignation Article': ['Test High Stock Product'],
+            'Point d\'Expédition': ['DEPOT1'],
+            'Nom Division': ['Test Division'],
+            'Quantité Commandée': [10],  # Low consumption
+            'Stock Utilisation Libre': [1000],  # Very high current stock
+            'Ecart': [0],
+            'Type Emballage': ['Verre'],
+            'Quantité en Palette': [24]
+        }
+        
+        df = pd.DataFrame(high_stock_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('high_stock_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        # Upload test data
+        upload_success, upload_response = self.run_test(
+            "Upload High Stock Test Data",
+            "POST",
+            "api/upload-excel",
+            200,
+            files=files
+        )
+        
+        if not upload_success:
+            print("❌ Failed to upload high stock test data")
+            return False
+        
+        test_session_id = upload_response['session_id']
+        
+        # Test calculation with high stock scenario
+        calculation_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "New Formula - Negative Value Scenario",
+            "POST",
+            f"api/calculate/{test_session_id}",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            if not calculations:
+                print("❌ No calculations returned for negative scenario test")
+                return False
+            
+            calc = calculations[0]  # Should be our test item
+            
+            adc = calc['average_daily_consumption']
+            current_stock = calc['current_stock']
+            required_stock = calc['required_for_x_days']
+            quantity_to_send = calc['quantity_to_send']
+            
+            print(f"📋 High Stock Scenario Test:")
+            print(f"   ADC: {adc}, Current Stock: {current_stock}")
+            print(f"   Required for 30 days: {required_stock}")
+            print(f"   Quantity to Send: {quantity_to_send}")
+            
+            # With high current stock (1000) and low consumption (10/10 = 1 per day)
+            # Required for 30 days = 30, Current stock = 1000
+            # NEW FORMULA: quantity_to_send = 30 - 1000 = -970
+            
+            if quantity_to_send >= 0:
+                print(f"❌ NEW FORMULA FAILED: Expected negative value but got {quantity_to_send}")
+                return False
+            
+            expected_negative = required_stock - current_stock
+            if abs(quantity_to_send - expected_negative) > 0.01:
+                print(f"❌ NEW FORMULA calculation error: got {quantity_to_send}, expected {expected_negative}")
+                return False
+            
+            # Verify palette quantity is 0 for negative quantity_to_send
+            palette_quantity = calc['palette_quantity']
+            if palette_quantity != 0:
+                print(f"❌ Palette quantity should be 0 for negative quantity_to_send, got {palette_quantity}")
+                return False
+            
+            print(f"✅ NEW FORMULA correctly produces negative value: {quantity_to_send}")
+            print("✅ Palette calculation correctly handles negative quantity (0 palettes)")
+            return True
+        
+        return False
+
+    def test_new_formula_regression_check(self):
+        """Test that the new formula doesn't break existing functionality"""
+        if not self.session_id:
+            print("❌ No session ID available for regression check")
+            return False
+        
+        print("\n🔍 Testing NEW FORMULA Regression Check...")
+        
+        # Test basic calculation
+        basic_data = {
+            "days": 30,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        basic_success, basic_response = self.run_test(
+            "Regression Check - Basic Calculation",
+            "POST",
+            f"api/calculate/{self.session_id}",
+            200,
+            data=basic_data
+        )
+        
+        if not basic_success:
+            print("❌ Basic calculation endpoint broken")
+            return False
+        
+        # Test enhanced calculation
+        enhanced_data = {
+            "days": 30,
+            "order_session_id": self.session_id,
+            "inventory_session_id": self.inventory_session_id,
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        enhanced_success, enhanced_response = self.run_test(
+            "Regression Check - Enhanced Calculation",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=enhanced_data
+        )
+        
+        if not enhanced_success:
+            print("❌ Enhanced calculation endpoint broken")
+            return False
+        
+        # Verify all expected fields are still present
+        basic_calcs = basic_response.get('calculations', [])
+        enhanced_calcs = enhanced_response.get('calculations', [])
+        
+        if basic_calcs:
+            calc = basic_calcs[0]
+            required_fields = [
+                'depot', 'article_code', 'article_name', 'packaging_type',
+                'average_daily_consumption', 'days_of_coverage', 'current_stock',
+                'required_for_x_days', 'quantity_to_send', 'palette_quantity',
+                'priority', 'priority_text', 'sourcing_status', 'sourcing_text',
+                'is_locally_made'
+            ]
+            
+            for field in required_fields:
+                if field not in calc:
+                    print(f"❌ Missing field in basic calculation: {field}")
+                    return False
+        
+        if enhanced_calcs:
+            calc = enhanced_calcs[0]
+            enhanced_required_fields = [
+                'depot', 'article_code', 'article_name', 'packaging_type',
+                'average_daily_consumption', 'days_of_coverage', 'current_stock',
+                'required_for_x_days', 'quantity_to_send', 'palette_quantity',
+                'priority', 'priority_text', 'sourcing_status', 'sourcing_text',
+                'is_locally_made', 'inventory_available', 'inventory_status'
+            ]
+            
+            for field in enhanced_required_fields:
+                if field not in calc:
+                    print(f"❌ Missing field in enhanced calculation: {field}")
+                    return False
+        
+        # Verify delivery optimization still works
+        basic_summary = basic_response.get('summary', {})
+        if 'delivery_optimization' not in basic_summary:
+            print("❌ Delivery optimization missing from basic calculation")
+            return False
+        
+        enhanced_summary = enhanced_response.get('summary', {})
+        if 'delivery_optimization' not in enhanced_summary:
+            print("❌ Delivery optimization missing from enhanced calculation")
+            return False
+        
+        print("✅ All existing functionality preserved with NEW FORMULA")
+        return True
+
 def main():
     print("🚀 Starting Stock Management API Tests")
     print("=" * 50)
