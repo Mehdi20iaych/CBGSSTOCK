@@ -152,6 +152,21 @@
           agent: "testing"
           comment: "✅ COMPREHENSIVE SIMPLIFIED BACKEND TESTING COMPLETED: All 20 tests passed with 100% success rate! MAJOR ACHIEVEMENTS: (1) UPLOAD ENDPOINTS VERIFICATION: All 3 upload endpoints working perfectly - /api/upload-commandes-excel (columns B,D,F,G), /api/upload-stock-excel (columns A,B,D), /api/upload-transit-excel (columns A,C,G,I) with proper column validation and error handling, (2) M210 FILTERING LOGIC VERIFIED: M210 correctly excluded from commandes destinations, only M210 records kept in stock data, only transits from M210 kept in transit data - all filtering working as specified, (3) SIMPLIFIED FORMULA VERIFICATION: Formula 'Quantité à Envoyer = max(0, (Quantité Commandée × Jours à Couvrir) - Stock Utilisation Libre - Quantité en Transit)' working correctly with negative value protection, (4) COMPREHENSIVE CALCULATION TESTING: /api/calculate endpoint working with all data types (commandes, stock, transit) and without optional data, proper status determination (OK/À livrer/Non couvert), (5) EXCEL EXPORT FUNCTIONALITY: /api/export-excel working correctly with proper file generation, (6) SESSION MANAGEMENT: /api/sessions endpoint working correctly showing active sessions for all 3 data types, (7) ERROR HANDLING: Proper validation for missing columns with appropriate error messages, (8) EDGE CASES: 0 days calculation, high stock scenarios, all working correctly. The simplified system is production-ready and fully compliant with user specifications."
 
+  - task: "Enhanced inventory management system with packaging type filtering"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Enhanced inventory management system implemented with packaging type filtering functionality. System now includes column I (Type Emballage) in Commandes file and supports filtering calculations by packaging types (verre, pet, ciel)."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE ENHANCED PACKAGING SYSTEM TESTING COMPLETED: All 9/9 core packaging functionality tests passed with 100% success rate! MAJOR ACHIEVEMENTS: (1) ENHANCED UPLOAD ENDPOINT: /api/upload-commandes-excel now requires and validates column I (Type Emballage), correctly processes packaging types with normalization (VERRE->verre, Pet->pet, bottle->verre, plastic->pet, can->ciel), returns packaging filter data and summary statistics, (2) PACKAGING DATA PROCESSING: Packaging types properly read, normalized to standard values (verre/pet/ciel), stored and included in filter responses, (3) PACKAGING FILTER FUNCTIONALITY: /api/calculate endpoint supports packaging_filter parameter, correctly filters results by single packaging type, multiple packaging types, and all types (no filter), (4) COMPREHENSIVE GROUPING: Calculations now group by (Article, Point d'Expédition, Type Emballage) instead of just (Article, Point d'Expédition), creating unique combinations for each packaging type, (5) PACKAGING IN RESULTS: All calculation results include packaging field with valid values (verre/pet/ciel), (6) FILTER COMBINATIONS: Successfully tested filtering with one packaging type, multiple types, and all types, (7) DATA INTEGRITY: Sourcing intelligence works correctly with packaging filtering, all fields properly maintained, (8) ERROR HANDLING: Proper validation for missing column I with appropriate error messages, (9) PACKAGING NORMALIZATION: Mixed case and English terms correctly normalized to standard French terms. The enhanced packaging system is production-ready and fully functional with comprehensive filtering capabilities."
+
   - task: "Upload fichier commandes avec validation colonnes B,D,F,G"
     implemented: true
     working: true
@@ -163,6 +178,9 @@
         - working: true
           agent: "testing"
           comment: "✅ TESTED: /api/upload-commandes-excel endpoint working perfectly. Correctly processes columns B(Article), D(Point d'Expédition), F(Quantité Commandée), G(Stock Utilisation Libre). M210 correctly excluded from destinations. Proper error handling for missing columns. Returns session_id, summary statistics, and filter data."
+        - working: true
+          agent: "testing"
+          comment: "✅ ENHANCED TESTING COMPLETED: Upload endpoint now enhanced to require column I (Type Emballage) and validates packaging types. Successfully processes columns B,D,F,G,I with packaging type normalization and filtering support. All validation and error handling working correctly."
 
   - task: "Upload fichier stock M210 avec filtrage Division=M210"
     implemented: true
