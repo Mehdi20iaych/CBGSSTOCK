@@ -1,71 +1,39 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 import { 
   DocumentIcon, 
   ChartBarIcon, 
   ArrowTrendingUpIcon,
   ArchiveBoxIcon,
-  LightBulbIcon,
-  CursorArrowRaysIcon,
-  ExclamationTriangleIcon,
-  TruckIcon,
-  MagnifyingGlassIcon,
-  ArrowPathIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ExclamationCircleIcon,
-  QuestionMarkCircleIcon,
-  BuildingOfficeIcon,
-  ShoppingCartIcon,
-  ChartPieIcon,
+  ExclamationTriangleIcon,
   ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
 function App() {
-  const [sessionId, setSessionId] = useState(null);
-  const [inventorySessionId, setInventorySessionId] = useState(null);
-  const [transitSessionId, setTransitSessionId] = useState(null);
-  const [uploadedData, setUploadedData] = useState(null);
-  const [inventoryData, setInventoryData] = useState(null);
+  // États pour les données uploadées
+  const [commandesData, setCommandesData] = useState(null);
+  const [stockData, setStockData] = useState(null);
   const [transitData, setTransitData] = useState(null);
+  
+  // États pour les calculs et interface
   const [calculations, setCalculations] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [days, setDays] = useState(30);
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [selectedPackaging, setSelectedPackaging] = useState([]);
-  const [availableFilters, setAvailableFilters] = useState(null);
-  const [geminiQuery, setGeminiQuery] = useState('');
-  const [geminiResponse, setGeminiResponse] = useState(null);
+  const [days, setDays] = useState(10);
   const [activeTab, setActiveTab] = useState('upload');
-  const [selectedCriticalItems, setSelectedCriticalItems] = useState([]);
-  const [showCriticalOnly, setShowCriticalOnly] = useState(false);
-  const fileInputRef = useRef(null);
-  const inventoryFileInputRef = useRef(null);
-  const transitFileInputRef = useRef(null);
+  const [selectedItems, setSelectedItems] = useState([]);
+  
+  // Références pour les inputs de fichiers
+  const commandesFileRef = useRef(null);
+  const stockFileRef = useRef(null);
+  const transitFileRef = useRef(null);
 
-  // Fetch available filters when session is created
-  useEffect(() => {
-    if (sessionId) {
-      fetchFilters();
-    }
-  }, [sessionId]);
-
-  const fetchFilters = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/filters/${sessionId}`);
-      if (response.ok) {
-        const filters = await response.json();
-        setAvailableFilters(filters);
-      }
-    } catch (err) {
-      console.error('Erreur lors de la récupération des filtres:', err);
-    }
-  };
-
-  const handleInventoryFileUpload = async (event) => {
+  // Upload fichier commandes
+  const handleCommandesFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -76,7 +44,7 @@ function App() {
     formData.append('file', file);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/upload-inventory-excel`, {
+      const response = await fetch(`${API_BASE_URL}/api/upload-commandes-excel`, {
         method: 'POST',
         body: formData,
       });
@@ -87,15 +55,48 @@ function App() {
       }
 
       const data = await response.json();
-      setInventorySessionId(data.session_id);
-      setInventoryData(data);
+      setCommandesData(data);
+      setError(null);
     } catch (err) {
-      setError(`Échec du téléchargement d'inventaire: ${err.message}`);
+      setError(`Échec du téléchargement des commandes: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
+  // Upload fichier stock
+  const handleStockFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/upload-stock-excel`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Erreur HTTP! statut: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setStockData(data);
+      setError(null);
+    } catch (err) {
+      setError(`Échec du téléchargement du stock: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Upload fichier transit
   const handleTransitFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -118,1270 +119,489 @@ function App() {
       }
 
       const data = await response.json();
-      setTransitSessionId(data.session_id);
       setTransitData(data);
+      setError(null);
     } catch (err) {
-      setError(`Échec du téléchargement de stock en transit: ${err.message}`);
+      setError(`Échec du téléchargement des données de transit: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    setLoading(true);
-    setError(null);
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/upload-excel`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Erreur HTTP! statut: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setSessionId(data.session_id);
-      setUploadedData(data);
-      setAvailableFilters(data.filters);
-      setActiveTab('calculate');
-    } catch (err) {
-      setError(`Échec du téléchargement: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Lancer les calculs
   const handleCalculate = async () => {
-    if (!sessionId) return;
+    if (!commandesData) {
+      setError('Veuillez d\'abord uploader un fichier de commandes');
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/enhanced-calculate`, {
+      const response = await fetch(`${API_BASE_URL}/api/calculate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          days: parseInt(days),
-          order_session_id: sessionId,
-          inventory_session_id: inventorySessionId,
-          transit_session_id: transitSessionId,
-          product_filter: selectedProducts.length > 0 ? selectedProducts : null,
-          packaging_filter: selectedPackaging.length > 0 ? selectedPackaging : null,
+          days: days,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || `Erreur HTTP! statut: ${response.status}`);
+        throw new Error(errorData.detail || 'Erreur lors du calcul');
       }
 
       const data = await response.json();
       setCalculations(data);
-      setSelectedCriticalItems([]);
       setActiveTab('results');
     } catch (err) {
-      setError(`Échec du calcul: ${err.message}`);
+      setError(`Erreur de calcul: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGeminiQuery = async () => {
-    if (!sessionId || !geminiQuery.trim()) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/gemini-query/${sessionId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: geminiQuery,
-          session_id: sessionId,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Erreur HTTP! statut: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setGeminiResponse(data);
-    } catch (err) {
-      setError(`Échec de la requête IA: ${err.message}`);
-    } finally {
-      setLoading(false);
+  // Export Excel
+  const handleExportExcel = async () => {
+    if (!selectedItems.length) {
+      setError('Veuillez sélectionner au moins un élément à exporter');
+      return;
     }
-  };
-
-  const handleExportCritical = async () => {
-    if (!sessionId || selectedCriticalItems.length === 0) return;
 
     setLoading(true);
-    setError(null);
-
     try {
-      const response = await fetch(`${API_BASE_URL}/api/export-critical/${sessionId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/export-excel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          selected_items: selectedCriticalItems,
-          session_id: sessionId,
+          selected_items: selectedItems,
+          session_id: 'current'
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || `Erreur HTTP! statut: ${response.status}`);
+        throw new Error(errorData.detail || 'Erreur lors de l\'export');
       }
 
-      // Handle file download
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
+      a.style.display = 'none';
       a.href = url;
-      a.download = `CBGS_Articles_Critiques_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.download = `Calcul_Stock_${new Date().toISOString().split('T')[0]}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      setSelectedCriticalItems([]);
     } catch (err) {
-      setError(`Échec de l'export: ${err.message}`);
+      setError(`Erreur d'export: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const resetApp = () => {
-    setSessionId(null);
-    setInventorySessionId(null);
-    setTransitSessionId(null);
-    setUploadedData(null);
-    setInventoryData(null);
-    setTransitData(null);
-    setCalculations(null);
-    setGeminiResponse(null);
-    setAvailableFilters(null);
-    setSelectedCriticalItems([]);
-    setError(null);
-    setActiveTab('upload');
-    setDays(30);
-    setSelectedProducts([]);
-    setSelectedPackaging([]);
-    setGeminiQuery('');
-    setShowCriticalOnly(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    if (inventoryFileInputRef.current) {
-      inventoryFileInputRef.current.value = '';
-    }
-    if (transitFileInputRef.current) {
-      transitFileInputRef.current.value = '';
-    }
-  };
-
-  const handleProductSelect = (product) => {
-    setSelectedProducts(prev => 
-      prev.includes(product) 
-        ? prev.filter(p => p !== product)
-        : [...prev, product]
-    );
-  };
-
-  const handleProductSelectAll = () => {
-    if (!availableFilters?.products) return;
-    
-    if (selectedProducts.length === availableFilters.products.length) {
-      // If all are selected, deselect all
-      setSelectedProducts([]);
-    } else {
-      // If not all are selected, select all
-      setSelectedProducts([...availableFilters.products]);
-    }
-  };
-
-  const handlePackagingSelect = (packaging) => {
-    setSelectedPackaging(prev => 
-      prev.includes(packaging) 
-        ? prev.filter(p => p !== packaging)
-        : [...prev, packaging]
-    );
-  };
-
-  const handleCriticalItemSelect = (item) => {
-    setSelectedCriticalItems(prev => {
-      const exists = prev.find(i => i.id === item.id);
+  // Gérer la sélection des items
+  const handleItemSelection = (item) => {
+    setSelectedItems(prev => {
+      const exists = prev.some(i => i.article === item.article && i.depot === item.depot);
       if (exists) {
-        return prev.filter(i => i.id !== item.id);
+        return prev.filter(i => !(i.article === item.article && i.depot === item.depot));
       } else {
         return [...prev, item];
       }
     });
   };
 
-  const selectAllCritical = () => {
-    if (!calculations) return;
-    const criticalItems = calculations.calculations.filter(item => item.priority === 'high');
-    setSelectedCriticalItems(criticalItems);
-  };
-
-  const clearCriticalSelection = () => {
-    setSelectedCriticalItems([]);
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'text-red-700 bg-red-100 border-red-200';
-      case 'medium': return 'text-amber-700 bg-amber-100 border-amber-200';
-      case 'low': return 'text-emerald-700 bg-emerald-100 border-emerald-200';
-      default: return 'text-slate-600 bg-slate-100 border-slate-200';
-    }
-  };
-
-  const formatNumber = (num) => {
-    if (typeof num === 'number') {
-      // Round to 2 decimal places and use French locale formatting
-      return Number(num.toFixed(2)).toLocaleString('fr-FR');
-    }
-    return num;
-  };
-
-  const getDisplayedCalculations = () => {
-    if (!calculations) return [];
-    
-    if (showCriticalOnly) {
-      return calculations.calculations.filter(item => item.priority === 'high');
-    }
-    
-    // Results are already sorted by depot from backend, but ensure critical items 
-    // still appear first within their depot group
-    const resultsByDepot = {};
-    
-    // Group items by depot
-    calculations.calculations.forEach(item => {
-      if (!resultsByDepot[item.depot]) {
-        resultsByDepot[item.depot] = { critical: [], other: [] };
-      }
-      if (item.priority === 'high') {
-        resultsByDepot[item.depot].critical.push(item);
+  // Sélectionner tous les items
+  const handleSelectAll = () => {
+    if (calculations && calculations.calculations) {
+      if (selectedItems.length === calculations.calculations.length) {
+        setSelectedItems([]);
       } else {
-        resultsByDepot[item.depot].other.push(item);
+        setSelectedItems([...calculations.calculations]);
       }
-    });
-    
-    // Flatten back to array, maintaining depot grouping with critical items first in each group
-    const finalResults = [];
-    Object.keys(resultsByDepot).sort().forEach(depot => {
-      finalResults.push(...resultsByDepot[depot].critical);
-      finalResults.push(...resultsByDepot[depot].other);
-    });
-    
-    return finalResults;
+    }
+  };
+
+  // Obtenir l'icône de statut
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'OK':
+        return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
+      case 'À livrer':
+        return <ExclamationTriangleIcon className="w-5 h-5 text-orange-500" />;
+      case 'Non couvert':
+        return <XCircleIcon className="w-5 h-5 text-red-500" />;
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-          <div className="p-6 border-b border-slate-200">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">
-              Système de Gestion des Stocks - CBGS
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-4">
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+              <ArchiveBoxIcon className="w-8 h-8 mr-3 text-blue-600" />
+              Gestion des Stocks - Version Simplifiée
             </h1>
-            <p className="text-slate-600">
-              Téléchargez des fichiers Excel pour analyser les niveaux de stock et calculer les besoins des dépôts
+            <p className="text-sm text-gray-600 mt-1">
+              Calculez automatiquement les quantités à envoyer depuis M210
             </p>
           </div>
+        </div>
+      </div>
 
-          <div className="p-6">
-            {/* Tab Navigation */}
-            <div className="flex space-x-2 mb-6 bg-slate-100 p-1 rounded-lg">
-              <button
-                onClick={() => setActiveTab('upload')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                  activeTab === 'upload'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <DocumentIcon className="w-4 h-4" />
-                <span>Télécharger Données</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('calculate')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                  activeTab === 'calculate'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                } ${!sessionId ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!sessionId}
-              >
-                <ChartPieIcon className="w-4 h-4" />
-                <span>Calculer Besoins</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('results')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                  activeTab === 'results'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                } ${!calculations ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!calculations}
-              >
-                <ChartBarIcon className="w-4 h-4" />
-                <span>Voir Résultats</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('ai')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                  activeTab === 'ai'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                } ${!sessionId ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!sessionId}
-              >
-                <MagnifyingGlassIcon className="w-4 h-4" />
-                <span>Analyses IA</span>
-              </button>
+      {/* Navigation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('upload')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'upload'
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <DocumentIcon className="w-5 h-5 inline mr-2" />
+            Upload des Fichiers
+          </button>
+          <button
+            onClick={() => setActiveTab('calculate')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'calculate'
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ChartBarIcon className="w-5 h-5 inline mr-2" />
+            Calculs
+          </button>
+          <button
+            onClick={() => setActiveTab('results')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'results'
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ArrowTrendingUpIcon className="w-5 h-5 inline mr-2" />
+            Résultats
+          </button>
+        </nav>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Affichage des erreurs */}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+            <div className="flex">
+              <XCircleIcon className="w-5 h-5 text-red-400" />
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
             </div>
+          </div>
+        )}
 
-            {/* Error Display */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
-                <div className="flex items-start space-x-2">
-                  <ExclamationTriangleIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-medium">ERREUR:</span>
-                    <span className="ml-2">{error}</span>
-                  </div>
-                </div>
-              </div>
-            )}
+        {/* Tab Upload */}
+        {activeTab === 'upload' && (
+          <div className="space-y-6">
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium mb-4 flex items-center">
+                <DocumentIcon className="w-6 h-6 mr-2 text-blue-600" />
+                Upload des Fichiers Excel
+              </h2>
 
-            {/* Loading Display */}
-            {loading && (
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span>Traitement en cours...</span>
-                </div>
-              </div>
-            )}
-
-            {/* Upload Tab */}
-            {activeTab === 'upload' && (
-              <div className="space-y-6">
-                {/* Order Data Upload */}
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                  <h3 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
-                    <ChartBarIcon className="w-5 h-5 text-slate-600" />
-                    <span>1. Télécharger Données de Commandes</span>
-                  </h3>
-                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-slate-400 transition-colors">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".xlsx,.xls"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      id="order-file-upload"
-                    />
-                    <label
-                      htmlFor="order-file-upload"
-                      className="cursor-pointer flex flex-col items-center space-y-2"
-                    >
-                      <div className="text-slate-400">
-                        <ArrowTrendingUpIcon className="w-12 h-12" />
-                      </div>
-                      <div className="text-lg font-medium text-slate-700">
-                        Fichier de Commandes Excel
-                      </div>
-                      <div className="text-sm text-slate-600">
-                        Avec colonnes: Date de Commande, Article, Quantité Commandée, etc.
-                      </div>
-                    </label>
-                  </div>
-
-                  {uploadedData && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mt-4">
-                      <h4 className="font-medium text-emerald-800 mb-2 flex items-center space-x-2">
-                        <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
-                        <span>DONNÉES DE COMMANDES CHARGÉES</span>
-                      </h4>
-                      <div className="text-sm text-emerald-700 space-y-1">
-                        <p>Enregistrements: <strong>{formatNumber(uploadedData.records_count)}</strong></p>
-                        <p>Période: <strong>{uploadedData.date_range.start}</strong> à <strong>{uploadedData.date_range.end}</strong></p>
-                        <p>Dépôts: <strong>{uploadedData.filters.depots.length}</strong> | Produits: <strong>{uploadedData.filters.products.length}</strong></p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Inventory Data Upload */}
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                  <h3 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
-                    <ArchiveBoxIcon className="w-5 h-5 text-slate-600" />
-                    <span>2. Télécharger Données d'Inventaire</span>
-                  </h3>
-                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-slate-400 transition-colors">
-                    <input
-                      ref={inventoryFileInputRef}
-                      type="file"
-                      accept=".xlsx,.xls"
-                      onChange={handleInventoryFileUpload}
-                      className="hidden"
-                      id="inventory-file-upload"
-                    />
-                    <label
-                      htmlFor="inventory-file-upload"
-                      className="cursor-pointer flex flex-col items-center space-y-2"
-                    >
-                      <div className="text-slate-400">
-                        <BuildingOfficeIcon className="w-12 h-12" />
-                      </div>
-                      <div className="text-lg font-medium text-slate-700">
-                        Fichier d'Inventaire Excel
-                      </div>
-                      <div className="text-sm text-slate-600">
-                        Avec colonnes: Division, Article, Désignation article, STOCK À DATE
-                      </div>
-                    </label>
-                  </div>
-
-                  {inventoryData && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mt-4">
-                      <h4 className="font-medium text-emerald-800 mb-2 flex items-center space-x-2">
-                        <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
-                        <span>DONNÉES D'INVENTAIRE CHARGÉES</span>
-                      </h4>
-                      <div className="text-sm text-emerald-700 space-y-1">
-                        <p>Enregistrements: <strong>{formatNumber(inventoryData.records_count)}</strong></p>
-                        <p>Articles: <strong>{inventoryData.summary.articles_count}</strong></p>
-                        <p>Stock Total: <strong>{formatNumber(inventoryData.summary.total_stock)}</strong></p>
-                        <p>Divisions: <strong>{inventoryData.summary.divisions.join(', ')}</strong></p>
-                      </div>
-                    </div>
-                  )}
-
-                  {!inventoryData && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
-                      <p className="text-sm text-amber-700 flex items-start space-x-2">
-                        <LightBulbIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <span><strong>Recommandé:</strong> Téléchargez les données d'inventaire pour voir la disponibilité des stocks et identifier les articles manquants.</span>
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Transit Stock Upload */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="font-medium text-blue-800 mb-3 flex items-center space-x-2">
-                    <TruckIcon className="w-5 h-5 text-blue-600" />
-                    <span>3. Télécharger Stock en Transit</span>
-                  </h3>
-                  <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                    <input
-                      ref={transitFileInputRef}
-                      type="file"
-                      accept=".xlsx,.xls"
-                      onChange={handleTransitFileUpload}
-                      className="hidden"
-                      id="transit-file-upload"
-                    />
-                    <label
-                      htmlFor="transit-file-upload"
-                      className="cursor-pointer flex flex-col items-center space-y-2"
-                    >
-                      <TruckIcon className="w-8 h-8 text-blue-400" />
-                      <div className="text-sm font-medium text-blue-800">
-                        Cliquez pour télécharger les données de stock en transit
-                      </div>
-                      <div className="text-sm text-blue-600">
-                        Avec colonnes: Article (Col. A), Division (Col. C), Quantité (Col. I)
-                      </div>
-                    </label>
-                  </div>
-
-                  {transitData && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center space-x-2">
-                        <CheckCircleIcon className="w-5 h-5 text-blue-600" />
-                        <span>STOCK EN TRANSIT CHARGÉ</span>
-                      </h4>
-                      <div className="text-sm text-blue-700 space-y-1">
-                        <p>Enregistrements: <strong>{formatNumber(transitData.records_count)}</strong></p>
-                        <p>Articles: <strong>{transitData.summary.articles_count}</strong></p>
-                        <p>Quantité Totale: <strong>{formatNumber(transitData.summary.total_transit_quantity)}</strong></p>
-                        <p>Divisions: <strong>{transitData.summary.divisions.join(', ')}</strong></p>
-                      </div>
-                    </div>
-                  )}
-
-                  {!transitData && (
-                    <div className="bg-blue-100 border border-blue-300 rounded-lg p-3 mt-4">
-                      <p className="text-sm text-blue-700 flex items-start space-x-2">
-                        <LightBulbIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <span><strong>Optionnel:</strong> Téléchargez les données de stock en transit pour inclure les marchandises déjà expédiées vers les dépôts dans les calculs.</span>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Calculate Tab */}
-            {activeTab === 'calculate' && uploadedData && (
-              <div className="space-y-6">
-                {/* Status Overview */}
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                  <h3 className="font-medium text-slate-800 mb-2">ÉTAT DES DONNÉES</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-slate-600 font-medium">INFO</span>
-                      <span>Données de commandes: <strong className="text-emerald-600">CHARGÉES</strong></span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <ArchiveBoxIcon className="w-4 h-4 text-emerald-600" />
-                      <span>Données d'inventaire: 
-                        {inventoryData ? (
-                          <strong className="text-emerald-600"> CHARGÉES</strong>
-                        ) : (
-                          <strong className="text-amber-600"> NON CHARGÉES</strong>
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <TruckIcon className="w-4 h-4 text-blue-600" />
-                      <span>Stock en transit: 
-                        {transitData ? (
-                          <strong className="text-blue-600"> CHARGÉ</strong>
-                        ) : (
-                          <strong className="text-gray-600"> NON CHARGÉ</strong>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                  {inventoryData && transitData && (
-                    <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
-                      <p className="text-sm text-blue-800 flex items-start space-x-2">
-                        <TruckIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <span><strong>Mode Expert Activé:</strong> Le système considère l'inventaire disponible ET le stock en transit vers chaque dépôt pour optimiser les envois.</span>
-                      </p>
-                    </div>
-                  )}
-                  {inventoryData && !transitData && (
-                    <div className="mt-3 p-3 bg-emerald-50 rounded border border-emerald-200">
-                      <p className="text-sm text-emerald-800 flex items-start space-x-2">
-                        <CursorArrowRaysIcon className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                        <span><strong>Mode Avancé Activé:</strong> Le système vérifiera la disponibilité en inventaire pour chaque article demandé.</span>
-                      </p>
-                    </div>
-                  )}
-                  {!inventoryData && transitData && (
-                    <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
-                      <p className="text-sm text-blue-800 flex items-start space-x-2">
-                        <TruckIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <span><strong>Mode Transit:</strong> Le système considère uniquement le stock en transit. Ajoutez les données d'inventaire pour un calcul complet.</span>
-                      </p>
-                    </div>
-                  )}
-                  {!inventoryData && !transitData && (
-                    <div className="mt-3 p-3 bg-amber-50 rounded border border-amber-200">
-                      <p className="text-sm text-amber-800 flex items-start space-x-2">
-                        <LightBulbIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <span><strong>Mode Standard:</strong> Calculs basés uniquement sur les données de commandes. Pour vérifier la disponibilité, téléchargez les données d'inventaire et/ou de transit.</span>
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Jours à Couvrir
-                    </label>
-                    <input
-                      type="number"
-                      value={days}
-                      onChange={(e) => setDays(e.target.value)}
-                      className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                      min="1"
-                      max="365"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Filtrer par Produits ({selectedProducts.length} sélectionné{selectedProducts.length !== 1 ? 's' : ''})
-                    </label>
-                    <div className="max-h-40 overflow-y-auto border border-slate-300 rounded-lg p-2">
-                      {/* Select All Option */}
-                      <label className="flex items-center space-x-2 py-1 hover:bg-slate-50 cursor-pointer border-b border-slate-200 mb-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedProducts.length === availableFilters?.products?.length && availableFilters?.products?.length > 0}
-                          onChange={handleProductSelectAll}
-                          className="rounded text-blue-500 focus:ring-blue-500"
-                        />
-                        <span className="text-sm font-medium text-blue-700">Sélectionner tout</span>
-                      </label>
-                      
-                      {availableFilters?.products?.map((product) => (
-                        <label key={product} className="flex items-center space-x-2 py-1 hover:bg-gray-50 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectedProducts.includes(product)}
-                            onChange={() => handleProductSelect(product)}
-                            className="rounded text-blue-500 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700">{product}</span>
-                        </label>
-                      ))}
-                    </div>
-                    {selectedProducts.length > 0 && (
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Fichier Commandes */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors">
+                  <div className="text-center">
+                    <DocumentIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Fichier Commandes</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Colonnes: B(Article), D(Point d'Expédition), F(Quantité Commandée), G(Stock Utilisation Libre)
+                    </p>
+                    <div className="mt-4">
+                      <input
+                        type="file"
+                        ref={commandesFileRef}
+                        onChange={handleCommandesFileUpload}
+                        accept=".xlsx,.xls"
+                        className="hidden"
+                      />
                       <button
-                        onClick={() => setSelectedProducts([])}
-                        className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                        onClick={() => commandesFileRef.current?.click()}
+                        disabled={loading}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                       >
-                        Effacer sélection
+                        Choisir un fichier
                       </button>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Filtrer par Emballage ({selectedPackaging.length} sélectionné{selectedPackaging.length !== 1 ? 's' : ''})
-                    </label>
-                    <div className="space-y-2">
-                      {availableFilters?.packaging?.map((packaging) => (
-                        <label key={packaging.value} className="flex items-center space-x-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectedPackaging.includes(packaging.value)}
-                            onChange={() => handlePackagingSelect(packaging.value)}
-                            className="rounded text-blue-500 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700">{packaging.display}</span>
-                        </label>
-                      ))}
                     </div>
-                    {selectedPackaging.length > 0 && (
-                      <button
-                        onClick={() => setSelectedPackaging([])}
-                        className="text-xs text-blue-600 hover:text-blue-800 mt-1"
-                      >
-                        Effacer sélection
-                      </button>
+                    {commandesData && (
+                      <div className="mt-3 text-sm">
+                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          ✓ {commandesData.summary.total_records} enregistrements
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
 
+                {/* Fichier Stock */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors">
+                  <div className="text-center">
+                    <ArchiveBoxIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Fichier Stock M210</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Colonnes: A(Division), B(Article), D(STOCK À DATE)
+                    </p>
+                    <div className="mt-4">
+                      <input
+                        type="file"
+                        ref={stockFileRef}
+                        onChange={handleStockFileUpload}
+                        accept=".xlsx,.xls"
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => stockFileRef.current?.click()}
+                        disabled={loading}
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Choisir un fichier
+                      </button>
+                    </div>
+                    {stockData && (
+                      <div className="mt-3 text-sm">
+                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          ✓ {stockData.summary.unique_articles} articles
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Fichier Transit */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors">
+                  <div className="text-center">
+                    <ArrowTrendingUpIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Fichier Transit</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Colonnes: A(Article), C(Division), G(Division cédante), I(Quantité)
+                    </p>
+                    <div className="mt-4">
+                      <input
+                        type="file"
+                        ref={transitFileRef}
+                        onChange={handleTransitFileUpload}
+                        accept=".xlsx,.xls"
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => transitFileRef.current?.click()}
+                        disabled={loading}
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Choisir un fichier
+                      </button>
+                    </div>
+                    {transitData && (
+                      <div className="mt-3 text-sm">
+                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          ✓ {transitData.summary.total_records} enregistrements
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-900">Instructions :</h4>
+                <ul className="mt-2 text-sm text-blue-800 list-disc list-inside space-y-1">
+                  <li>Le fichier <strong>Commandes</strong> est obligatoire</li>
+                  <li>Les fichiers <strong>Stock M210</strong> et <strong>Transit</strong> sont optionnels mais recommandés</li>
+                  <li>Respectez exactement les colonnes spécifiées pour chaque fichier</li>
+                  <li>Seuls les dépôts différents de M210 seront approvisionnés</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab Calculate */}
+        {activeTab === 'calculate' && (
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-lg font-medium mb-4 flex items-center">
+              <ChartBarIcon className="w-6 h-6 mr-2 text-blue-600" />
+              Configuration des Calculs
+            </h2>
+
+            <div className="max-w-md space-y-4">
+              <div>
+                <label htmlFor="days" className="block text-sm font-medium text-gray-700">
+                  Nombre de jours à couvrir
+                </label>
+                <input
+                  type="number"
+                  id="days"
+                  value={days}
+                  onChange={(e) => setDays(parseInt(e.target.value) || 10)}
+                  min="1"
+                  max="365"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="pt-4">
                 <button
                   onClick={handleCalculate}
-                  disabled={loading}
-                  className="w-full bg-slate-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  disabled={loading || !commandesData}
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {loading ? 'Calcul en cours...' : 'Calculer les Besoins'}
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Calcul en cours...
+                    </>
+                  ) : (
+                    <>
+                      <ChartBarIcon className="w-5 h-5 mr-2" />
+                      Lancer les Calculs
+                    </>
+                  )}
                 </button>
               </div>
-            )}
+            </div>
 
-            {/* Results Tab */}
-            {activeTab === 'results' && calculations && (
-              <div className="space-y-6">
-                {/* Summary Statistics */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <div className="text-2xl font-bold text-slate-600">
-                      {formatNumber(calculations.summary.total_depots)}
-                    </div>
-                    <div className="text-sm text-slate-700">Dépôts Totaux</div>
-                  </div>
-                  <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
-                    <div className="text-2xl font-bold text-emerald-600">
-                      {formatNumber(calculations.summary.total_products)}
-                    </div>
-                    <div className="text-sm text-emerald-700">Produits Totaux</div>
-                  </div>
-                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                    <div className="text-2xl font-bold text-red-600">
-                      {formatNumber(calculations.summary.high_priority?.length || 0)}
-                    </div>
-                    <div className="text-sm text-red-700">Priorité Critique</div>
-                  </div>
-                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                    <div className="text-2xl font-bold text-amber-600">
-                      {formatNumber(calculations.summary.medium_priority?.length || 0)}
-                    </div>
-                    <div className="text-sm text-amber-700">Priorité Moyenne</div>
-                  </div>
-                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <div className="text-2xl font-bold text-slate-600">
-                      {formatNumber(calculations.summary.no_stock_needed?.length || 0)}
-                    </div>
-                    <div className="text-sm text-gray-700">Stock Suffisant</div>
-                  </div>
+            <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
+              <h4 className="text-sm font-medium text-yellow-900">Formule appliquée :</h4>
+              <p className="mt-2 text-sm text-yellow-800">
+                <strong>Quantité à Envoyer = max(0, (Quantité Commandée × Jours à Couvrir) - Stock Utilisation Libre - Quantité en Transit)</strong>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Tab Results */}
+        {activeTab === 'results' && calculations && (
+          <div className="space-y-6">
+            {/* Résumé */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium mb-4 flex items-center">
+                <ClipboardDocumentListIcon className="w-6 h-6 mr-2 text-blue-600" />
+                Résumé des Calculs
+              </h2>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-gray-900">{calculations.summary.total_items}</div>
+                  <div className="text-sm text-gray-600">Total Items</div>
                 </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{calculations.summary.items_ok}</div>
+                  <div className="text-sm text-green-600">OK</div>
+                </div>
+                <div className="text-center p-4 bg-orange-50 rounded-lg">
+                  <div className="text-2xl font-bold text-orange-600">{calculations.summary.items_a_livrer}</div>
+                  <div className="text-sm text-orange-600">À Livrer</div>
+                </div>
+                <div className="text-center p-4 bg-red-50 rounded-lg">
+                  <div className="text-2xl font-bold text-red-600">{calculations.summary.items_non_couverts}</div>
+                  <div className="text-sm text-red-600">Non Couvert</div>
+                </div>
+              </div>
+            </div>
 
-                {/* Inventory Status Summary */}
-                {calculations.summary.inventory_status === 'available' && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                    <h3 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
-                      <ArchiveBoxIcon className="w-5 h-5 text-slate-600" />
-                      <span>État de l'Inventaire</span>
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl font-bold text-green-600">STOCK</span>
-                        <div>
-                          <div className="font-bold text-green-600">
-                            {formatNumber(calculations.summary.sufficient_items || 0)}
-                          </div>
-                          <div className="text-green-700">Stock Suffisant</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl font-bold text-yellow-600">[!]</span>
-                        <div>
-                          <div className="font-bold text-yellow-600">
-                            {formatNumber(calculations.summary.partial_items || 0)}
-                          </div>
-                          <div className="text-yellow-700">Stock Partiel</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl font-bold text-red-600">[X]</span>
-                        <div>
-                          <div className="font-bold text-red-600">
-                            {formatNumber(calculations.summary.insufficient_items || 0)}
-                          </div>
-                          <div className="text-red-700">Stock Insuffisant</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl font-bold text-gray-600">[?]</span>
-                        <div>
-                          <div className="font-bold text-gray-600">
-                            {formatNumber(calculations.summary.not_found_items || 0)}
-                          </div>
-                          <div className="text-gray-700">Non Trouvé</div>
-                        </div>
-                      </div>
-                    </div>
-                    {calculations.summary.total_inventory_shortage > 0 && (
-                      <div className="mt-3 p-3 bg-red-50 rounded border border-red-200">
-                        <p className="text-sm text-red-800 flex items-start space-x-2">
-                          <ExclamationTriangleIcon className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                          <span><strong>Manque Total:</strong> {formatNumber(calculations.summary.total_inventory_shortage)} unités manquantes en inventaire.</span>
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+            {/* Tableau des résultats */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900">Détail des Calculs</h3>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleSelectAll}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    {selectedItems.length === calculations.calculations.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  </button>
+                  <button
+                    onClick={handleExportExcel}
+                    disabled={selectedItems.length === 0 || loading}
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50"
+                  >
+                    Exporter Excel ({selectedItems.length})
+                  </button>
+                </div>
+              </div>
 
-                {/* Sourcing Summary */}
-                {calculations.summary.sourcing_summary && (
-                  <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-medium text-blue-800 mb-3">🏭 Analyse du Sourcing</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl">🏭</span>
-                        <div>
-                          <div className="font-bold text-green-600">
-                            {formatNumber(calculations.summary.sourcing_summary.local_items || 0)}
-                          </div>
-                          <div className="text-green-700">Production Locale</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl">🌍</span>
-                        <div>
-                          <div className="font-bold text-orange-600">
-                            {formatNumber(calculations.summary.sourcing_summary.external_items || 0)}
-                          </div>
-                          <div className="text-orange-700">Sourcing Externe</div>
-                        </div>
-                      </div>
-                    </div>
-                    {calculations.summary.sourcing_summary.external_items > 0 && (
-                      <div className="mt-3 p-3 bg-orange-100 rounded border border-orange-300">
-                        <p className="text-sm text-orange-800">
-                          [!] <strong>Attention:</strong> {calculations.summary.sourcing_summary.external_items} article(s) nécessitent un sourcing externe.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Delivery Optimization Summary */}
-                {calculations.summary.delivery_optimization && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                    <h3 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
-                      <TruckIcon className="w-5 h-5 text-slate-600" />
-                      <span>Optimisation des Livraisons (Contrainte 20 Palettes)</span>
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <CheckCircleIcon className="w-6 h-6 text-emerald-600" />
-                        <div>
-                          <div className="font-bold text-emerald-600">
-                            {formatNumber(calculations.summary.delivery_optimization.efficient_depots || 0)}
-                          </div>
-                          <div className="text-emerald-700">Dépôts Efficaces</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <ExclamationTriangleIcon className="w-6 h-6 text-amber-600" />
-                        <div>
-                          <div className="font-bold text-amber-600">
-                            {formatNumber(calculations.summary.delivery_optimization.inefficient_depots || 0)}
-                          </div>
-                          <div className="text-amber-700">Dépôts Inefficaces</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <ArchiveBoxIcon className="w-6 h-6 text-slate-600" />
-                        <div>
-                          <div className="font-bold text-slate-600">
-                            {formatNumber(calculations.summary.delivery_optimization.total_palettes || 0)}
-                          </div>
-                          <div className="text-slate-700">Total Palettes</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <TruckIcon className="w-6 h-6 text-slate-600" />
-                        <div>
-                          <div className="font-bold text-slate-600">
-                            {formatNumber(calculations.summary.delivery_optimization.total_trucks || 0)}
-                          </div>
-                          <div className="text-slate-700">Total Camions</div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Depot Details */}
-                    {calculations.summary.delivery_optimization.depot_summaries && calculations.summary.delivery_optimization.depot_summaries.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="font-medium text-slate-800 mb-2">Détail par Dépôt:</h4>
-                        <div className="space-y-2">
-                          {calculations.summary.delivery_optimization.depot_summaries.map((depot, index) => (
-                            <div key={index} className={`p-3 rounded-lg border ${
-                              depot.delivery_status === 'efficient' 
-                                ? 'bg-emerald-50 border-emerald-200' 
-                                : 'bg-amber-50 border-amber-200'
-                            }`}>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                  <span className={`${
-                                    depot.delivery_status === 'efficient' ? 'text-emerald-600' : 'text-amber-600'
-                                  }`}>
-                                    {depot.delivery_status === 'efficient' 
-                                      ? <CheckCircleIcon className="w-5 h-5" />
-                                      : <ExclamationTriangleIcon className="w-5 h-5" />
-                                    }
-                                  </span>
-                                  <span className="font-medium">{depot.depot_name}</span>
-                                  <div className="flex items-center space-x-2">
-                                    <span className={`text-sm px-2 py-1 rounded ${
-                                      depot.delivery_status === 'efficient'
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : 'bg-amber-100 text-amber-800'
-                                    }`}>
-                                      {depot.total_palettes} palettes
-                                    </span>
-                                    <span className={`text-sm px-2 py-1 rounded border ${
-                                      depot.delivery_status === 'efficient'
-                                        ? 'border-emerald-300 text-emerald-800'
-                                        : 'border-amber-300 text-amber-800'
-                                    }`}>
-                                      <TruckIcon className="w-3 h-3 inline mr-1" />
-                                      {depot.trucks_needed} camion{depot.trucks_needed !== 1 ? 's' : ''}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="text-sm text-slate-600">
-                                  {depot.items_count} article{depot.items_count !== 1 ? 's' : ''}
-                                </div>
-                              </div>
-                              
-                              {/* Suggestions for inefficient depots */}
-                              {depot.delivery_status === 'inefficient' && depot.suggested_items && depot.suggested_items.length > 0 && (
-                                <div className="mt-3 p-2 bg-white rounded border">
-                                  <div className="text-sm font-medium text-amber-800 mb-2 flex items-start space-x-1">
-                                    <LightBulbIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                                    <span>Suggestions pour atteindre 20 palettes ({depot.palettes_needed} palettes manquantes):</span>
-                                  </div>
-                                  <div className="space-y-1">
-                                    {depot.suggested_items.slice(0, 3).map((suggestion, sugIndex) => (
-                                      <div key={sugIndex} className="text-xs text-slate-700 flex justify-between">
-                                        <span>{suggestion.article_code} - {suggestion.packaging_type}</span>
-                                        <span className="font-medium">
-                                          {formatNumber(suggestion.quantity_to_send)} unités ({suggestion.palette_quantity} pal.)
-                                        </span>
-                                      </div>
-                                    ))}
-                                    {depot.suggested_items.length > 3 && (
-                                      <div className="text-xs text-slate-500 italic">
-                                        ... et {depot.suggested_items.length - 3} autre(s) suggestion(s)
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {calculations.summary.delivery_optimization.inefficient_depots > 0 && (
-                      <div className="mt-3 p-3 bg-amber-50 rounded border border-amber-200">
-                        <p className="text-sm text-amber-800 flex items-start space-x-2">
-                          <TruckIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                          <span><strong>Optimisation:</strong> {calculations.summary.delivery_optimization.inefficient_depots} dépôt(s) n'atteignent pas le minimum de 20 palettes. Considérez ajouter les articles suggérés pour optimiser les coûts de livraison.</span>
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {calculations.summary.inventory_status === 'no_inventory_data' && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <p className="text-sm text-amber-800 flex items-start space-x-2">
-                      <LightBulbIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <span><strong>Info:</strong> Aucune donnée d'inventaire disponible. Les calculs sont basés uniquement sur les données de commandes.</span>
-                    </p>
-                  </div>
-                )}
-
-                {/* Critical Items Selection */}
-                {calculations.summary.high_priority.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-red-800 flex items-center space-x-2">
-                        <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
-                        <span>Articles Critiques - Sélection pour Export</span>
-                      </h3>
-                      <div className="flex items-center space-x-2">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={showCriticalOnly}
-                            onChange={(e) => setShowCriticalOnly(e.target.checked)}
-                            className="rounded text-red-500 focus:ring-red-500"
-                          />
-                          <span className="text-sm text-red-700">Afficher uniquement les critiques</span>
-                        </label>
-                      </div>
-                    </div>
-                    <div className="flex space-x-4 mb-4">
-                      <button
-                        onClick={selectAllCritical}
-                        className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
-                      >
-                        Sélectionner tous les critiques
-                      </button>
-                      <button
-                        onClick={clearCriticalSelection}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors"
-                      >
-                        Effacer sélection
-                      </button>
-                      <button
-                        onClick={handleExportCritical}
-                        disabled={selectedCriticalItems.length === 0 || loading}
-                        className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-                      >
-                        <DocumentIcon className="w-4 h-4" />
-                        <span>Exporter CBGS ({selectedCriticalItems.length} sélectionnés)</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse border border-gray-300 rounded-lg">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="border border-gray-300 p-3 text-left">Sélection</th>
-                        <th className="border border-gray-300 p-3 text-left">Dépôt</th>
-                        <th className="border border-gray-300 p-3 text-left">Code Article</th>
-                        <th className="border border-gray-300 p-3 text-left">Emballage</th>
-                        <th className="border border-gray-300 p-3 text-right">CQM</th>
-                        <th className="border border-gray-300 p-3 text-right">Jours Couv.</th>
-                        <th className="border border-gray-300 p-3 text-right">Stock Actuel</th>
-                        {transitData && (
-                          <th className="border border-gray-300 p-3 text-right">Stock Transit</th>
-                        )}
-                        <th className="border border-gray-300 p-3 text-right">Quantité à Envoyer</th>
-                        <th className="border border-gray-300 p-3 text-right">Palettes</th>
-                        {calculations.summary.inventory_status === 'available' && (
-                          <>
-                            <th className="border border-gray-300 p-3 text-right">Stock Inventaire</th>
-                            <th className="border border-gray-300 p-3 text-center">Disponibilité</th>
-                          </>
-                        )}
-                        <th className="border border-gray-300 p-3 text-center">Sourcing</th>
-                        <th className="border border-gray-300 p-3 text-center">Livraison</th>
-                        <th className="border border-gray-300 p-3 text-center">Priorité</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getDisplayedCalculations().map((item, index) => (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                          <td className="border border-gray-300 p-3 text-center">
-                            {item.priority === 'high' && (
-                              <input
-                                type="checkbox"
-                                checked={selectedCriticalItems.some(selected => selected.id === item.id)}
-                                onChange={() => handleCriticalItemSelect(item)}
-                                className="rounded text-red-500 focus:ring-red-500"
-                              />
-                            )}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <input type="checkbox" className="rounded" />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code Article</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code Dépôt</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité Commandée</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Actuel</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité en Transit</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité à Envoyer</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Dispo M210</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {calculations.calculations.map((item, index) => {
+                      const isSelected = selectedItems.some(i => i.article === item.article && i.depot === item.depot);
+                      return (
+                        <tr key={index} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleItemSelection(item)}
+                              className="rounded"
+                            />
                           </td>
-                          <td className="border border-gray-300 p-3 font-medium">{item.depot}</td>
-                          <td className="border border-gray-300 p-3">{item.article_code}</td>
-                          <td className="border border-gray-300 p-3">{item.packaging_type}</td>
-                          <td className="border border-gray-300 p-3 text-right">{formatNumber(item.average_daily_consumption)}</td>
-                          <td className="border border-gray-300 p-3 text-right">
-                            <span className={item.priority === 'high' ? 'text-red-600 font-bold' : 
-                                           item.priority === 'medium' ? 'text-yellow-600 font-bold' : ''}>
-                              {formatNumber(item.days_of_coverage)}
-                            </span>
-                          </td>
-                          <td className="border border-gray-300 p-3 text-right">{formatNumber(item.current_stock)}</td>
-                          {transitData && (
-                            <td className="border border-gray-300 p-3 text-right">
-                              <span className={`font-medium ${
-                                item.transit_available > 0 ? 'text-blue-600' : 'text-gray-500'
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.article}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.depot}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.cqm}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_actuel}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_transit}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.quantite_a_envoyer}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_dispo_m210}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              {getStatusIcon(item.statut)}
+                              <span className={`ml-2 text-sm font-medium ${
+                                item.statut === 'OK' ? 'text-green-600' :
+                                item.statut === 'À livrer' ? 'text-orange-600' : 'text-red-600'
                               }`}>
-                                {item.transit_available !== undefined ? formatNumber(item.transit_available) : '0'}
+                                {item.statut}
                               </span>
-                            </td>
-                          )}
-                          <td className="border border-gray-300 p-3 text-right">
-                            <span className={item.quantity_to_send > 0 ? 'text-blue-600 font-bold' : 'text-gray-500'}>
-                              {formatNumber(item.quantity_to_send)}
-                            </span>
-                          </td>
-                          <td className="border border-gray-300 p-3 text-right">
-                            <span className={`font-medium ${
-                              item.palette_quantity > 0 
-                                ? item.delivery_efficient 
-                                  ? 'text-green-600' 
-                                  : 'text-orange-600'
-                                : 'text-gray-500'
-                            }`}>
-                              {item.palette_quantity || 0}
-                            </span>
-                          </td>
-                          {calculations.summary.inventory_status === 'available' && (
-                            <>
-                              <td className="border border-gray-300 p-3 text-right">
-                                <span className="font-medium">
-                                  {item.inventory_available !== undefined ? formatNumber(item.inventory_available) : '-'}
-                                </span>
-                                {item.inventory_shortage > 0 && (
-                                  <div className="text-xs text-red-600 mt-1">
-                                    Manque: {formatNumber(item.inventory_shortage)}
-                                  </div>
-                                )}
-                              </td>
-                              <td className="border border-gray-300 p-3 text-center">
-                                {item.inventory_status && (
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.inventory_status_color}`}>
-                                    {item.inventory_status_text}
-                                  </span>
-                                )}
-                              </td>
-                            </>
-                          )}
-                          <td className="border border-gray-300 p-3 text-center">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              item.is_locally_made 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-orange-100 text-orange-800'
-                            }`}>
-                              {item.sourcing_text || (item.is_locally_made ? 'Production Locale' : 'Sourcing Externe')}
-                            </span>
-                          </td>
-                          <td className="border border-gray-300 p-3 text-center">
-                            {item.delivery_status && (
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.delivery_status_color}`}>
-                                {item.delivery_efficient ? '[OK] Efficace' : '[!] Inefficace'}
-                              </span>
-                            )}
-                          </td>
-                          <td className="border border-gray-300 p-3 text-center">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
-                              {item.priority_text}
-                            </span>
+                            </div>
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            )}
-
-            {/* AI Insights Tab */}
-            {activeTab === 'ai' && sessionId && (
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
-                  <h3 className="font-medium text-blue-800 mb-2">🤖 Assistant Intelligent d'Analyse des Stocks</h3>
-                  <p className="text-sm text-blue-700">
-                    Analysez vos données journalières de stock avec des insights précis et des recommandations d'expert.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setGeminiQuery('Quels dépôts ont les plus faibles niveaux de stock aujourd\'hui?')}
-                    className="p-4 text-left bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors"
-                  >
-                    <div className="font-medium text-red-800 flex items-center space-x-2">
-                      <ExclamationTriangleIcon className="w-4 h-4" />
-                      <span>Stocks Critiques</span>
-                    </div>
-                    <div className="text-sm text-red-600 mt-1">Dépôts avec faibles stocks</div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setGeminiQuery('Quels sont les 5 produits les plus commandés aujourd\'hui?')}
-                    className="p-4 text-left bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 transition-colors"
-                  >
-                    <div className="font-medium text-orange-800 flex items-center space-x-2">
-                      <ArrowTrendingUpIcon className="w-4 h-4" />
-                      <span>Top Commandes</span>
-                    </div>
-                    <div className="text-sm text-orange-600 mt-1">Produits les plus demandés</div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setGeminiQuery('Analysez la répartition des commandes par dépôt pour aujourd\'hui.')}
-                    className="p-4 text-left bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
-                  >
-                    <div className="font-medium text-blue-800 flex items-center space-x-2">
-                      <ChartBarIcon className="w-4 h-4" />
-                      <span>Répartition Dépôts</span>
-                    </div>
-                    <div className="text-sm text-blue-600 mt-1">Volume par dépôt</div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setGeminiQuery('Quels produits nécessitent un réapprovisionnement immédiat basé sur les stocks actuels?')}
-                    className="p-4 text-left bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors"
-                  >
-                    <div className="font-medium text-green-800 flex items-center space-x-2">
-                      <LightBulbIcon className="w-4 h-4" />
-                      <span>Réapprovisionnement</span>
-                    </div>
-                    <div className="text-sm text-green-600 mt-1">Actions urgentes</div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setGeminiQuery('Comparez les volumes commandés par type d\'emballage aujourd\'hui.')}
-                    className="p-4 text-left bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors"
-                  >
-                    <div className="font-medium text-indigo-800 flex items-center space-x-2">
-                      <ArchiveBoxIcon className="w-4 h-4" />
-                      <span>Analyse Emballages</span>
-                    </div>
-                    <div className="text-sm text-indigo-600 mt-1">Volumes par packaging</div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setGeminiQuery('Donnez-moi un résumé des performances commerciales du jour avec les chiffres clés.')}
-                    className="p-4 text-left bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors"
-                  >
-                    <div className="font-medium text-purple-800 flex items-center space-x-2">
-                      <ClipboardDocumentListIcon className="w-4 h-4" />
-                      <span>Résumé Journalier</span>
-                    </div>
-                    <div className="text-sm text-purple-600 mt-1">Performance du jour</div>
-                  </button>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex space-x-4">
-                    <textarea
-                      value={geminiQuery}
-                      onChange={(e) => setGeminiQuery(e.target.value)}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                      placeholder="Posez votre question personnalisée sur les données de stock..."
-                      rows="3"
-                    />
-                    <button
-                      onClick={handleGeminiQuery}
-                      disabled={loading || !geminiQuery.trim()}
-                      className="bg-blue-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors self-start"
-                    >
-                      {loading ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          <span>Analyse...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <MagnifyingGlassIcon className="w-4 h-4" />
-                          <span>Analyser</span>
-                        </div>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {geminiResponse && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
-                    <h4 className="font-medium text-slate-800 mb-3 flex items-center space-x-2">
-                      <CursorArrowRaysIcon className="w-5 h-5 text-slate-600" />
-                      <span>Analyse Experte:</span>
-                    </h4>
-                    <div className="text-sm text-slate-700 leading-relaxed bg-white p-4 rounded border border-slate-200">{geminiResponse.response}
-                    </div>
-                    <div className="mt-3 text-xs text-slate-600">
-                      Question analysée: "{geminiResponse.query}"
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Reset Button */}
-            {sessionId && (
-              <div className="mt-8 pt-6 border-t border-slate-200">
-                <button
-                  onClick={resetApp}
-                  className="bg-slate-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-600 transition-colors flex items-center space-x-2"
-                >
-                  <ArrowPathIcon className="w-4 h-4" />
-                  <span>Nouvelle Analyse</span>
-                </button>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
