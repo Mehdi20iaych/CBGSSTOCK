@@ -627,6 +627,147 @@ async def export_excel(request: ExportRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erreur lors de l'export: {str(e)}")
 
+@app.post("/api/depot-suggestions")
+async def get_depot_suggestions(request: dict):
+    """Génère des suggestions pour compléter 24 palettes par camion pour un dépôt"""
+    try:
+        depot_name = request.get('depot_name')
+        current_days = request.get('days', 10)
+        
+        if not depot_name:
+            raise HTTPException(status_code=400, detail="Nom de dépôt requis")
+        
+        # Vérifier qu'on a des données de commandes
+        if not commandes_data:
+            raise HTTPException(status_code=400, detail="Aucune donnée de commandes uploadée")
+        
+        # Prendre la dernière session de commandes uploadée
+        commandes_session_id = list(commandes_data.keys())[-1]
+        commandes_df = pd.DataFrame(commandes_data[commandes_session_id]['data'])
+        
+        # Obtenir les données de stock et transit actuelles
+        stock_m210 = {}
+        if stock_data and len(stock_data) > 0:
+            stock_session_id = list(stock_data.keys())[-1]
+            stock_df = pd.DataFrame(stock_data[stock_session_id]['data'])
+            stock_m210 = dict(zip(stock_df['Article'].astype(str), stock_df['STOCK A DATE']))
+        
+        transit_stocks = {}
+        if transit_data and len(transit_data) > 0:
+            transit_session_id = list(transit_data.keys())[-1]
+            transit_df = pd.DataFrame(transit_data[transit_session_id]['data'])
+            
+            for _, row in transit_df.iterrows():
+                article = str(row['Article'])
+                if article not in transit_stocks:
+                    transit_stocks[article] = {}
+                depot = row['Division']
+                if depot not in transit_stocks[article]:
+                    transit_stocks[article][depot] = 0
+                transit_stocks[article][depot] += row['Quantité']
+        
+        # Filtrer les commandes pour ce dépôt spécifique
+        depot_commandes = commandes_df[commandes_df['Point d\'Expédition'] == depot_name]
+        
+        if depot_commandes.empty:
+            return {
+                "depot_name": depot_name,
+                "current_palettes": 0,
+                "target_palettes": 24,
+                "suggestions": [],
+                "message": f"Aucune commande trouvée pour le dépôt {depot_name}"
+            }
+        
+        # Calculer les palettes actuelles pour ce dépôt
+        current_palettes = 0
+        depot_products = []
+        
+        for _, row in depot_commandes.iterrows():
+            article = str(row['Article'])
+            depot = row['Point d\'Expédition']
+            packaging = row['Type Emballage']
+            cqm = row['Quantité Commandée']
+            stock_actuel = row['Stock Utilisation Libre']
+            stock_transit = transit_stocks.get(article, {}).get(depot, 0)
+            
+            # Calculer avec la formule actuelle
+            quantite_requise = cqm * current_days
+            quantite_a_envoyer = max(0, quantite_requise - stock_actuel - stock_transit)
+            palettes_needed = math.ceil(quantite_a_envoyer / 30) if quantite_a_envoyer > 0 else 0
+            
+            current_palettes += palettes_needed
+            
+            depot_products.append({
+                'article': article,
+                'packaging': packaging,
+                'cqm': cqm,
+                'stock_actuel': stock_actuel,
+                'stock_transit': stock_transit,
+                'quantite_a_envoyer': quantite_a_envoyer,
+                'palettes_needed': palettes_needed,
+                'stock_dispo_m210': stock_m210.get(article, 0)
+            })
+        
+        # Calculer combien de palettes sont nécessaires pour atteindre des multiples de 24
+        current_trucks = math.ceil(current_palettes / 24) if current_palettes > 0 else 1
+        target_palettes = current_trucks * 24
+        palettes_to_add = target_palettes - current_palettes
+        
+        suggestions = []
+        if palettes_to_add > 0:
+            # Trier les produits par quantité à envoyer actuelle (ascendant) pour prioriser les plus faibles quantités
+            sorted_products = sorted([p for p in depot_products if p['quantite_a_envoyer'] > 0], 
+                                   key=lambda x: x['quantite_a_envoyer'])
+            
+            remaining_palettes = palettes_to_add
+            
+            for product in sorted_products:
+                if remaining_palettes <= 0:
+                    break
+                    
+                # Calculer combien de produits supplémentaires sont nécessaires pour ajouter des palettes
+                current_quantity = product['quantite_a_envoyer']
+                current_product_palettes = product['palettes_needed']
+                
+                # Proposer d'ajouter 1-3 palettes de plus pour ce produit
+                suggested_additional_palettes = min(3, remaining_palettes)
+                additional_products_needed = suggested_additional_palettes * 30
+                new_total_quantity = current_quantity + additional_products_needed
+                new_total_palettes = math.ceil(new_total_quantity / 30)
+                
+                # Vérifier si on a assez de stock à M210
+                stock_available = product['stock_dispo_m210']
+                can_fulfill = new_total_quantity <= stock_available
+                
+                suggestions.append({
+                    'article': product['article'],
+                    'packaging': product['packaging'],
+                    'current_quantity': current_quantity,
+                    'current_palettes': current_product_palettes,
+                    'suggested_additional_quantity': additional_products_needed,
+                    'suggested_additional_palettes': suggested_additional_palettes,
+                    'new_total_quantity': new_total_quantity,
+                    'new_total_palettes': new_total_palettes,
+                    'stock_available': stock_available,
+                    'can_fulfill': can_fulfill,
+                    'feasibility': 'Réalisable' if can_fulfill else 'Stock insuffisant'
+                })
+                
+                remaining_palettes -= suggested_additional_palettes
+        
+        return {
+            "depot_name": depot_name,
+            "current_palettes": current_palettes,
+            "current_trucks": current_trucks,
+            "target_palettes": target_palettes,
+            "palettes_to_add": palettes_to_add,
+            "suggestions": suggestions[:5],  # Limiter à 5 suggestions max
+            "efficiency_status": "Efficace" if current_palettes >= 24 else "Inefficace"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erreur lors de la génération des suggestions: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
