@@ -882,28 +882,14 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
             if request.transit_session_id and request.transit_session_id in transit_data:
                 transit_df = pd.DataFrame(transit_data[request.transit_session_id]['data'])
                 
-                # DEBUG: Print matching information
-                print(f"🔍 DEBUG - Looking for Article: '{row['article_code']}' at Depot: '{row['depot']}'")
-                print(f"🔍 DEBUG - Available in transit data:")
-                for idx, t_row in transit_df.iterrows():
-                    print(f"   Article: '{t_row['Article']}' (match: {str(t_row['Article']) == str(row['article_code'])})")
-                    print(f"   Division: '{t_row['Division']}' (match: {str(t_row['Division']) == str(row['depot'])})")
-                    print(f"   Quantité: {t_row['Quantité']}")
-                    print("   ---")
-                
                 # Find matching article AND depot in transit data
                 matching_transit = transit_df[
                     (transit_df['Article'].astype(str) == str(row['article_code'])) &
                     (transit_df['Division'].astype(str) == str(row['depot']))
                 ]
                 
-                print(f"🔍 DEBUG - Matches found: {len(matching_transit)}")
-                
                 if not matching_transit.empty:
                     transit_available = float(matching_transit['Quantité'].sum())
-                    print(f"✅ DEBUG - Transit available: {transit_available}")
-                else:
-                    print("❌ DEBUG - No matches found!")
             
             # Calculate quantity to send considering current stock + transit stock
             total_available = row['current_stock'] + transit_available
