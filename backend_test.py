@@ -97,9 +97,9 @@ class SimplifiedStockManagementTester:
 
     def create_sample_transit_excel(self):
         """Create sample transit Excel file with columns A, C, G, I"""
-        # Create sample transit data from M210 to other depots
+        # Create sample transit data from M210 to other depots - include articles from sourcing test
         data = {
-            'Article': ['ART001', 'ART002', 'ART003', 'ART001', 'ART004'],  # Article (Column A)
+            'Article': ['1011', '1016', '1021', '9999', '8888'],  # Article (Column A) - Mix of local and external
             'Dummy_B': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5'],  # Dummy column B
             'Division': ['M211', 'M212', 'M213', 'M212', 'M211'],  # Division destinataire (Column C)
             'Dummy_D': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],  # Dummy column D
