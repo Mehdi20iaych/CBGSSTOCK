@@ -353,10 +353,13 @@
 
 ## test_plan:
   current_focus:
-    - "Test new calculation formula functionality"
-    - "Verify negative values are allowed in quantity_to_send"
-    - "Test enhanced calculation with transit stock"
-    - "Regression testing for existing functionality"
+    - "Test nouvelle version simplifiée du backend"
+    - "Upload fichier commandes avec validation colonnes B,D,F,G"
+    - "Upload fichier stock M210 avec filtrage Division=M210"
+    - "Upload fichier transit avec filtrage depuis M210"
+    - "Calcul avec formule simplifiée max(0, CQM×Jours - Stock - Transit)"
+    - "Export Excel des résultats"
+    - "Gestion des sessions actives"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
