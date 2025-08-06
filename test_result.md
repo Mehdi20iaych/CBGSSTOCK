@@ -374,6 +374,7 @@
 
 ## test_plan:
   current_focus:
+    - "Enhanced inventory management system with packaging type filtering"
     - "Test nouvelle version simplifiée du backend"
     - "Upload fichier commandes avec validation colonnes B,D,F,G"
     - "Upload fichier stock M210 avec filtrage Division=M210"
