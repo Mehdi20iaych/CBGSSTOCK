@@ -940,9 +940,9 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
                 if not matching_transit.empty:
                     transit_available = float(matching_transit['Quantité'].sum())
             
-            # Calculate quantity to send using new formula: (CQM x JOURS A COUVRIR) - Stock Transit - Stock Actuel
-            # quantity_to_send = (request.days * adc) - transit_available - current_stock
-            quantity_to_send = required_stock - transit_available - row['current_stock']
+            # Calculate quantity to send using new formula: max(0, (CQM x JOURS A COUVRIR) - Stock Transit - Stock Actuel)
+            # quantity_to_send = max(0, (request.days * adc) - transit_available - current_stock)
+            quantity_to_send = max(0, required_stock - transit_available - row['current_stock'])
             
             # Calculate palettes needed for this item
             # Formula: number of palettes = Quantité à Envoyer / 30
