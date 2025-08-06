@@ -60,9 +60,10 @@ class SimplifiedStockManagementTester:
             return False, {}
 
     def create_sample_commandes_excel(self):
-        """Create sample commandes Excel file with columns B, D, F, G"""
+        """Create sample commandes Excel file with columns B, D, F, G, I (including packaging)"""
         # Create sample data with proper column structure - using actual column names
         # Include both locally made and external articles for sourcing testing
+        # Include mixed packaging types for packaging filtering tests
         data = {
             'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006'],  # Dummy column A
             'Article': ['1011', '1016', '1021', '9999', '8888', '1033'],  # Article (Column B) - Mix of local and external
@@ -70,7 +71,9 @@ class SimplifiedStockManagementTester:
             'Point d\'Expédition': ['M211', 'M212', 'M213', 'M212', 'M211', 'M213'],  # Point d'Expédition (Column D) - M210 excluded
             'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],  # Dummy column E
             'Quantité Commandée': [100, 150, 80, 120, 90, 200],  # Quantité Commandée (Column F)
-            'Stock Utilisation Libre': [50, 75, 40, 60, 45, 100]  # Stock Utilisation Libre (Column G)
+            'Stock Utilisation Libre': [50, 75, 40, 60, 45, 100],  # Stock Utilisation Libre (Column G)
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],  # Dummy column H
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet', 'ciel']  # Type Emballage (Column I) - Mixed packaging types
         }
         
         df = pd.DataFrame(data)
