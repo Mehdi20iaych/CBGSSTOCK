@@ -353,7 +353,11 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: []
+  current_focus:
+    - "Test new calculation formula functionality"
+    - "Verify negative values are allowed in quantity_to_send"
+    - "Test enhanced calculation with transit stock"
+    - "Regression testing for existing functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
