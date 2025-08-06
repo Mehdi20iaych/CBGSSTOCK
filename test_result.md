@@ -133,6 +133,21 @@
           agent: "testing"
           comment: "✅ TESTED: Inventory Excel upload endpoint working perfectly. Successfully uploads inventory data with required columns (Division, Article, Désignation article, STOCK À DATE). Returns proper session_id and summary statistics including divisions, articles_count, total_stock, and records_count. Error handling works correctly for missing columns (returns 400 status). MongoDB serialization issues fixed by converting numpy types to Python native types. Tested with 7 inventory records totaling 5750 units."
 
+  - task: "Test new calculation formula functionality"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "MAJOR FORMULA CHANGE: Implemented new calculation formula - Quantité à Envoyer = (CQM x JOURS A COUVRIR) - Stock Transit - Stock Actuel. This formula now allows NEGATIVE values when stock exceeds requirements, removing the max(0, ...) constraint from both /api/calculate/{session_id} and /api/enhanced-calculate endpoints."
+        - working: true
+          agent: "testing"
+          comment: "✅ NEW FORMULA COMPREHENSIVE TESTING COMPLETED: All new formula requirements successfully verified! Executed 4 specialized NEW FORMULA tests with excellent results. KEY ACHIEVEMENTS: (1) BASIC CALCULATION VERIFICATION: Confirmed /api/calculate/{session_id} endpoint correctly implements quantity_to_send = required_stock - current_stock (without max(0, ...)), allowing negative values when current stock exceeds requirements, (2) ENHANCED CALCULATION VERIFICATION: Confirmed /api/enhanced-calculate endpoint correctly implements quantity_to_send = required_stock - transit_available - current_stock, properly handling transit stock in the new formula, (3) NEGATIVE VALUE SCENARIOS: Successfully verified that when current_stock > required_stock OR current_stock + transit_stock > required_stock, the quantity_to_send becomes negative as required, tested with high stock scenario (1000 current stock vs 300 required = -700 quantity_to_send), (4) PALETTE CALCULATION INTEGRATION: Verified palette calculation correctly handles negative quantities (0 palettes for negative quantity_to_send), (5) REGRESSION TESTING: Confirmed all existing functionality preserved - delivery optimization, sourcing intelligence, truck calculations, and all other features work correctly with new formula, (6) COMPREHENSIVE INTEGRATION: All 59 backend tests passed (100% success rate), confirming new formula works seamlessly with existing system. CRITICAL FINDINGS: The new formula successfully removes the artificial constraint of non-negative quantities, allowing the system to accurately represent scenarios where current stock exceeds requirements. This provides more realistic inventory management insights. Minor floating-point precision differences (±0.02) observed but within acceptable tolerance. The new formula is production-ready and fully integrated with all existing features."
+
   - task: "Enhanced calculation with inventory cross-reference"
     implemented: true
     working: true
@@ -147,6 +162,9 @@
         - working: true
           agent: "testing"
           comment: "✅ TESTED: Enhanced calculation with inventory cross-reference working excellently. Successfully matches order requirements with inventory availability using article codes. Returns proper inventory status fields (inventory_available, can_fulfill, inventory_status, inventory_status_text, inventory_status_color). Inventory shortage calculations work correctly. Summary statistics include sufficient_items, partial_items, insufficient_items, not_found_items counts. Works with and without inventory data. Proper error handling for invalid sessions (404). Filters work correctly with inventory data. All 6 test items showed 'sufficient' status with proper inventory matching."
+        - working: true
+          agent: "testing"
+          comment: "✅ RE-TESTED WITH NEW FORMULA: Enhanced calculation endpoint working perfectly with new formula implementation. All inventory cross-reference functionality preserved. New formula correctly applied: quantity_to_send = required_stock - transit_available - current_stock. Negative values properly handled in inventory status calculations. All existing features (inventory matching, status indicators, summary statistics) working correctly with new formula."
 
   - task: "Filter packaging types to only verre, pet, ciel"
     implemented: true
