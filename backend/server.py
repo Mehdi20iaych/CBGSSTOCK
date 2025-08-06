@@ -604,26 +604,21 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             result_item['can_fulfill'] = bool(total_available >= quantity_to_send)
             
             if request.inventory_session_id and request.inventory_session_id in inventory_data:
-                if total_available >= quantity_to_send:
+                # Base the Disponibilité status ONLY on inventory data from column D (not transit stock)
+                if total_available_inventory >= quantity_to_send:
                     result_item['inventory_status'] = 'sufficient'
-                    result_item['inventory_status_text'] = 'EN STOCK' + (f' (+{round(transit_available, 2)} transit)' if transit_available > 0 else '')
+                    result_item['inventory_status_text'] = 'EN STOCK'
                     result_item['inventory_status_color'] = 'text-green-600 bg-green-50'
-                elif total_available > 0:
+                elif total_available_inventory > 0:
                     result_item['inventory_status'] = 'partial'
-                    result_item['inventory_status_text'] = 'STOCK FAIBLE' + (f' (+{round(transit_available, 2)} transit)' if transit_available > 0 else '')
+                    result_item['inventory_status_text'] = 'STOCK FAIBLE'
                     result_item['inventory_status_color'] = 'text-yellow-600 bg-yellow-50'
-                    result_item['inventory_shortage'] = round(quantity_to_send - total_available, 2)
+                    result_item['inventory_shortage'] = round(quantity_to_send - total_available_inventory, 2)
                 else:
                     result_item['inventory_status'] = 'insufficient'
-                    result_item['inventory_status_text'] = 'HORS STOCK' + (f' (+{round(transit_available, 2)} transit)' if transit_available > 0 else '')
+                    result_item['inventory_status_text'] = 'HORS STOCK'
                     result_item['inventory_status_color'] = 'text-red-600 bg-red-50'
-                    result_item['inventory_shortage'] = round(quantity_to_send - total_available, 2)
-                    
-                # Add special status if only transit data makes it sufficient
-                if total_available_inventory == 0 and transit_available >= quantity_to_send:
-                    result_item['inventory_status'] = 'transit_only'
-                    result_item['inventory_status_text'] = f'TRANSIT SUFFISANT ({round(transit_available, 2)})'
-                    result_item['inventory_status_color'] = 'text-blue-600 bg-blue-50'
+                    result_item['inventory_shortage'] = round(quantity_to_send - total_available_inventory, 2)
                     
             elif request.transit_session_id and request.transit_session_id in transit_data:
                 # Only transit data available, no inventory data
