@@ -724,45 +724,57 @@ async def get_depot_suggestions(request: dict):
         
         suggestions = []
         if palettes_to_add > 0:
-            # Trier les produits par quantité à envoyer actuelle (ascendant) pour prioriser les plus faibles quantités
-            sorted_products = sorted([p for p in depot_products if p['quantite_a_envoyer'] > 0], 
-                                   key=lambda x: x['quantite_a_envoyer'])
-            
-            remaining_palettes = palettes_to_add
-            
-            for product in sorted_products:
-                if remaining_palettes <= 0:
-                    break
-                    
-                # Calculer combien de produits supplémentaires sont nécessaires pour ajouter des palettes
-                current_quantity = product['quantite_a_envoyer']
-                current_product_palettes = product['palettes_needed']
-                
-                # Proposer d'ajouter 1-3 palettes de plus pour ce produit
-                suggested_additional_palettes = min(3, remaining_palettes)
-                additional_products_needed = suggested_additional_palettes * 30
-                new_total_quantity = current_quantity + additional_products_needed
-                new_total_palettes = math.ceil(new_total_quantity / 30)
-                
-                # Vérifier si on a assez de stock à M210
-                stock_available = product['stock_dispo_m210']
-                can_fulfill = new_total_quantity <= stock_available
-                
+            # NOUVELLE LOGIQUE: Suggérer des produits basés sur les plus faibles quantités de stock
+            # Obtenir tous les produits du stock M210 et les trier par quantité de stock (ascendant)
+            if not stock_m210:
                 suggestions.append({
-                    'article': product['article'],
-                    'packaging': product['packaging'],
-                    'current_quantity': current_quantity,
-                    'current_palettes': current_product_palettes,
-                    'suggested_additional_quantity': additional_products_needed,
-                    'suggested_additional_palettes': suggested_additional_palettes,
-                    'new_total_quantity': new_total_quantity,
-                    'new_total_palettes': new_total_palettes,
-                    'stock_available': stock_available,
-                    'can_fulfill': can_fulfill,
-                    'feasibility': 'Réalisable' if can_fulfill else 'Stock insuffisant'
+                    'message': 'Aucune donnée de stock M210 disponible pour générer des suggestions'
                 })
+            else:
+                # Créer une liste de tous les produits avec leurs stocks M210, triés par stock croissant
+                all_stock_products = []
+                for article, stock_quantity in stock_m210.items():
+                    # Vérifier si ce produit n'est pas déjà dans les commandes actuelles du dépôt
+                    article_already_ordered = any(p['article'] == article for p in depot_products)
+                    
+                    if not article_already_ordered and stock_quantity > 0:
+                        all_stock_products.append({
+                            'article': article,
+                            'stock_m210': stock_quantity,
+                            'packaging': 'verre',  # Valeur par défaut, pourrait être améliorée avec plus de données
+                        })
                 
-                remaining_palettes -= suggested_additional_palettes
+                # Trier par stock M210 (ascendant) - les plus faibles quantités en premier
+                all_stock_products.sort(key=lambda x: x['stock_m210'])
+                
+                remaining_palettes = palettes_to_add
+                products_needed_per_palette = 30
+                
+                for product in all_stock_products:
+                    if remaining_palettes <= 0:
+                        break
+                    
+                    # Calculer combien de palettes on peut suggérer avec ce produit
+                    # On va suggérer de 1 à 3 palettes selon les besoins restants
+                    suggested_palettes = min(3, remaining_palettes)
+                    suggested_quantity = suggested_palettes * products_needed_per_palette
+                    
+                    # Vérifier si on a assez de stock M210 pour cette suggestion
+                    stock_available = product['stock_m210']
+                    can_fulfill = suggested_quantity <= stock_available
+                    
+                    suggestions.append({
+                        'article': product['article'],
+                        'packaging': product['packaging'],
+                        'stock_m210': stock_available,
+                        'suggested_quantity': suggested_quantity,
+                        'suggested_palettes': suggested_palettes,
+                        'can_fulfill': can_fulfill,
+                        'feasibility': 'Réalisable' if can_fulfill else 'Stock insuffisant',
+                        'reason': f'Stock faible ({stock_available} unités) - Priorité pour reconstitution'
+                    })
+                    
+                    remaining_palettes -= suggested_palettes
         
         return {
             "depot_name": depot_name,
