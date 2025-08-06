@@ -357,8 +357,8 @@ async def calculate_requirements(request: CalculationRequest):
                 key = (str(row['Article']), str(row['Division']))
                 transit_stocks[key] = transit_stocks.get(key, 0) + float(row['Quantité'])
         
-        # Grouper les commandes par (Article, Point d'Expédition)
-        grouped = commandes_df.groupby(['Article', 'Point d\'Expédition']).agg({
+        # Grouper les commandes par (Article, Point d'Expédition, Type Emballage)
+        grouped = commandes_df.groupby(['Article', 'Point d\'Expédition', 'Type Emballage']).agg({
             'Quantité Commandée': 'sum',  # CQM (Consommation Quotidienne Moyenne)
             'Stock Utilisation Libre': 'first'  # Stock actuel dans le dépôt
         }).reset_index()
