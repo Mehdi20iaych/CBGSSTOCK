@@ -461,7 +461,7 @@ async def calculate_requirements(request: CalculationRequest):
         results_sorted = sorted(results, key=lambda x: x['depot'])
         
         return {
-            "calculations": results,
+            "calculations": results_sorted,
             "summary": {
                 "total_items": total_items,
                 "items_ok": items_ok,
@@ -475,6 +475,7 @@ async def calculate_requirements(request: CalculationRequest):
                 "local_percentage": round((local_items / total_items * 100) if total_items > 0 else 0, 1),
                 "external_percentage": round((external_items / total_items * 100) if total_items > 0 else 0, 1)
             },
+            "depot_summary": depot_summary,
             "has_stock_data": len(stock_m210) > 0,
             "has_transit_data": len(transit_stocks) > 0
         }
