@@ -331,6 +331,13 @@ async def calculate_requirements(request: CalculationRequest):
         commandes_session_id = list(commandes_data.keys())[-1]
         commandes_df = pd.DataFrame(commandes_data[commandes_session_id]['data'])
         
+        # Appliquer le filtre de type d'emballage si spécifié
+        if request.packaging_filter and len(request.packaging_filter) > 0:
+            commandes_df = commandes_df[commandes_df['Type Emballage'].isin(request.packaging_filter)]
+            
+        if commandes_df.empty:
+            raise HTTPException(status_code=400, detail="Aucune donnée après application des filtres d'emballage")
+        
         # Obtenir les données de stock M210 si disponibles
         stock_m210 = {}
         if stock_data:
