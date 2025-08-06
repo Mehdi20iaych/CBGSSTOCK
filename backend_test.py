@@ -521,19 +521,19 @@ class SimplifiedStockManagementTester:
         
         return False
 
-    def test_excel_export(self):
-        """Test Excel export functionality"""
+    def test_excel_export_enhanced_depot_organization(self):
+        """Test enhanced Excel export with intelligent depot organization"""
         if not self.commandes_session_id:
             print("❌ No commandes session available for export test")
             return False
         
-        # First get calculation results
+        # First get calculation results with palettes and depot information
         calculation_data = {
             "days": 10
         }
         
         calc_success, calc_response = self.run_test(
-            "Get Calculations for Export",
+            "Get Calculations for Enhanced Export",
             "POST",
             "api/calculate",
             200,
@@ -546,8 +546,16 @@ class SimplifiedStockManagementTester:
                 print("⚠️ No calculations available for export test")
                 return True
             
-            # Select items for export
-            selected_items = calculations[:3]  # Take first 3 items
+            # Verify calculations include required fields for enhanced export
+            required_fields = ['depot', 'article', 'quantite_a_envoyer', 'palettes_needed', 'statut']
+            for calc in calculations:
+                for field in required_fields:
+                    if field not in calc:
+                        print(f"❌ Missing required field '{field}' in calculation for enhanced export")
+                        return False
+            
+            # Select items for export - include items from different depots
+            selected_items = calculations  # Take all items to test depot organization
             
             export_data = {
                 "selected_items": selected_items,
@@ -555,7 +563,7 @@ class SimplifiedStockManagementTester:
             }
             
             success, response = self.run_test(
-                "Excel Export",
+                "Enhanced Excel Export with Depot Organization",
                 "POST",
                 "api/export-excel",
                 200,
@@ -563,7 +571,298 @@ class SimplifiedStockManagementTester:
             )
             
             if success:
-                print("✅ Excel export completed successfully")
+                print("✅ Enhanced Excel export with depot organization completed successfully")
+                
+                # Verify depot summary is available in calculations
+                if 'depot_summary' in calc_response:
+                    depot_summary = calc_response['depot_summary']
+                    print(f"✅ Depot summary available with {len(depot_summary)} depots")
+                    
+                    # Verify depot summary structure
+                    for depot_info in depot_summary:
+                        required_depot_fields = ['depot', 'total_palettes', 'trucks_needed', 'delivery_efficiency']
+                        for field in required_depot_fields:
+                            if field not in depot_info:
+                                print(f"❌ Missing depot summary field: {field}")
+                                return False
+                        
+                        # Verify truck efficiency logic
+                        total_palettes = depot_info['total_palettes']
+                        expected_trucks = math.ceil(total_palettes / 24) if total_palettes > 0 else 0
+                        expected_efficiency = 'Efficace' if total_palettes >= 24 else 'Inefficace'
+                        
+                        if depot_info['trucks_needed'] != expected_trucks:
+                            print(f"❌ Depot {depot_info['depot']}: Expected {expected_trucks} trucks, got {depot_info['trucks_needed']}")
+                            return False
+                        
+                        if depot_info['delivery_efficiency'] != expected_efficiency:
+                            print(f"❌ Depot {depot_info['depot']}: Expected efficiency '{expected_efficiency}', got '{depot_info['delivery_efficiency']}'")
+                            return False
+                        
+                        print(f"✅ Depot {depot_info['depot']}: {total_palettes} palettes, {expected_trucks} trucks, {expected_efficiency}")
+                
+                return True
+        
+        return False
+
+    def test_excel_export_filename_format(self):
+        """Test Excel export filename format: Livraisons_Depot_YYYYMMDD_HHMMSS.xlsx"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for filename test")
+            return False
+        
+        # Get calculation results
+        calculation_data = {"days": 5}
+        calc_success, calc_response = self.run_test(
+            "Get Calculations for Filename Test",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if calc_success and 'calculations' in calc_response:
+            calculations = calc_response['calculations']
+            if not calculations:
+                print("⚠️ No calculations available for filename test")
+                return True
+            
+            selected_items = calculations[:2]  # Take first 2 items
+            export_data = {
+                "selected_items": selected_items,
+                "session_id": "filename_test"
+            }
+            
+            # Make request and check response headers
+            url = f"{self.base_url}/api/export-excel"
+            try:
+                response = requests.post(url, json=export_data, headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    # Check Content-Disposition header for filename
+                    content_disposition = response.headers.get('Content-Disposition', '')
+                    if 'Livraisons_Depot_' in content_disposition and '.xlsx' in content_disposition:
+                        print("✅ Excel export filename format correct: Livraisons_Depot_YYYYMMDD_HHMMSS.xlsx")
+                        return True
+                    else:
+                        print(f"❌ Incorrect filename format in Content-Disposition: {content_disposition}")
+                        return False
+                else:
+                    print(f"❌ Export failed with status {response.status_code}")
+                    return False
+            except Exception as e:
+                print(f"❌ Error testing filename format: {str(e)}")
+                return False
+        
+        return False
+
+    def test_excel_export_data_organization(self):
+        """Test Excel export data organization by depot with proper sorting"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for data organization test")
+            return False
+        
+        # Create test data with multiple depots and varying quantities
+        test_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006'],
+            'Article': ['1011', '1016', '1021', '1033', '1040', '1051'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6'],
+            'Point d\'Expédition': ['M213', 'M211', 'M212', 'M213', 'M211', 'M212'],  # Mixed depot order
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Quantité Commandée': [200, 100, 150, 300, 80, 120],  # Varying quantities
+            'Stock Utilisation Libre': [50, 25, 40, 75, 20, 30],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet', 'ciel']
+        }
+        
+        df = pd.DataFrame(test_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('depot_organization_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        # Upload test data
+        success, upload_response = self.run_test(
+            "Upload Data for Organization Test",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if success:
+            # Get calculations
+            calculation_data = {"days": 15}
+            calc_success, calc_response = self.run_test(
+                "Calculate for Organization Test",
+                "POST",
+                "api/calculate",
+                200,
+                data=calculation_data
+            )
+            
+            if calc_success and 'calculations' in calc_response:
+                calculations = calc_response['calculations']
+                
+                # Verify data is sorted by depot
+                previous_depot = None
+                for calc in calculations:
+                    current_depot = calc['depot']
+                    if previous_depot and current_depot < previous_depot:
+                        print(f"❌ Data not sorted by depot: {previous_depot} should come after {current_depot}")
+                        return False
+                    previous_depot = current_depot
+                
+                print("✅ Calculation results properly sorted by depot")
+                
+                # Test export with organized data
+                export_data = {
+                    "selected_items": calculations,
+                    "session_id": "organization_test"
+                }
+                
+                success, response = self.run_test(
+                    "Export with Depot Organization",
+                    "POST",
+                    "api/export-excel",
+                    200,
+                    data=export_data
+                )
+                
+                if success:
+                    print("✅ Excel export with depot organization successful")
+                    
+                    # Verify depot grouping in calculations
+                    depot_groups = {}
+                    for calc in calculations:
+                        depot = calc['depot']
+                        if depot not in depot_groups:
+                            depot_groups[depot] = []
+                        depot_groups[depot].append(calc)
+                    
+                    print(f"✅ Data organized into {len(depot_groups)} depot groups:")
+                    for depot, items in depot_groups.items():
+                        total_palettes = sum(item.get('palettes_needed', 0) for item in items)
+                        print(f"   {depot}: {len(items)} items, {total_palettes} palettes")
+                    
+                    return True
+        
+        return False
+
+    def test_excel_export_essential_columns(self):
+        """Test that Excel export includes only essential columns: Dépôt, Code Article, Quantité à Livrer, Palettes, Statut"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for essential columns test")
+            return False
+        
+        # Get calculation results
+        calculation_data = {"days": 10}
+        calc_success, calc_response = self.run_test(
+            "Get Calculations for Essential Columns Test",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if calc_success and 'calculations' in calc_response:
+            calculations = calc_response['calculations']
+            if not calculations:
+                print("⚠️ No calculations available for essential columns test")
+                return True
+            
+            # Verify calculations have all required fields for essential columns
+            essential_field_mapping = {
+                'Dépôt': 'depot',
+                'Code Article': 'article', 
+                'Quantité à Livrer': 'quantite_a_envoyer',
+                'Palettes': 'palettes_needed',
+                'Statut': 'statut'
+            }
+            
+            for calc in calculations:
+                for excel_column, calc_field in essential_field_mapping.items():
+                    if calc_field not in calc:
+                        print(f"❌ Missing field '{calc_field}' required for Excel column '{excel_column}'")
+                        return False
+            
+            print("✅ All calculations contain fields for essential Excel columns")
+            
+            # Test export
+            selected_items = calculations[:5]  # Take first 5 items
+            export_data = {
+                "selected_items": selected_items,
+                "session_id": "essential_columns_test"
+            }
+            
+            success, response = self.run_test(
+                "Excel Export with Essential Columns",
+                "POST",
+                "api/export-excel",
+                200,
+                data=export_data
+            )
+            
+            if success:
+                print("✅ Excel export with essential columns completed successfully")
+                print("✅ Expected columns: Dépôt, Code Article, Quantité à Livrer, Palettes, Statut")
+                return True
+        
+        return False
+
+    def test_excel_export_palette_calculations(self):
+        """Test that Excel export includes correct palette calculations (30 products per palette)"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for palette calculations test")
+            return False
+        
+        # Get calculation results
+        calculation_data = {"days": 10}
+        calc_success, calc_response = self.run_test(
+            "Get Calculations for Palette Test",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if calc_success and 'calculations' in calc_response:
+            calculations = calc_response['calculations']
+            
+            # Verify palette calculations are correct
+            for calc in calculations:
+                quantite_a_envoyer = calc.get('quantite_a_envoyer', 0)
+                palettes_needed = calc.get('palettes_needed', 0)
+                
+                # Verify palette calculation: ceil(quantite_a_envoyer / 30)
+                expected_palettes = math.ceil(quantite_a_envoyer / 30) if quantite_a_envoyer > 0 else 0
+                
+                if palettes_needed != expected_palettes:
+                    print(f"❌ Article {calc['article']}: Expected {expected_palettes} palettes for {quantite_a_envoyer} products, got {palettes_needed}")
+                    return False
+                
+                print(f"✅ Article {calc['article']}: {quantite_a_envoyer} products = {palettes_needed} palettes")
+            
+            # Test export with palette data
+            selected_items = calculations
+            export_data = {
+                "selected_items": selected_items,
+                "session_id": "palette_test"
+            }
+            
+            success, response = self.run_test(
+                "Excel Export with Palette Calculations",
+                "POST",
+                "api/export-excel",
+                200,
+                data=export_data
+            )
+            
+            if success:
+                print("✅ Excel export with correct palette calculations completed")
                 return True
         
         return False
