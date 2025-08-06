@@ -368,6 +368,7 @@ async def calculate_requirements(request: CalculationRequest):
         for _, row in grouped.iterrows():
             article = str(row['Article'])
             depot = str(row['Point d\'Expédition'])
+            packaging = str(row['Type Emballage'])
             cqm = float(row['Quantité Commandée'])
             stock_actuel = float(row['Stock Utilisation Libre'])
             
