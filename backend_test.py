@@ -81,12 +81,12 @@ class SimplifiedStockManagementTester:
 
     def create_sample_stock_excel(self):
         """Create sample stock M210 Excel file with columns A, B, D"""
-        # Create sample stock data for M210 only
+        # Create sample stock data for M210 only - include articles from sourcing test
         data = {
-            'Division': ['M210', 'M210', 'M210', 'M210', 'M210'],  # Division (Column A)
-            'Article': ['ART001', 'ART002', 'ART003', 'ART004', 'ART005'],  # Article (Column B)
-            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5'],  # Dummy column C
-            'STOCK A DATE': [500, 300, 200, 400, 250]  # STOCK A DATE (Column D)
+            'Division': ['M210', 'M210', 'M210', 'M210', 'M210', 'M210'],  # Division (Column A)
+            'Article': ['1011', '1016', '1021', '9999', '8888', '1033'],  # Article (Column B) - Mix of local and external
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6'],  # Dummy column C
+            'STOCK A DATE': [500, 300, 200, 400, 250, 350]  # STOCK A DATE (Column D)
         }
         
         df = pd.DataFrame(data)
