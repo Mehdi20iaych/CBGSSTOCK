@@ -60,6 +60,14 @@ function App() {
 
       const data = await response.json();
       setCommandesData(data);
+      
+      // Mettre à jour les filtres d'emballage disponibles
+      if (data.filters && data.filters.packaging) {
+        setAvailablePackaging(data.filters.packaging);
+        // Par défaut, sélectionner tous les types d'emballage
+        setSelectedPackaging(data.filters.packaging);
+      }
+      
       setError(null);
     } catch (err) {
       setError(`Échec du téléchargement des commandes: ${err.message}`);
