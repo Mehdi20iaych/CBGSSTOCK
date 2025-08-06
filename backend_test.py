@@ -746,6 +746,252 @@ class SimplifiedStockManagementTester:
         
         return True
 
+    def test_sourcing_intelligence_basic(self):
+        """Test basic sourcing intelligence functionality"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for sourcing intelligence test")
+            return False
+        
+        calculation_data = {
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Sourcing Intelligence Basic Test",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            # Verify sourcing fields are present in all calculations
+            for calc in calculations:
+                required_sourcing_fields = ['sourcing_status', 'sourcing_text', 'is_locally_made']
+                for field in required_sourcing_fields:
+                    if field not in calc:
+                        print(f"❌ Missing sourcing field '{field}' in calculation for article {calc.get('article', 'unknown')}")
+                        return False
+                
+                # Verify sourcing logic for known articles
+                article = calc['article']
+                is_locally_made = calc['is_locally_made']
+                sourcing_status = calc['sourcing_status']
+                sourcing_text = calc['sourcing_text']
+                
+                # Check locally made articles (1011, 1016, 1021, 1033 are in LOCALLY_MADE_ARTICLES)
+                if article in ['1011', '1016', '1021', '1033']:
+                    if not is_locally_made:
+                        print(f"❌ Article {article} should be locally made but is_locally_made={is_locally_made}")
+                        return False
+                    if sourcing_status != 'local':
+                        print(f"❌ Article {article} should have sourcing_status='local' but got '{sourcing_status}'")
+                        return False
+                    if sourcing_text != 'Production Locale':
+                        print(f"❌ Article {article} should have sourcing_text='Production Locale' but got '{sourcing_text}'")
+                        return False
+                    print(f"✅ Article {article}: Correctly identified as local production")
+                
+                # Check external articles (9999, 8888 are NOT in LOCALLY_MADE_ARTICLES)
+                elif article in ['9999', '8888']:
+                    if is_locally_made:
+                        print(f"❌ Article {article} should be external but is_locally_made={is_locally_made}")
+                        return False
+                    if sourcing_status != 'external':
+                        print(f"❌ Article {article} should have sourcing_status='external' but got '{sourcing_status}'")
+                        return False
+                    if sourcing_text != 'Sourcing Externe':
+                        print(f"❌ Article {article} should have sourcing_text='Sourcing Externe' but got '{sourcing_text}'")
+                        return False
+                    print(f"✅ Article {article}: Correctly identified as external sourcing")
+            
+            # Verify sourcing summary is present
+            if 'sourcing_summary' not in response:
+                print("❌ Missing sourcing_summary in response")
+                return False
+            
+            sourcing_summary = response['sourcing_summary']
+            required_summary_fields = ['local_items', 'external_items', 'local_percentage', 'external_percentage']
+            for field in required_summary_fields:
+                if field not in sourcing_summary:
+                    print(f"❌ Missing sourcing summary field: {field}")
+                    return False
+            
+            # Verify summary statistics
+            local_count = len([calc for calc in calculations if calc['is_locally_made']])
+            external_count = len([calc for calc in calculations if not calc['is_locally_made']])
+            total_count = len(calculations)
+            
+            if sourcing_summary['local_items'] != local_count:
+                print(f"❌ Expected local_items={local_count}, got {sourcing_summary['local_items']}")
+                return False
+            
+            if sourcing_summary['external_items'] != external_count:
+                print(f"❌ Expected external_items={external_count}, got {sourcing_summary['external_items']}")
+                return False
+            
+            expected_local_percentage = round((local_count / total_count * 100) if total_count > 0 else 0, 1)
+            if abs(sourcing_summary['local_percentage'] - expected_local_percentage) > 0.1:
+                print(f"❌ Expected local_percentage={expected_local_percentage}, got {sourcing_summary['local_percentage']}")
+                return False
+            
+            expected_external_percentage = round((external_count / total_count * 100) if total_count > 0 else 0, 1)
+            if abs(sourcing_summary['external_percentage'] - expected_external_percentage) > 0.1:
+                print(f"❌ Expected external_percentage={expected_external_percentage}, got {sourcing_summary['external_percentage']}")
+                return False
+            
+            print(f"✅ Sourcing summary: {local_count} local ({sourcing_summary['local_percentage']}%), {external_count} external ({sourcing_summary['external_percentage']}%)")
+            print("✅ All sourcing intelligence fields verified successfully")
+            return True
+        
+        return False
+
+    def test_sourcing_intelligence_comprehensive(self):
+        """Test comprehensive sourcing intelligence with all LOCALLY_MADE_ARTICLES"""
+        print("\n🔍 Testing comprehensive sourcing intelligence...")
+        
+        # Test with a selection of articles from LOCALLY_MADE_ARTICLES
+        locally_made_sample = ['1011', '1016', '1021', '1022', '1033', '1040', '1051', '1059', '1069', '1071']
+        external_sample = ['9001', '9002', '9003', '9004', '9005']
+        
+        # Create test data with mix of local and external articles
+        test_data = {
+            'Dummy_A': [f'CMD{i:03d}' for i in range(1, 16)],
+            'Article': locally_made_sample + external_sample,
+            'Dummy_C': [f'Desc{i}' for i in range(1, 16)],
+            'Point d\'Expédition': ['M211', 'M212', 'M213'] * 5,
+            'Dummy_E': [f'Extra{i}' for i in range(1, 16)],
+            'Quantité Commandée': [100 + i*10 for i in range(15)],
+            'Stock Utilisation Libre': [50 + i*5 for i in range(15)]
+        }
+        
+        df = pd.DataFrame(test_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('comprehensive_sourcing_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        # Upload comprehensive test data
+        success, upload_response = self.run_test(
+            "Upload Comprehensive Sourcing Test Data",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if success:
+            calculation_data = {
+                "days": 15
+            }
+            
+            success, response = self.run_test(
+                "Comprehensive Sourcing Intelligence Calculation",
+                "POST",
+                "api/calculate",
+                200,
+                data=calculation_data
+            )
+            
+            if success and 'calculations' in response:
+                calculations = response['calculations']
+                
+                # Verify all locally made articles are correctly identified
+                local_articles_found = []
+                external_articles_found = []
+                
+                for calc in calculations:
+                    article = calc['article']
+                    is_locally_made = calc['is_locally_made']
+                    
+                    if article in locally_made_sample:
+                        if not is_locally_made:
+                            print(f"❌ Article {article} should be locally made but is_locally_made={is_locally_made}")
+                            return False
+                        local_articles_found.append(article)
+                    elif article in external_sample:
+                        if is_locally_made:
+                            print(f"❌ Article {article} should be external but is_locally_made={is_locally_made}")
+                            return False
+                        external_articles_found.append(article)
+                
+                print(f"✅ Local articles correctly identified: {len(local_articles_found)} articles")
+                print(f"✅ External articles correctly identified: {len(external_articles_found)} articles")
+                
+                # Verify sourcing summary matches expectations
+                sourcing_summary = response['sourcing_summary']
+                expected_local = len(set(local_articles_found))
+                expected_external = len(set(external_articles_found))
+                
+                if sourcing_summary['local_items'] != expected_local:
+                    print(f"❌ Expected {expected_local} local items, got {sourcing_summary['local_items']}")
+                    return False
+                
+                if sourcing_summary['external_items'] != expected_external:
+                    print(f"❌ Expected {expected_external} external items, got {sourcing_summary['external_items']}")
+                    return False
+                
+                print("✅ Comprehensive sourcing intelligence test passed")
+                return True
+        
+        return False
+
+    def test_sourcing_data_consistency(self):
+        """Test that sourcing information is consistent across multiple calculations"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for consistency test")
+            return False
+        
+        # Run multiple calculations with different days
+        test_days = [5, 10, 20, 30]
+        sourcing_data_by_article = {}
+        
+        for days in test_days:
+            calculation_data = {
+                "days": days
+            }
+            
+            success, response = self.run_test(
+                f"Sourcing Consistency Test - {days} days",
+                "POST",
+                "api/calculate",
+                200,
+                data=calculation_data
+            )
+            
+            if success and 'calculations' in response:
+                calculations = response['calculations']
+                
+                for calc in calculations:
+                    article = calc['article']
+                    sourcing_info = {
+                        'is_locally_made': calc['is_locally_made'],
+                        'sourcing_status': calc['sourcing_status'],
+                        'sourcing_text': calc['sourcing_text']
+                    }
+                    
+                    if article not in sourcing_data_by_article:
+                        sourcing_data_by_article[article] = sourcing_info
+                    else:
+                        # Verify consistency
+                        previous_info = sourcing_data_by_article[article]
+                        if previous_info != sourcing_info:
+                            print(f"❌ Inconsistent sourcing data for article {article}")
+                            print(f"   Previous: {previous_info}")
+                            print(f"   Current:  {sourcing_info}")
+                            return False
+            else:
+                return False
+        
+        print(f"✅ Sourcing data consistent across {len(test_days)} different calculations")
+        print(f"✅ Verified consistency for {len(sourcing_data_by_article)} articles")
+        return True
+
     def run_all_tests(self):
         """Run all tests for the simplified stock management system"""
         print("🚀 Starting Simplified Stock Management System Tests")
