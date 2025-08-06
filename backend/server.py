@@ -357,6 +357,11 @@ async def calculate_requirements(request: CalculationRequest):
             # Vérifier le stock disponible à M210
             stock_dispo_m210 = stock_m210.get(article, 0)
             
+            # Check if article is locally made
+            is_locally_made = str(article) in LOCALLY_MADE_ARTICLES
+            sourcing_status = 'local' if is_locally_made else 'external'
+            sourcing_text = 'Production Locale' if is_locally_made else 'Sourcing Externe'
+            
             # Déterminer le statut
             if quantite_a_envoyer == 0:
                 statut = "OK"
