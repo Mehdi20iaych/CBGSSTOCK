@@ -686,33 +686,116 @@ function App() {
                   </h3>
                   <div className="space-y-3">
                     {calculations.depot_summary.map((depot, index) => (
-                      <div key={index} className={`p-3 rounded-lg border ${
-                        depot.delivery_efficiency === 'Efficace' 
-                          ? 'bg-green-50 border-green-200' 
-                          : 'bg-orange-50 border-orange-200'
-                      }`}>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center space-x-4">
-                            <span className="font-medium text-gray-900">{depot.depot}</span>
-                            <div className="flex items-center space-x-2 text-sm">
-                              <span className="text-gray-600">{depot.total_palettes} palettes</span>
-                              <span className="text-gray-400">•</span>
-                              <span className="text-gray-600">{depot.trucks_needed} camion(s)</span>
+                      <div key={index}>
+                        <div className={`p-3 rounded-lg border ${
+                          depot.delivery_efficiency === 'Efficace' 
+                            ? 'bg-green-50 border-green-200' 
+                            : 'bg-orange-50 border-orange-200'
+                        }`}>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center space-x-4">
+                              <span className="font-medium text-gray-900">{depot.depot}</span>
+                              <div className="flex items-center space-x-2 text-sm">
+                                <span className="text-gray-600">{depot.total_palettes} palettes</span>
+                                <span className="text-gray-400">•</span>
+                                <span className="text-gray-600">{depot.trucks_needed} camion(s)</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                depot.delivery_efficiency === 'Efficace' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-orange-100 text-orange-800'
+                              }`}>
+                                {depot.delivery_efficiency}
+                              </span>
+                              {/* Arrow icon for suggestions */}
+                              {depot.delivery_efficiency === 'Inefficace' && (
+                                <button
+                                  onClick={() => toggleSuggestions(depot.depot)}
+                                  className="p-1 text-orange-600 hover:text-orange-800 hover:bg-orange-100 rounded transition-colors"
+                                  title="Voir les suggestions pour compléter 24 palettes"
+                                  disabled={loadingSuggestions[depot.depot]}
+                                >
+                                  {loadingSuggestions[depot.depot] ? (
+                                    <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <ChevronRightIcon className={`w-4 h-4 transition-transform ${
+                                      showSuggestions[depot.depot] ? 'rotate-90' : ''
+                                    }`} />
+                                  )}
+                                </button>
+                              )}
                             </div>
                           </div>
-                          <div className="flex items-center">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              depot.delivery_efficiency === 'Efficace' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-orange-100 text-orange-800'
-                            }`}>
-                              {depot.delivery_efficiency}
-                            </span>
-                          </div>
+                          {depot.delivery_efficiency === 'Inefficace' && (
+                            <div className="mt-2 text-xs text-orange-700">
+                              ⚠️ Livraison inefficace: moins de 24 palettes par camion
+                            </div>
+                          )}
                         </div>
-                        {depot.delivery_efficiency === 'Inefficace' && (
-                          <div className="mt-2 text-xs text-orange-700">
-                            ⚠️ Livraison inefficace: moins de 24 palettes par camion
+
+                        {/* Suggestions panel */}
+                        {showSuggestions[depot.depot] && suggestions[depot.depot] && (
+                          <div className="mt-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-center mb-3">
+                              <LightBulbIcon className="w-4 h-4 mr-2 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-800">
+                                Suggestions pour {depot.depot}
+                              </span>
+                            </div>
+                            
+                            <div className="text-xs text-blue-700 mb-3">
+                              Palettes actuelles: <strong>{suggestions[depot.depot].current_palettes}</strong> → 
+                              Objectif: <strong>{suggestions[depot.depot].target_palettes}</strong> palettes 
+                              ({suggestions[depot.depot].palettes_to_add} palettes à ajouter)
+                            </div>
+
+                            {suggestions[depot.depot].suggestions && suggestions[depot.depot].suggestions.length > 0 ? (
+                              <div className="space-y-2">
+                                {suggestions[depot.depot].suggestions.map((suggestion, idx) => (
+                                  <div key={idx} className={`p-2 rounded border text-xs ${
+                                    suggestion.can_fulfill 
+                                      ? 'bg-green-50 border-green-200' 
+                                      : 'bg-red-50 border-red-200'
+                                  }`}>
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <div className="font-medium text-gray-900">
+                                          Article: {suggestion.article} ({suggestion.packaging})
+                                        </div>
+                                        <div className="text-gray-600 mt-1">
+                                          Actuel: {suggestion.current_quantity} produits ({suggestion.current_palettes} palette{suggestion.current_palettes > 1 ? 's' : ''})
+                                        </div>
+                                        <div className="text-blue-700 font-medium">
+                                          Suggestion: +{suggestion.suggested_additional_quantity} produits 
+                                          (+{suggestion.suggested_additional_palettes} palette{suggestion.suggested_additional_palettes > 1 ? 's' : ''})
+                                        </div>
+                                        <div className="text-gray-600">
+                                          Nouveau total: {suggestion.new_total_quantity} produits ({suggestion.new_total_palettes} palette{suggestion.new_total_palettes > 1 ? 's' : ''})
+                                        </div>
+                                      </div>
+                                      <div className="ml-2">
+                                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                          suggestion.can_fulfill
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-red-100 text-red-800'
+                                        }`}>
+                                          {suggestion.feasibility}
+                                        </span>
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          Stock M210: {suggestion.stock_available}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-600">
+                                {suggestions[depot.depot].message || 'Aucune suggestion disponible'}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
