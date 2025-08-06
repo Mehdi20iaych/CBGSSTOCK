@@ -452,7 +452,16 @@ async def calculate_requirements(request: CalculationRequest):
             total_palettes = depot_stats[depot]['total_palettes']
             trucks_needed = math.ceil(total_palettes / 24) if total_palettes > 0 else 0
             depot_stats[depot]['trucks_needed'] = trucks_needed
-            depot_stats[depot]['delivery_efficiency'] = 'Efficace' if total_palettes >= 24 else 'Inefficace'
+            
+            # Vérifier si on a des camions incomplets (pas un multiple parfait de 24)
+            if total_palettes > 0 and total_palettes % 24 != 0:
+                depot_stats[depot]['delivery_efficiency'] = 'Inefficace'
+                # Calculer combien de palettes manquent pour compléter le dernier camion
+                palettes_in_last_truck = total_palettes % 24
+                depot_stats[depot]['missing_palettes'] = 24 - palettes_in_last_truck
+            else:
+                depot_stats[depot]['delivery_efficiency'] = 'Efficace'
+                depot_stats[depot]['missing_palettes'] = 0
         
         # Convertir en liste et trier par nombre de palettes (décroissant)
         depot_summary = sorted(list(depot_stats.values()), key=lambda x: x['total_palettes'], reverse=True)
