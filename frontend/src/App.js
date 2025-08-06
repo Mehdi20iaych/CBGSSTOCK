@@ -34,6 +34,11 @@ function App() {
   const [availablePackaging, setAvailablePackaging] = useState([]);
   const [selectedPackaging, setSelectedPackaging] = useState([]);
   
+  // États pour les suggestions de palettes
+  const [suggestions, setSuggestions] = useState({});
+  const [loadingSuggestions, setLoadingSuggestions] = useState({});
+  const [showSuggestions, setShowSuggestions] = useState({});
+  
   // Références pour les inputs de fichiers
   const commandesFileRef = useRef(null);
   const stockFileRef = useRef(null);
