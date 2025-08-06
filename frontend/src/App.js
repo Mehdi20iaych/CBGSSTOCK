@@ -241,6 +241,26 @@ function App() {
     }
   };
 
+  // Gérer la sélection des filtres d'emballage
+  const handlePackagingFilter = (packaging) => {
+    setSelectedPackaging(prev => {
+      if (prev.includes(packaging)) {
+        return prev.filter(p => p !== packaging);
+      } else {
+        return [...prev, packaging];
+      }
+    });
+  };
+
+  // Sélectionner tous/aucun emballages
+  const handleSelectAllPackaging = () => {
+    if (selectedPackaging.length === availablePackaging.length) {
+      setSelectedPackaging([]);
+    } else {
+      setSelectedPackaging([...availablePackaging]);
+    }
+  };
+
   // Obtenir l'icône de statut
   const getStatusIcon = (status) => {
     switch (status) {
