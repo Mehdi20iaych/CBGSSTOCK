@@ -118,13 +118,13 @@ class SimplifiedStockManagementTester:
     def create_invalid_commandes_excel(self):
         """Create invalid commandes Excel with M210 as destination (should be filtered out)"""
         data = {
-            'A': ['CMD001', 'CMD002'],
-            'B': ['ART001', 'ART002'],  # Article
-            'C': ['Desc1', 'Desc2'],
-            'D': ['M210', 'M211'],  # Point d'Expédition - M210 should be excluded
-            'E': ['Extra1', 'Extra2'],
-            'F': [100, 150],  # Quantité Commandée
-            'G': [50, 75]  # Stock Utilisation Libre
+            'Dummy_A': ['CMD001', 'CMD002'],
+            'Article': ['ART001', 'ART002'],  # Article
+            'Dummy_C': ['Desc1', 'Desc2'],
+            'Point d\'Expédition': ['M210', 'M211'],  # Point d'Expédition - M210 should be excluded
+            'Dummy_E': ['Extra1', 'Extra2'],
+            'Quantité Commandée': [100, 150],  # Quantité Commandée
+            'Stock Utilisation Libre': [50, 75]  # Stock Utilisation Libre
         }
         
         df = pd.DataFrame(data)
