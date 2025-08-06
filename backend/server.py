@@ -383,7 +383,10 @@ async def calculate_requirements(request: CalculationRequest):
                 'quantite_a_envoyer': quantite_a_envoyer,
                 'stock_dispo_m210': stock_dispo_m210,
                 'statut': statut,
-                'statut_color': statut_color
+                'statut_color': statut_color,
+                'sourcing_status': sourcing_status,
+                'sourcing_text': sourcing_text,
+                'is_locally_made': is_locally_made
             })
         
         # Calculer les statistiques de résumé
