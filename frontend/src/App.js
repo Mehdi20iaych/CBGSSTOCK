@@ -27,6 +27,10 @@ function App() {
   const [activeTab, setActiveTab] = useState('upload');
   const [selectedItems, setSelectedItems] = useState([]);
   
+  // États pour les filtres
+  const [availablePackaging, setAvailablePackaging] = useState([]);
+  const [selectedPackaging, setSelectedPackaging] = useState([]);
+  
   // Références pour les inputs de fichiers
   const commandesFileRef = useRef(null);
   const stockFileRef = useRef(null);
