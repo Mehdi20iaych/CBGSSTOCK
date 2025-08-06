@@ -91,7 +91,7 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
         df = pd.read_excel(contents)
         
         # Vérifier les colonnes requises selon les spécifications
-        required_columns = ['B', 'D', 'F', 'G']  # Article, Point d'Expédition, Quantité Commandée, Stock Utilisation Libre
+        required_columns = ['B', 'D', 'F', 'G', 'I']  # Article, Point d'Expédition, Quantité Commandée, Stock Utilisation Libre, Type Emballage
         
         # Si les colonnes sont nommées différemment, essayer de les identifier
         if 'B' not in df.columns:
