@@ -1174,7 +1174,9 @@ class SimplifiedStockManagementTester:
             'Point d\'Expédition': ['M211'],  # Point d'Expédition
             'Dummy_E': ['Extra1'],
             'Quantité Commandée': [10],  # Low Quantité Commandée
-            'Stock Utilisation Libre': [10000]  # Very high Stock Utilisation Libre
+            'Stock Utilisation Libre': [10000],  # Very high Stock Utilisation Libre
+            'Dummy_H': ['Extra1'],
+            'Type Emballage': ['verre']  # Add packaging column
         }
         
         df = pd.DataFrame(high_stock_data)
