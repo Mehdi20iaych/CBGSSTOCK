@@ -1831,6 +1831,57 @@ class SimplifiedStockManagementTester:
         
         return self.tests_passed == self.tests_run
 
+    def run_enhanced_excel_export_tests(self):
+        """Run focused tests for enhanced Excel export functionality with depot organization"""
+        print("🚀 Starting Enhanced Excel Export Tests with Depot Organization")
+        print("=" * 70)
+        
+        # First ensure we have test data uploaded
+        setup_tests = [
+            ("Health Check", self.test_health_check),
+            ("Upload Commandes Excel", self.test_upload_commandes_excel),
+            ("Upload Stock Excel", self.test_upload_stock_excel),
+            ("Upload Transit Excel", self.test_upload_transit_excel),
+        ]
+        
+        # Enhanced Excel export specific tests
+        excel_export_tests = [
+            ("Enhanced Excel Export with Depot Organization", self.test_excel_export_enhanced_depot_organization),
+            ("Excel Export Filename Format", self.test_excel_export_filename_format),
+            ("Excel Export Data Organization", self.test_excel_export_data_organization),
+            ("Excel Export Essential Columns", self.test_excel_export_essential_columns),
+            ("Excel Export Palette Calculations", self.test_excel_export_palette_calculations),
+        ]
+        
+        all_tests = setup_tests + excel_export_tests
+        
+        for test_name, test_func in all_tests:
+            try:
+                print(f"\n{'='*20} {test_name} {'='*20}")
+                result = test_func()
+                if result:
+                    print(f"✅ {test_name} PASSED")
+                else:
+                    print(f"❌ {test_name} FAILED")
+            except Exception as e:
+                print(f"❌ {test_name} ERROR: {str(e)}")
+                self.tests_run += 1  # Count as attempted
+        
+        # Print final summary
+        print("\n" + "="*70)
+        print("📊 ENHANCED EXCEL EXPORT TEST SUMMARY")
+        print(f"Total tests run: {self.tests_run}")
+        print(f"Tests passed: {self.tests_passed}")
+        print(f"Success rate: {(self.tests_passed/self.tests_run*100):.1f}%" if self.tests_run > 0 else "No tests run")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 ALL ENHANCED EXCEL EXPORT TESTS PASSED!")
+        else:
+            print(f"⚠️ {self.tests_run - self.tests_passed} test(s) failed")
+        
+        print("="*70)
+        return self.tests_passed == self.tests_run
+
 if __name__ == "__main__":
     tester = SimplifiedStockManagementTester()
     tester.run_all_tests()
