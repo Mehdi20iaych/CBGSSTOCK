@@ -97,18 +97,20 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
         if 'B' not in df.columns:
             # Essayer avec les noms potentiels des colonnes
             column_mapping = {}
-            if len(df.columns) >= 7:  # Au moins 7 colonnes pour avoir A-G
+            if len(df.columns) >= 9:  # Au moins 9 colonnes pour avoir A-I
                 column_mapping['Article'] = df.columns[1]  # Colonne B (index 1)
                 column_mapping['Point d\'Expédition'] = df.columns[3]  # Colonne D (index 3) 
                 column_mapping['Quantité Commandée'] = df.columns[5]  # Colonne F (index 5)
                 column_mapping['Stock Utilisation Libre'] = df.columns[6]  # Colonne G (index 6)
+                column_mapping['Type Emballage'] = df.columns[8]  # Colonne I (index 8)
                 
                 # Renommer les colonnes pour standardiser
                 df = df.rename(columns={
                     df.columns[1]: 'Article',
                     df.columns[3]: 'Point d\'Expédition', 
                     df.columns[5]: 'Quantité Commandée',
-                    df.columns[6]: 'Stock Utilisation Libre'
+                    df.columns[6]: 'Stock Utilisation Libre',
+                    df.columns[8]: 'Type Emballage'
                 })
         
         # Vérifier que nous avons les colonnes nécessaires après mapping
