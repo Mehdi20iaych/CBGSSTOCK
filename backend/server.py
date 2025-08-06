@@ -475,7 +475,9 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
             adc = row['total_ordered'] / date_range_days if date_range_days > 0 else 0
             doc = row['current_stock'] / adc if adc > 0 else float('inf')
             required_stock = request.days * adc
-            quantity_to_send = max(0, required_stock - row['current_stock'])
+            # New formula: Quantité à Envoyer = (CQM x JOURS A COUVRIR) - Stock Transit - Stock Actuel
+            # For basic calculation (no transit stock): quantity_to_send = (request.days * adc) - current_stock
+            quantity_to_send = required_stock - row['current_stock']
             
             # Calculate palettes needed for this item
             # Formula: number of palettes = Quantité à Envoyer / 30
