@@ -136,10 +136,10 @@ class SimplifiedStockManagementTester:
     def create_invalid_stock_excel(self):
         """Create invalid stock Excel with non-M210 divisions (should be filtered out)"""
         data = {
-            'A': ['M211', 'M212', 'M210'],  # Division - only M210 should be kept
-            'B': ['ART001', 'ART002', 'ART003'],  # Article
-            'C': ['Desc1', 'Desc2', 'Desc3'],
-            'D': [500, 300, 200]  # STOCK A DATE
+            'Division': ['M211', 'M212', 'M210'],  # Division - only M210 should be kept
+            'Article': ['ART001', 'ART002', 'ART003'],  # Article
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3'],
+            'STOCK A DATE': [500, 300, 200]  # STOCK A DATE
         }
         
         df = pd.DataFrame(data)
