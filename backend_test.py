@@ -151,15 +151,15 @@ class SimplifiedStockManagementTester:
     def create_invalid_transit_excel(self):
         """Create invalid transit Excel with non-M210 source (should be filtered out)"""
         data = {
-            'A': ['ART001', 'ART002'],  # Article
-            'B': ['Desc1', 'Desc2'],
-            'C': ['M211', 'M212'],  # Division destinataire
-            'D': ['Extra1', 'Extra2'],
-            'E': ['Extra1', 'Extra2'],
-            'F': ['Extra1', 'Extra2'],
-            'G': ['M211', 'M210'],  # Division cédante - only M210 should be kept
-            'H': ['Extra1', 'Extra2'],
-            'I': [30, 20]  # Quantité
+            'Article': ['ART001', 'ART002'],  # Article
+            'Dummy_B': ['Desc1', 'Desc2'],
+            'Division': ['M211', 'M212'],  # Division destinataire
+            'Dummy_D': ['Extra1', 'Extra2'],
+            'Dummy_E': ['Extra1', 'Extra2'],
+            'Dummy_F': ['Extra1', 'Extra2'],
+            'Division cédante': ['M211', 'M210'],  # Division cédante - only M210 should be kept
+            'Dummy_H': ['Extra1', 'Extra2'],
+            'Quantité': [30, 20]  # Quantité
         }
         
         df = pd.DataFrame(data)
