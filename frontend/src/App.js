@@ -325,6 +325,11 @@ function App() {
     }
   };
 
+  // Vérifier si un dépôt a des camions incomplets (pas un multiple parfait de 24 palettes)
+  const hasIncompletetrucks = (depot) => {
+    return depot.total_palettes > 0 && depot.total_palettes % 24 !== 0;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
