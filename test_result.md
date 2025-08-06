@@ -137,7 +137,7 @@
   **Objectif:** S'assurer que la nouvelle version simplifiée fonctionne correctement selon les spécifications et que la logique de calcul est exacte.
 
 ## backend:
-  - task: "Add inventory Excel upload endpoint"
+  - task: "Test nouvelle version simplifiée du backend"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -147,12 +147,12 @@
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "Added /api/upload-inventory-excel endpoint to handle inventory data with columns Division, Article, Désignation article, STOCK À DATE"
+          comment: "Nouvelle version simplifiée du backend implémentée avec 3 fichiers Excel et formule simplifiée selon les spécifications utilisateur"
         - working: true
           agent: "testing"
-          comment: "✅ TESTED: Inventory Excel upload endpoint working perfectly. Successfully uploads inventory data with required columns (Division, Article, Désignation article, STOCK À DATE). Returns proper session_id and summary statistics including divisions, articles_count, total_stock, and records_count. Error handling works correctly for missing columns (returns 400 status). MongoDB serialization issues fixed by converting numpy types to Python native types. Tested with 7 inventory records totaling 5750 units."
+          comment: "✅ COMPREHENSIVE SIMPLIFIED BACKEND TESTING COMPLETED: All 20 tests passed with 100% success rate! MAJOR ACHIEVEMENTS: (1) UPLOAD ENDPOINTS VERIFICATION: All 3 upload endpoints working perfectly - /api/upload-commandes-excel (columns B,D,F,G), /api/upload-stock-excel (columns A,B,D), /api/upload-transit-excel (columns A,C,G,I) with proper column validation and error handling, (2) M210 FILTERING LOGIC VERIFIED: M210 correctly excluded from commandes destinations, only M210 records kept in stock data, only transits from M210 kept in transit data - all filtering working as specified, (3) SIMPLIFIED FORMULA VERIFICATION: Formula 'Quantité à Envoyer = max(0, (Quantité Commandée × Jours à Couvrir) - Stock Utilisation Libre - Quantité en Transit)' working correctly with negative value protection, (4) COMPREHENSIVE CALCULATION TESTING: /api/calculate endpoint working with all data types (commandes, stock, transit) and without optional data, proper status determination (OK/À livrer/Non couvert), (5) EXCEL EXPORT FUNCTIONALITY: /api/export-excel working correctly with proper file generation, (6) SESSION MANAGEMENT: /api/sessions endpoint working correctly showing active sessions for all 3 data types, (7) ERROR HANDLING: Proper validation for missing columns with appropriate error messages, (8) EDGE CASES: 0 days calculation, high stock scenarios, all working correctly. The simplified system is production-ready and fully compliant with user specifications."
 
-  - task: "Test new calculation formula functionality"
+  - task: "Upload fichier commandes avec validation colonnes B,D,F,G"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -160,94 +160,11 @@
     priority: "high"
     needs_retesting: false
     status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "MAJOR FORMULA CHANGE: Implemented new calculation formula - Quantité à Envoyer = (CQM x JOURS A COUVRIR) - Stock Transit - Stock Actuel. This formula now allows NEGATIVE values when stock exceeds requirements, removing the max(0, ...) constraint from both /api/calculate/{session_id} and /api/enhanced-calculate endpoints."
         - working: true
           agent: "testing"
-          comment: "✅ NEW FORMULA COMPREHENSIVE TESTING COMPLETED: All new formula requirements successfully verified! Executed 4 specialized NEW FORMULA tests with excellent results. KEY ACHIEVEMENTS: (1) BASIC CALCULATION VERIFICATION: Confirmed /api/calculate/{session_id} endpoint correctly implements quantity_to_send = required_stock - current_stock (without max(0, ...)), allowing negative values when current stock exceeds requirements, (2) ENHANCED CALCULATION VERIFICATION: Confirmed /api/enhanced-calculate endpoint correctly implements quantity_to_send = required_stock - transit_available - current_stock, properly handling transit stock in the new formula, (3) NEGATIVE VALUE SCENARIOS: Successfully verified that when current_stock > required_stock OR current_stock + transit_stock > required_stock, the quantity_to_send becomes negative as required, tested with high stock scenario (1000 current stock vs 300 required = -700 quantity_to_send), (4) PALETTE CALCULATION INTEGRATION: Verified palette calculation correctly handles negative quantities (0 palettes for negative quantity_to_send), (5) REGRESSION TESTING: Confirmed all existing functionality preserved - delivery optimization, sourcing intelligence, truck calculations, and all other features work correctly with new formula, (6) COMPREHENSIVE INTEGRATION: All 59 backend tests passed (100% success rate), confirming new formula works seamlessly with existing system. CRITICAL FINDINGS: The new formula successfully removes the artificial constraint of non-negative quantities, allowing the system to accurately represent scenarios where current stock exceeds requirements. This provides more realistic inventory management insights. Minor floating-point precision differences (±0.02) observed but within acceptable tolerance. The new formula is production-ready and fully integrated with all existing features."
+          comment: "✅ TESTED: /api/upload-commandes-excel endpoint working perfectly. Correctly processes columns B(Article), D(Point d'Expédition), F(Quantité Commandée), G(Stock Utilisation Libre). M210 correctly excluded from destinations. Proper error handling for missing columns. Returns session_id, summary statistics, and filter data."
 
-  - task: "Enhanced calculation with inventory cross-reference"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high" 
-    needs_retesting: false
-    status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "Added /api/enhanced-calculate endpoint that matches order requirements with inventory availability, shows fulfillment status (sufficient/partial/insufficient/not_found)"
-        - working: true
-          agent: "testing"
-          comment: "✅ TESTED: Enhanced calculation with inventory cross-reference working excellently. Successfully matches order requirements with inventory availability using article codes. Returns proper inventory status fields (inventory_available, can_fulfill, inventory_status, inventory_status_text, inventory_status_color). Inventory shortage calculations work correctly. Summary statistics include sufficient_items, partial_items, insufficient_items, not_found_items counts. Works with and without inventory data. Proper error handling for invalid sessions (404). Filters work correctly with inventory data. All 6 test items showed 'sufficient' status with proper inventory matching."
-        - working: true
-          agent: "testing"
-          comment: "✅ RE-TESTED WITH NEW FORMULA: Enhanced calculation endpoint working perfectly with new formula implementation. All inventory cross-reference functionality preserved. New formula correctly applied: quantity_to_send = required_stock - transit_available - current_stock. Negative values properly handled in inventory status calculations. All existing features (inventory matching, status indicators, summary statistics) working correctly with new formula."
-
-  - task: "Filter packaging types to only verre, pet, ciel"
-    implemented: true
-    working: true  
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "Modified packaging filtering logic to only show verre, pet, ciel types that exist in uploaded data"
-        - working: true
-          agent: "testing"
-          comment: "✅ TESTED: Packaging filter enhancement working correctly. Upload endpoint returns only allowed packaging types (verre, pet, ciel) that exist in data. Sample file with mixed packaging types (including Canette, Tétra) correctly filtered to show only Pet and Verre. Display names properly formatted (e.g., 'Pet' -> 'Bouteille en Plastique (PET)'). Calculation endpoints work correctly with packaging filters."
-  
-  - task: "Add 20-palette delivery optimization constraint"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"  
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "MAJOR ENHANCEMENT: Added sophisticated 20-palette minimum delivery constraint system. Backend now calculates total palettes per depot, suggests additional 'filler' products when depot doesn't reach 20 palettes, and modifies priorities based on delivery efficiency. Features: (1) Depot grouping and palette calculation, (2) Smart filler suggestion algorithm that finds additional products from same depot needing restocking, (3) Priority modification - inefficient depots get reduced priority, efficient depots get priority boost, (4) New response fields: palette_quantity, delivery_efficient, delivery_status, delivery_status_color, (5) Comprehensive depot summaries with suggested items and palettes needed. Applied to both /api/calculate and /api/enhanced-calculate endpoints."
-        - working: true
-          agent: "testing"
-          comment: "✅ COMPREHENSIVE 20-PALETTE DELIVERY OPTIMIZATION TESTING COMPLETED: All requirements successfully verified! Executed 10/10 specialized tests with 100% pass rate. KEY ACHIEVEMENTS: (1) Basic Functionality: Successfully verified palette_quantity field extraction and calculation for each item, both /api/calculate and /api/enhanced-calculate endpoints working perfectly, (2) Delivery Optimization Logic: Confirmed items properly grouped by depot, depots with ≥20 palettes correctly marked as 'efficient', depots with <20 palettes correctly marked as 'inefficient', priority modifications working (efficient depots get boosts, inefficient get reductions), (3) Smart Filler Suggestions: Verified system suggests additional products from same depot for inefficient depots, suggestions are products that need restocking (quantity_to_send > 0), suggestions sorted by urgency (lowest days of coverage first), limited to top 5 items per depot, (4) Response Structure: All new fields present - palette_quantity, delivery_efficient, delivery_status, delivery_status_color, delivery_optimization summary with depot_summaries working correctly, (5) Edge Cases: Tested exactly 20 palettes (correctly efficient), 0 palettes (correctly inefficient), no filler suggestions when no items need restocking, single vs multiple depot scenarios. COMPREHENSIVE TESTING: Created realistic test scenarios with mixed depot efficiency, verified efficient depot (114 palettes) vs inefficient depot (0 palettes), confirmed 20-palette constraint logic working perfectly, priority modifications functioning correctly. The 20-palette delivery optimization system transforms basic inventory management into advanced logistics optimization platform that automatically identifies delivery inefficiencies and suggests solutions to minimize transportation costs. System ready for production use with full delivery optimization capabilities."
-  - task: "Improve AI assistant context and prompting"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "low"  
-    needs_retesting: false
-    status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "Enhanced Gemini context with better prompting, data statistics, and professional tone"
-        - working: true
-          agent: "testing"
-          comment: "✅ TESTED: AI assistant improvements working excellently. Enhanced context provides intelligent responses with precise data statistics (650 units total, 26-day period, 333 average stock). Responses are appropriately concise (2-4 sentences, 300-500 chars), professional, and in French. Multiple query types tested successfully: consumption analysis, stock trends, restocking needs, volume statistics. AI correctly identifies data limitations and provides actionable insights."
-        - working: "NA"
-          agent: "main"
-          comment: "UPDATED: Optimized AI context specifically for single-day data analysis to avoid multi-day assumptions. Focused on daily activity insights."
-
-  - task: "Add truck calculation (pallets/24) for delivery optimization"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py, /app/frontend/src/App.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "ENHANCEMENT: Added comprehensive truck calculation functionality. Backend: Added trucks_needed calculation to depot summaries (math.ceil(total_palettes / 24)) and total_trucks to delivery optimization summary. Frontend: Added 'Total Camions' display in delivery optimization summary and trucks display for each depot with proper French pluralization and styling based on delivery efficiency. System now calculates exactly how many trucks (24 pallets per truck) are needed for each depot and total deliveries."
-        - working: true
-          agent: "testing"
-          comment: "✅ COMPREHENSIVE TRUCK CALCULATION TESTING COMPLETED: All truck calculation functionality working perfectly! Executed 52/52 backend tests with 100% pass rate. KEY ACHIEVEMENTS: (1) Basic & Enhanced Endpoints: Both /api/calculate and /api/enhanced-calculate endpoints correctly include trucks_needed in depot summaries and total_trucks in delivery optimization summary, (2) Mathematical Accuracy: Verified math.ceil(total_palettes / 24) formula working correctly - tested edge cases from 0 to 73 pallets, all calculations accurate, (3) Integration with 20-Palette System: Truck calculations properly integrated with delivery optimization - inefficient depots (<20 palettes) and efficient depots (≥20 palettes) both show correct truck requirements, (4) Consistency: Truck calculations identical between basic and enhanced endpoints, ensuring data consistency, (5) Response Structure: All required fields present (trucks_needed per depot, total_trucks in summary), proper data types and formatting, (6) Edge Cases: Handles 0 palettes (0 trucks), exactly 24 palettes (1 truck), 25 palettes (2 trucks), etc. - all mathematical edge cases verified. CRITICAL FIXES ALSO VERIFIED: (1) Data Reading Fix: Excel upload now properly processes ALL rows including those with missing 'Stock Utilisation Libre' values - missing stock data filled with 0, only essential data (Date de Commande, Quantité Commandée) causes row drops, (2) Depot Organization Fix: Both calculation endpoints now properly organize results by depot with items grouped together and critical items appearing first within each depot group. System ready for production use with complete truck calculation and delivery optimization capabilities."
-
-  - task: "Add transit stock functionality for comprehensive stock calculation"
+  - task: "Upload fichier stock M210 avec filtrage Division=M210"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -255,12 +172,57 @@
     priority: "high"
     needs_retesting: false
     status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "MAJOR ENHANCEMENT: Added comprehensive transit stock functionality to complement existing inventory management. Features: (1) New /api/upload-transit-excel endpoint that reads Column A (Article), Column C (Division/depot), and Column I (Quantité/transit stock), (2) Enhanced both /api/calculate and /api/enhanced-calculate endpoints to include transit stock in calculations, (3) Transit stock matching by both Article code AND Division (depot) for precise depot-specific calculations, (4) Updated calculation formula: quantity_to_send = max(0, required_stock - (current_stock + transit_stock)), (5) New response fields: transit_available, total_available (current + transit), (6) Enhanced inventory status text to show transit information (e.g., 'EN STOCK (+30.0 transit)'), (7) Support for transit-only scenarios with appropriate status codes (transit_sufficient, transit_partial, etc.), (8) Proper error handling for invalid transit files (must have at least 9 columns), (9) MongoDB integration for transit data storage and retrieval."
         - working: true
           agent: "testing"
-          comment: "✅ COMPREHENSIVE TRANSIT STOCK FUNCTIONALITY TESTING COMPLETED: All transit stock requirements successfully verified with 100% pass rate (10/10 tests passed)! MAJOR ACHIEVEMENTS: (1) ORDER FILE UPLOAD VERIFICATION: Column G 'Stock Utilisation Libre' correctly read as current_stock - verified 6 order records processed with proper current stock values (20, 30, 15, 25, 10, 35), (2) TRANSIT FILE UPLOAD VERIFICATION: Column I 'Quantité' correctly read as transit stock - verified 6 transit records processed with total transit quantity 140 units, proper column positioning (A=Article, C=Division, I=Quantité), (3) COMBINED CALCULATION VERIFICATION: Both basic and enhanced calculation endpoints correctly include current stock + transit stock in total_available calculation - verified formula: quantity_to_send = max(0, required_stock - (current_stock + transit_stock)), (4) TRANSIT DATA MATCHING VERIFICATION: Transit stock correctly matched by both Article code AND Division (depot) - verified all 6 test cases: Article 1011 at M212 (30 transit), Article 1016 at M212 (20 transit), Article 1021 at M213 (25 transit), Article 1033 at M212 (15 transit), Article 2011 at M213 (40 transit), Article 2014 at M212 (10 transit), (5) USER SCENARIO VERIFICATION: Confirmed Article 1011 at Depot M212 with 20 current stock + 30 transit stock = 50 total available, calculation logic working perfectly, (6) ENHANCED CALCULATION WITH TRANSIT: Verified inventory + transit stock integration with proper status text showing transit information (e.g., 'EN STOCK (+30.0 transit)'), (7) TRANSIT-ONLY SCENARIOS: Verified system works correctly with only transit data (no inventory), appropriate status codes (transit_partial, transit_sufficient), (8) FALLBACK BEHAVIOR: Verified system gracefully handles missing transit data (transit_available = 0), (9) ERROR HANDLING: Invalid transit files correctly rejected with proper error messages, (10) DATA INTEGRITY: All calculations mathematically verified, total_available = current_stock + transit_available consistently applied. CRITICAL FINDING: The transit stock functionality is working correctly as designed. The user's reported issue may be related to data format or file structure rather than system functionality. All core requirements verified: Column G reading, Column I reading, combined calculations, and depot-specific matching."
+          comment: "✅ TESTED: /api/upload-stock-excel endpoint working perfectly. Correctly processes columns A(Division), B(Article), D(STOCK A DATE). Only keeps records where Division=M210 as specified. Proper error handling for missing columns and empty M210 data. Returns session_id and summary statistics."
+
+  - task: "Upload fichier transit avec filtrage depuis M210"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: /api/upload-transit-excel endpoint working perfectly. Correctly processes columns A(Article), C(Division), G(Division cédante), I(Quantité). Only keeps records where Division cédante=M210 as specified. Proper error handling for missing columns. Returns session_id and summary statistics."
+
+  - task: "Calcul avec formule simplifiée max(0, CQM×Jours - Stock - Transit)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: /api/calculate endpoint implementing simplified formula correctly. Formula 'Quantité à Envoyer = max(0, (Quantité Commandée × Jours à Couvrir) - Stock Utilisation Libre - Quantité en Transit)' verified mathematically. Negative values properly limited to 0. Status determination (OK/À livrer/Non couvert) working correctly based on M210 stock availability."
+
+  - task: "Export Excel des résultats"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: /api/export-excel endpoint working correctly. Generates Excel files with proper headers and data formatting. Handles selected items correctly and returns proper file download response."
+
+  - task: "Gestion des sessions actives"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: /api/sessions endpoint working perfectly. Returns active sessions for all 3 data types (commandes_sessions, stock_sessions, transit_sessions). Proper JSON structure and session tracking."
 
 ## frontend:
   - task: "Add dual file upload for order and inventory data"
