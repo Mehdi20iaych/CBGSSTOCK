@@ -162,7 +162,8 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
             'upload_time': datetime.now(),
             'filters': {
                 'articles': unique_articles,
-                'depots': unique_depots
+                'depots': unique_depots,
+                'packaging': unique_packaging
             }
         }
         
@@ -173,12 +174,14 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
                 "total_records": len(df),
                 "unique_articles": len(unique_articles),
                 "unique_depots": len(unique_depots),
+                "unique_packaging": len(unique_packaging),
                 "total_quantity": float(df['Quantité Commandée'].sum()),
                 "total_stock": float(df['Stock Utilisation Libre'].sum())
             },
             "filters": {
                 "articles": unique_articles,
-                "depots": unique_depots
+                "depots": unique_depots,
+                "packaging": unique_packaging
             }
         }
         
