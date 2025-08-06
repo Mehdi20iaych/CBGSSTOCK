@@ -431,6 +431,35 @@ async def calculate_requirements(request: CalculationRequest):
         local_items = len([r for r in results if r['is_locally_made']])
         external_items = len([r for r in results if not r['is_locally_made']])
         
+        # Calculer les statistiques par dépôt (palettes et camions)
+        depot_stats = {}
+        for result in results:
+            depot = result['depot']
+            if depot not in depot_stats:
+                depot_stats[depot] = {
+                    'depot': depot,
+                    'total_palettes': 0,
+                    'total_items': 0,
+                    'trucks_needed': 0,
+                    'delivery_efficiency': 'Efficace'
+                }
+            
+            depot_stats[depot]['total_palettes'] += result['palettes_needed']
+            depot_stats[depot]['total_items'] += 1
+        
+        # Calculer le nombre de camions et l'efficacité pour chaque dépôt
+        for depot in depot_stats:
+            total_palettes = depot_stats[depot]['total_palettes']
+            trucks_needed = math.ceil(total_palettes / 24) if total_palettes > 0 else 0
+            depot_stats[depot]['trucks_needed'] = trucks_needed
+            depot_stats[depot]['delivery_efficiency'] = 'Efficace' if total_palettes >= 24 else 'Inefficace'
+        
+        # Convertir en liste et trier par nombre de palettes (décroissant)
+        depot_summary = sorted(list(depot_stats.values()), key=lambda x: x['total_palettes'], reverse=True)
+        
+        # Trier les résultats par dépôt
+        results_sorted = sorted(results, key=lambda x: x['depot'])
+        
         return {
             "calculations": results,
             "summary": {
