@@ -1341,7 +1341,9 @@ class SimplifiedStockManagementTester:
             'Point d\'Expédition': ['M211', 'M212', 'M213'] * 5,
             'Dummy_E': [f'Extra{i}' for i in range(1, 16)],
             'Quantité Commandée': [100 + i*10 for i in range(15)],
-            'Stock Utilisation Libre': [50 + i*5 for i in range(15)]
+            'Stock Utilisation Libre': [50 + i*5 for i in range(15)],
+            'Dummy_H': [f'Extra{i}' for i in range(1, 16)],
+            'Type Emballage': ['verre', 'pet', 'ciel'] * 5  # Add packaging column
         }
         
         df = pd.DataFrame(test_data)
