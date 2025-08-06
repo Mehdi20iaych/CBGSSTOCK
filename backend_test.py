@@ -667,6 +667,476 @@ class SimplifiedStockManagementTester:
         
         return success
 
+    def create_packaging_test_excel(self):
+        """Create Excel file with diverse packaging types for testing"""
+        data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006', 'CMD007', 'CMD008'],
+            'Article': ['1011', '1016', '1021', '9999', '8888', '1033', '1040', '1051'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6', 'Desc7', 'Desc8'],
+            'Point d\'Expédition': ['M211', 'M212', 'M213', 'M211', 'M212', 'M213', 'M211', 'M212'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7', 'Extra8'],
+            'Quantité Commandée': [100, 150, 80, 120, 90, 200, 110, 130],
+            'Stock Utilisation Libre': [50, 75, 40, 60, 45, 100, 55, 65],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7', 'Extra8'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet', 'ciel', 'verre', 'pet']
+        }
+        
+        df = pd.DataFrame(data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        return excel_buffer
+
+    def create_packaging_normalization_test_excel(self):
+        """Create Excel file with packaging types that need normalization"""
+        data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006'],
+            'Article': ['1011', '1016', '1021', '9999', '8888', '1033'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6'],
+            'Point d\'Expédition': ['M211', 'M212', 'M213', 'M211', 'M212', 'M213'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Quantité Commandée': [100, 150, 80, 120, 90, 200],
+            'Stock Utilisation Libre': [50, 75, 40, 60, 45, 100],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Type Emballage': ['VERRE', 'Pet', 'CIEL', 'bottle', 'plastic', 'can']  # Mixed case and English terms
+        }
+        
+        df = pd.DataFrame(data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        return excel_buffer
+
+    def create_missing_packaging_column_excel(self):
+        """Create Excel file missing the packaging column (Column I)"""
+        data = {
+            'Dummy_A': ['CMD001', 'CMD002'],
+            'Article': ['ART001', 'ART002'],
+            'Dummy_C': ['Desc1', 'Desc2'],
+            'Point d\'Expédition': ['M211', 'M212'],
+            'Dummy_E': ['Extra1', 'Extra2'],
+            'Quantité Commandée': [100, 150],
+            'Stock Utilisation Libre': [50, 75],
+            'Dummy_H': ['Extra1', 'Extra2']
+            # Missing Type Emballage column
+        }
+        
+        df = pd.DataFrame(data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        return excel_buffer
+
+    def test_enhanced_upload_with_packaging(self):
+        """Test enhanced upload endpoint with packaging column validation"""
+        excel_file = self.create_packaging_test_excel()
+        
+        files = {
+            'file': ('commandes_with_packaging.xlsx', excel_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Enhanced Upload with Packaging Column",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if success and 'session_id' in response:
+            self.commandes_session_id = response['session_id']
+            
+            # Verify packaging filter data is included
+            if 'filters' not in response or 'packaging' not in response['filters']:
+                print("❌ Missing packaging filters in response")
+                return False
+            
+            packaging_types = response['filters']['packaging']
+            expected_types = ['ciel', 'pet', 'verre']  # Should be normalized and sorted
+            
+            if set(packaging_types) != set(expected_types):
+                print(f"❌ Expected packaging types {expected_types}, got {packaging_types}")
+                return False
+            
+            # Verify summary includes packaging count
+            if 'unique_packaging' not in response['summary']:
+                print("❌ Missing unique_packaging in summary")
+                return False
+            
+            if response['summary']['unique_packaging'] != 3:
+                print(f"❌ Expected 3 unique packaging types, got {response['summary']['unique_packaging']}")
+                return False
+            
+            print(f"✅ Enhanced upload with packaging successful - {len(packaging_types)} packaging types found")
+            return True
+        return False
+
+    def test_packaging_normalization(self):
+        """Test that packaging types are properly normalized"""
+        excel_file = self.create_packaging_normalization_test_excel()
+        
+        files = {
+            'file': ('packaging_normalization.xlsx', excel_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Packaging Type Normalization",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if success and 'filters' in response and 'packaging' in response['filters']:
+            packaging_types = response['filters']['packaging']
+            expected_normalized = ['ciel', 'pet', 'verre']  # All should be normalized to these
+            
+            if set(packaging_types) != set(expected_normalized):
+                print(f"❌ Packaging normalization failed. Expected {expected_normalized}, got {packaging_types}")
+                return False
+            
+            print("✅ Packaging types correctly normalized: VERRE->verre, Pet->pet, CIEL->ciel, bottle->verre, plastic->pet, can->ciel")
+            return True
+        return False
+
+    def test_missing_packaging_column_error(self):
+        """Test error handling when packaging column is missing"""
+        excel_file = self.create_missing_packaging_column_excel()
+        
+        files = {
+            'file': ('missing_packaging.xlsx', excel_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Missing Packaging Column Error",
+            "POST",
+            "api/upload-commandes-excel",
+            400,  # Should return error
+            files=files
+        )
+        
+        return success  # Success means we got the expected 400 error
+
+    def test_packaging_filter_single_type(self):
+        """Test calculation with single packaging type filter"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for packaging filter test")
+            return False
+        
+        calculation_data = {
+            "days": 10,
+            "packaging_filter": ["verre"]  # Filter for glass packaging only
+        }
+        
+        success, response = self.run_test(
+            "Packaging Filter - Single Type (verre)",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            # Verify all results have verre packaging
+            for calc in calculations:
+                if 'packaging' not in calc:
+                    print("❌ Missing packaging field in calculation result")
+                    return False
+                
+                if calc['packaging'] != 'verre':
+                    print(f"❌ Expected only 'verre' packaging, found '{calc['packaging']}'")
+                    return False
+            
+            print(f"✅ Packaging filter working - {len(calculations)} results with 'verre' packaging only")
+            return True
+        return False
+
+    def test_packaging_filter_multiple_types(self):
+        """Test calculation with multiple packaging type filters"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for packaging filter test")
+            return False
+        
+        calculation_data = {
+            "days": 10,
+            "packaging_filter": ["verre", "pet"]  # Filter for glass and plastic packaging
+        }
+        
+        success, response = self.run_test(
+            "Packaging Filter - Multiple Types (verre, pet)",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            # Verify all results have verre or pet packaging
+            allowed_packaging = {'verre', 'pet'}
+            found_packaging = set()
+            
+            for calc in calculations:
+                if 'packaging' not in calc:
+                    print("❌ Missing packaging field in calculation result")
+                    return False
+                
+                packaging = calc['packaging']
+                if packaging not in allowed_packaging:
+                    print(f"❌ Unexpected packaging type '{packaging}', expected one of {allowed_packaging}")
+                    return False
+                
+                found_packaging.add(packaging)
+            
+            print(f"✅ Multiple packaging filter working - {len(calculations)} results with packaging types: {found_packaging}")
+            return True
+        return False
+
+    def test_packaging_filter_all_types(self):
+        """Test calculation with all packaging types (no filter)"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for packaging filter test")
+            return False
+        
+        calculation_data = {
+            "days": 10
+            # No packaging_filter - should include all types
+        }
+        
+        success, response = self.run_test(
+            "Packaging Filter - All Types (no filter)",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            # Verify we have results with different packaging types
+            found_packaging = set()
+            for calc in calculations:
+                if 'packaging' not in calc:
+                    print("❌ Missing packaging field in calculation result")
+                    return False
+                found_packaging.add(calc['packaging'])
+            
+            expected_types = {'verre', 'pet', 'ciel'}
+            if not found_packaging.issubset(expected_types):
+                print(f"❌ Unexpected packaging types found: {found_packaging - expected_types}")
+                return False
+            
+            print(f"✅ All packaging types included - found: {found_packaging}")
+            return True
+        return False
+
+    def test_comprehensive_grouping_with_packaging(self):
+        """Test that calculations group by (Article, Point d'Expédition, Type Emballage)"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for grouping test")
+            return False
+        
+        calculation_data = {
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Comprehensive Grouping with Packaging",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            # Verify each result has unique combination of (article, depot, packaging)
+            combinations = set()
+            for calc in calculations:
+                required_fields = ['article', 'depot', 'packaging']
+                for field in required_fields:
+                    if field not in calc:
+                        print(f"❌ Missing required field '{field}' in calculation result")
+                        return False
+                
+                combination = (calc['article'], calc['depot'], calc['packaging'])
+                if combination in combinations:
+                    print(f"❌ Duplicate combination found: {combination}")
+                    return False
+                combinations.add(combination)
+            
+            print(f"✅ Comprehensive grouping working - {len(combinations)} unique (article, depot, packaging) combinations")
+            
+            # Verify that same article+depot with different packaging creates separate entries
+            article_depot_pairs = {}
+            for calc in calculations:
+                key = (calc['article'], calc['depot'])
+                if key not in article_depot_pairs:
+                    article_depot_pairs[key] = []
+                article_depot_pairs[key].append(calc['packaging'])
+            
+            # Look for cases where same article+depot has multiple packaging types
+            multi_packaging_cases = {k: v for k, v in article_depot_pairs.items() if len(v) > 1}
+            if multi_packaging_cases:
+                print(f"✅ Found {len(multi_packaging_cases)} cases with multiple packaging types for same article+depot:")
+                for (article, depot), packaging_list in multi_packaging_cases.items():
+                    print(f"   Article {article} at {depot}: {packaging_list}")
+            
+            return True
+        return False
+
+    def test_packaging_in_results_integrity(self):
+        """Test that all calculation results include packaging field with valid values"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for results integrity test")
+            return False
+        
+        calculation_data = {
+            "days": 15
+        }
+        
+        success, response = self.run_test(
+            "Packaging Results Integrity",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            valid_packaging_types = {'verre', 'pet', 'ciel'}
+            
+            for i, calc in enumerate(calculations):
+                # Check packaging field exists
+                if 'packaging' not in calc:
+                    print(f"❌ Result {i}: Missing packaging field")
+                    return False
+                
+                # Check packaging value is valid
+                packaging = calc['packaging']
+                if packaging not in valid_packaging_types:
+                    print(f"❌ Result {i}: Invalid packaging type '{packaging}', expected one of {valid_packaging_types}")
+                    return False
+                
+                # Check packaging is consistent with other fields
+                if not isinstance(packaging, str) or len(packaging.strip()) == 0:
+                    print(f"❌ Result {i}: Packaging field is empty or invalid")
+                    return False
+            
+            print(f"✅ All {len(calculations)} results have valid packaging fields")
+            return True
+        return False
+
+    def test_packaging_filter_combinations(self):
+        """Test various packaging filter combinations"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for filter combinations test")
+            return False
+        
+        test_cases = [
+            (["verre"], "Single verre filter"),
+            (["pet"], "Single pet filter"),
+            (["ciel"], "Single ciel filter"),
+            (["verre", "pet"], "Verre + Pet filter"),
+            (["verre", "ciel"], "Verre + Ciel filter"),
+            (["pet", "ciel"], "Pet + Ciel filter"),
+            (["verre", "pet", "ciel"], "All types filter")
+        ]
+        
+        for packaging_filter, description in test_cases:
+            calculation_data = {
+                "days": 10,
+                "packaging_filter": packaging_filter
+            }
+            
+            success, response = self.run_test(
+                f"Filter Combination - {description}",
+                "POST",
+                "api/calculate",
+                200,
+                data=calculation_data
+            )
+            
+            if success and 'calculations' in response:
+                calculations = response['calculations']
+                found_types = set(calc['packaging'] for calc in calculations)
+                expected_types = set(packaging_filter)
+                
+                if not found_types.issubset(expected_types):
+                    print(f"❌ {description}: Found unexpected packaging types {found_types - expected_types}")
+                    return False
+                
+                print(f"✅ {description}: {len(calculations)} results with packaging types {found_types}")
+            else:
+                return False
+        
+        return True
+
+    def test_packaging_with_sourcing_intelligence(self):
+        """Test that packaging filtering works correctly with sourcing intelligence"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for packaging+sourcing test")
+            return False
+        
+        calculation_data = {
+            "days": 10,
+            "packaging_filter": ["verre"]  # Filter for glass packaging only
+        }
+        
+        success, response = self.run_test(
+            "Packaging Filter with Sourcing Intelligence",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            # Verify all results have both packaging and sourcing fields
+            for calc in calculations:
+                required_fields = ['packaging', 'sourcing_status', 'sourcing_text', 'is_locally_made']
+                for field in required_fields:
+                    if field not in calc:
+                        print(f"❌ Missing field '{field}' in calculation result")
+                        return False
+                
+                # Verify packaging filter is applied
+                if calc['packaging'] != 'verre':
+                    print(f"❌ Expected only 'verre' packaging, found '{calc['packaging']}'")
+                    return False
+                
+                # Verify sourcing intelligence is working
+                article = calc['article']
+                is_locally_made = calc['is_locally_made']
+                
+                # Check known local articles
+                if article in ['1011', '1016', '1021', '1033']:
+                    if not is_locally_made:
+                        print(f"❌ Article {article} should be locally made")
+                        return False
+                # Check known external articles
+                elif article in ['9999', '8888']:
+                    if is_locally_made:
+                        print(f"❌ Article {article} should be external")
+                        return False
+            
+            # Verify sourcing summary is present and accurate
+            if 'sourcing_summary' not in response:
+                print("❌ Missing sourcing_summary in response")
+                return False
+            
+            print(f"✅ Packaging filter + sourcing intelligence working - {len(calculations)} verre results with sourcing data")
+            return True
+        return False
+
     def test_edge_cases(self):
         """Test edge cases and boundary conditions"""
         print("\n🔍 Testing edge cases...")
