@@ -158,6 +158,7 @@ function App() {
         },
         body: JSON.stringify({
           days: days,
+          packaging_filter: selectedPackaging.length > 0 ? selectedPackaging : null
         }),
       });
 
