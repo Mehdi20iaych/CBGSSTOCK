@@ -283,6 +283,48 @@ function App() {
     }
   };
 
+  // Obtenir des suggestions pour compléter les palettes d'un dépôt
+  const fetchDepotSuggestions = async (depotName) => {
+    setLoadingSuggestions(prev => ({ ...prev, [depotName]: true }));
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/depot-suggestions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          depot_name: depotName,
+          days: days
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Erreur lors de la récupération des suggestions');
+      }
+
+      const data = await response.json();
+      setSuggestions(prev => ({ ...prev, [depotName]: data }));
+      setShowSuggestions(prev => ({ ...prev, [depotName]: true }));
+    } catch (err) {
+      setError(`Erreur lors de la récupération des suggestions: ${err.message}`);
+    } finally {
+      setLoadingSuggestions(prev => ({ ...prev, [depotName]: false }));
+    }
+  };
+
+  // Basculer l'affichage des suggestions
+  const toggleSuggestions = (depotName) => {
+    if (showSuggestions[depotName]) {
+      setShowSuggestions(prev => ({ ...prev, [depotName]: false }));
+    } else if (suggestions[depotName]) {
+      setShowSuggestions(prev => ({ ...prev, [depotName]: true }));
+    } else {
+      fetchDepotSuggestions(depotName);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
