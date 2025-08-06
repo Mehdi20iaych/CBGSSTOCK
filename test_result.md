@@ -140,7 +140,7 @@
   - task: "Test nouvelle version simplifiée du backend"
     implemented: true
     working: true
-    file: "/app/backend/server.py"
+    file: "/app/backend/server.py, /app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
