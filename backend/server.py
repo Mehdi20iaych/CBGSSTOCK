@@ -507,7 +507,7 @@ async def export_excel(request: ExportRequest):
         # En-têtes
         headers = [
             "Code Article", "Code Dépôt", "Quantité Commandée", "Stock Actuel", 
-            "Quantité en Transit", "Quantité à Envoyer", "Stock Dispo M210", "Statut"
+            "Quantité en Transit", "Quantité à Envoyer", "Palettes", "Stock Dispo M210", "Statut"
         ]
         
         # Ajouter les en-têtes
