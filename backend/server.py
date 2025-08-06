@@ -402,7 +402,8 @@ async def calculate_requirements(request: CalculationRequest):
             
             results.append({
                 'article': article,
-                'depot': depot, 
+                'depot': depot,
+                'packaging': packaging,
                 'cqm': cqm,
                 'stock_actuel': stock_actuel,
                 'stock_transit': stock_transit,
