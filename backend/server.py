@@ -868,11 +868,43 @@ async def calculate_requirements(session_id: str, request: CalculationRequest):
             if request.transit_session_id and request.transit_session_id in transit_data:
                 transit_df = pd.DataFrame(transit_data[request.transit_session_id]['data'])
                 
-                # Find matching article AND depot in transit data
+                # Create flexible depot matching - handle both depot codes and names
+                # Common mappings: M212 -> Harbil Dépot, etc.
+                depot_mappings = {
+                    'M212': ['Harbil Dépot', 'Harbil Depot', 'M212'],
+                    'M210': ['Local Depot', 'M210'],  # Add more mappings as needed
+                    'M213': ['Other Depot', 'M213']   # Add more mappings as needed
+                }
+                
+                # Try direct match first
                 matching_transit = transit_df[
                     (transit_df['Article'].astype(str) == str(row['article_code'])) &
                     (transit_df['Division'].astype(str) == str(row['depot']))
                 ]
+                
+                # If no direct match, try reverse mapping (depot name -> code)
+                if matching_transit.empty:
+                    depot_code = None
+                    for code, names in depot_mappings.items():
+                        if str(row['depot']) in names:
+                            depot_code = code
+                            break
+                    
+                    if depot_code:
+                        matching_transit = transit_df[
+                            (transit_df['Article'].astype(str) == str(row['article_code'])) &
+                            (transit_df['Division'].astype(str) == depot_code)
+                        ]
+                
+                # If still no match, try forward mapping (code -> depot names)
+                if matching_transit.empty:
+                    transit_depot_code = str(transit_df['Division'].iloc[0] if not transit_df.empty else '')
+                    if transit_depot_code in depot_mappings:
+                        if str(row['depot']) in depot_mappings[transit_depot_code]:
+                            matching_transit = transit_df[
+                                (transit_df['Article'].astype(str) == str(row['article_code'])) &
+                                (transit_df['Division'].astype(str) == transit_depot_code)
+                            ]
                 
                 if not matching_transit.empty:
                     transit_available = float(matching_transit['Quantité'].sum())
