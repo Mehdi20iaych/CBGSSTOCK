@@ -582,11 +582,13 @@ async def enhanced_calculate_requirements(request: EnhancedCalculationRequest):
                 if not matching_transit.empty:
                     transit_available = float(matching_transit['Quantité'].sum())
             
-            # Calculate total available (inventory + transit)
+            # Calculate total available (inventory + transit) for display purposes
             total_available = total_available_inventory + transit_available
             
-            # Recalculate quantity_to_send using total_available (inventory + transit)
-            quantity_to_send = max(0, required_stock - total_available)
+            # Apply new formula: quantity_to_send = (CQM x JOURS A COUVRIR) - Stock Transit - Stock Actuel
+            # quantity_to_send = required_stock - transit_available - current_stock
+            current_stock = result_item['current_stock']
+            quantity_to_send = required_stock - transit_available - current_stock
             result_item['quantity_to_send'] = round(quantity_to_send, 2)
             
             # Recalculate palettes needed based on updated quantity_to_send
