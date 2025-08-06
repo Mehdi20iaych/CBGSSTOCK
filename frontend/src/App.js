@@ -670,7 +670,7 @@ function App() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {calculations.calculations.map((item, index) => {
-                      const isSelected = selectedItems.some(i => i.article === item.article && i.depot === item.depot);
+                      const isSelected = selectedItems.some(i => i.article === item.article && i.depot === item.depot && i.packaging === item.packaging);
                       return (
                         <tr key={index} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}>
                           <td className="px-6 py-4 whitespace-nowrap">
