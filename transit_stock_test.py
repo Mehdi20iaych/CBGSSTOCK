@@ -495,7 +495,7 @@ class TransitStockTester:
             # Find Article 1011 at Depot M212
             target_calc = None
             for calc in calculations:
-                if calc['article_code'] == '1011' and calc['depot'] == 'M212':
+                if str(calc['article_code']) == '1011' and calc['depot'] == 'M212':
                     target_calc = calc
                     break
             
