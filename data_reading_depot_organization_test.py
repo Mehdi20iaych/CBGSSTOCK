@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import numpy as np
 
 class DataReadingDepotOrganizationTester:
-    def __init__(self, base_url="https://8f22796f-438f-4677-9756-adbdeb99bd38.preview.emergentagent.com"):
+    def __init__(self, base_url="https://8220bf12-c5cc-401d-a353-82184b1106d2.preview.emergentagent.com"):
         self.base_url = base_url
         self.session_id = None
         self.inventory_session_id = None
