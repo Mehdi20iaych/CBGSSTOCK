@@ -114,12 +114,12 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
                 })
         
         # Vérifier que nous avons les colonnes nécessaires après mapping
-        required_cols = ['Article', 'Point d\'Expédition', 'Quantité Commandée', 'Stock Utilisation Libre']
+        required_cols = ['Article', 'Point d\'Expédition', 'Quantité Commandée', 'Stock Utilisation Libre', 'Type Emballage']
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
             raise HTTPException(
                 status_code=400, 
-                detail=f"Colonnes manquantes: {', '.join(missing_cols)}. Vérifiez que le fichier contient les colonnes B, D, F, G selon les spécifications."
+                detail=f"Colonnes manquantes: {', '.join(missing_cols)}. Vérifiez que le fichier contient les colonnes B, D, F, G, I selon les spécifications."
             )
         
         # Nettoyer et valider les données
