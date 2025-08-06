@@ -400,6 +400,9 @@ async def calculate_requirements(request: CalculationRequest):
                 statut = "Non couvert"
                 statut_color = "red"
             
+            # Calcul des palettes (30 produits par palette)
+            palettes_needed = math.ceil(quantite_a_envoyer / 30) if quantite_a_envoyer > 0 else 0
+            
             results.append({
                 'article': article,
                 'depot': depot,
@@ -410,6 +413,7 @@ async def calculate_requirements(request: CalculationRequest):
                 'quantite_requise': quantite_requise,
                 'quantite_a_envoyer': quantite_a_envoyer,
                 'stock_dispo_m210': stock_dispo_m210,
+                'palettes_needed': palettes_needed,
                 'statut': statut,
                 'statut_color': statut_color,
                 'sourcing_status': sourcing_status,
