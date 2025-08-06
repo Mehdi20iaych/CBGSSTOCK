@@ -785,15 +785,17 @@ function App() {
                                           Article: {suggestion.article} ({suggestion.packaging})
                                         </div>
                                         <div className="text-gray-600 mt-1">
-                                          Actuel: {suggestion.current_quantity} produits ({suggestion.current_palettes} palette{suggestion.current_palettes > 1 ? 's' : ''})
+                                          Stock M210: {suggestion.stock_m210} unités
                                         </div>
                                         <div className="text-blue-700 font-medium">
-                                          Suggestion: +{suggestion.suggested_additional_quantity} produits 
-                                          (+{suggestion.suggested_additional_palettes} palette{suggestion.suggested_additional_palettes > 1 ? 's' : ''})
+                                          Suggestion: {suggestion.suggested_quantity} produits 
+                                          ({suggestion.suggested_palettes} palette{suggestion.suggested_palettes > 1 ? 's' : ''})
                                         </div>
-                                        <div className="text-gray-600">
-                                          Nouveau total: {suggestion.new_total_quantity} produits ({suggestion.new_total_palettes} palette{suggestion.new_total_palettes > 1 ? 's' : ''})
-                                        </div>
+                                        {suggestion.reason && (
+                                          <div className="text-orange-600 text-xs mt-1">
+                                            {suggestion.reason}
+                                          </div>
+                                        )}
                                       </div>
                                       <div className="ml-2">
                                         <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
@@ -803,9 +805,6 @@ function App() {
                                         }`}>
                                           {suggestion.feasibility}
                                         </span>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                          Stock M210: {suggestion.stock_available}
-                                        </div>
                                       </div>
                                     </div>
                                   </div>
