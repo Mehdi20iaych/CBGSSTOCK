@@ -525,8 +525,9 @@ async def export_excel(request: ExportRequest):
             ws.cell(row=row_idx, column=4, value=item['stock_actuel'])
             ws.cell(row=row_idx, column=5, value=item['stock_transit'])
             ws.cell(row=row_idx, column=6, value=item['quantite_a_envoyer'])
-            ws.cell(row=row_idx, column=7, value=item['stock_dispo_m210'])
-            ws.cell(row=row_idx, column=8, value=item['statut'])
+            ws.cell(row=row_idx, column=7, value=item['palettes_needed'])
+            ws.cell(row=row_idx, column=8, value=item['stock_dispo_m210'])
+            ws.cell(row=row_idx, column=9, value=item['statut'])
             
             # Colorer selon le statut
             status_color = "90EE90" if item['statut'] == "OK" else "FFE4B5" if item['statut'] == "À livrer" else "FFB6C1"
