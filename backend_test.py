@@ -1009,7 +1009,10 @@ class SimplifiedStockManagementTester:
             ("Excel Export", self.test_excel_export),
             ("Sessions Endpoint", self.test_sessions_endpoint),
             ("Column Validation Errors", self.test_column_validation_errors),
-            ("Edge Cases", self.test_edge_cases)
+            ("Edge Cases", self.test_edge_cases),
+            ("Sourcing Intelligence Basic", self.test_sourcing_intelligence_basic),
+            ("Sourcing Intelligence Comprehensive", self.test_sourcing_intelligence_comprehensive),
+            ("Sourcing Data Consistency", self.test_sourcing_data_consistency)
         ]
         
         for test_name, test_func in tests:
