@@ -62,9 +62,10 @@ class SimplifiedStockManagementTester:
     def create_sample_commandes_excel(self):
         """Create sample commandes Excel file with columns B, D, F, G"""
         # Create sample data with proper column structure - using actual column names
+        # Include both locally made and external articles for sourcing testing
         data = {
             'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006'],  # Dummy column A
-            'Article': ['ART001', 'ART002', 'ART003', 'ART001', 'ART002', 'ART004'],  # Article (Column B)
+            'Article': ['1011', '1016', '1021', '9999', '8888', '1033'],  # Article (Column B) - Mix of local and external
             'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6'],  # Dummy column C
             'Point d\'Expédition': ['M211', 'M212', 'M213', 'M212', 'M211', 'M213'],  # Point d'Expédition (Column D) - M210 excluded
             'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],  # Dummy column E
