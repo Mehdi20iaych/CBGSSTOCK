@@ -478,7 +478,7 @@ function App() {
               Configuration des Calculs
             </h2>
 
-            <div className="max-w-md space-y-4">
+            <div className="max-w-2xl space-y-6">
               <div>
                 <label htmlFor="days" className="block text-sm font-medium text-gray-700">
                   Nombre de jours à couvrir
@@ -493,6 +493,50 @@ function App() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
+
+              {/* Filtre Type d'Emballage */}
+              {availablePackaging.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Types d'emballage à inclure
+                  </label>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="select-all-packaging"
+                        checked={selectedPackaging.length === availablePackaging.length}
+                        onChange={handleSelectAllPackaging}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      />
+                      <label htmlFor="select-all-packaging" className="ml-2 text-sm text-gray-700 font-medium">
+                        Tout sélectionner
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 mt-3">
+                      {availablePackaging.map((packaging) => (
+                        <div key={packaging} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`packaging-${packaging}`}
+                            checked={selectedPackaging.includes(packaging)}
+                            onChange={() => handlePackagingFilter(packaging)}
+                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          />
+                          <label htmlFor={`packaging-${packaging}`} className="ml-2 text-sm text-gray-700 capitalize">
+                            {packaging}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    {selectedPackaging.length === 0 && (
+                      <p className="text-sm text-amber-600">
+                        ⚠️ Aucun type d'emballage sélectionné - veuillez en choisir au moins un
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4">
                 <button
