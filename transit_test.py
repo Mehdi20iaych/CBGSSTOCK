@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 class TransitStockTester:
-    def __init__(self, base_url="https://62406335-1313-4fb4-9f2d-733ce76c118e.preview.emergentagent.com"):
+    def __init__(self, base_url="https://f4e7735e-dff3-4628-8a51-a829c1c1d581.preview.emergentagent.com"):
         self.base_url = base_url
         self.order_session_id = None
         self.inventory_session_id = None
