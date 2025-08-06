@@ -2415,4 +2415,5 @@ class SimplifiedStockManagementTester:
 
 if __name__ == "__main__":
     tester = SimplifiedStockManagementTester()
-    tester.run_all_tests()
+    # Run focused depot suggestions tests
+    tester.run_depot_suggestions_tests()
