@@ -771,7 +771,7 @@ async def get_depot_suggestions(request: dict):
             "target_palettes": target_palettes,
             "palettes_to_add": palettes_to_add,
             "suggestions": suggestions[:5],  # Limiter à 5 suggestions max
-            "efficiency_status": "Efficace" if current_palettes >= 24 else "Inefficace"
+            "efficiency_status": "Efficace" if current_palettes > 0 and current_palettes % 24 == 0 else "Inefficace"
         }
         
     except Exception as e:
