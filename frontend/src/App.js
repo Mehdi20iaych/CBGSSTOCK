@@ -541,7 +541,7 @@ function App() {
               <div className="pt-4">
                 <button
                   onClick={handleCalculate}
-                  disabled={loading || !commandesData}
+                  disabled={loading || !commandesData || selectedPackaging.length === 0}
                   className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                 >
                   {loading ? (
