@@ -3596,4 +3596,7 @@ def main():
         return 1
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # Run focused tests for the specific review request
+    tester = StockManagementAPITester()
+    success = tester.run_focused_tests()
+    sys.exit(0 if success else 1)
