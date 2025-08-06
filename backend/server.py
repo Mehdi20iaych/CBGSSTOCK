@@ -126,8 +126,21 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
         df['Quantité Commandée'] = pd.to_numeric(df['Quantité Commandée'], errors='coerce')
         df['Stock Utilisation Libre'] = pd.to_numeric(df['Stock Utilisation Libre'], errors='coerce')
         
+        # Nettoyer et standardiser le type d'emballage
+        df['Type Emballage'] = df['Type Emballage'].astype(str).str.strip().str.lower()
+        # Normaliser les valeurs d'emballage
+        packaging_mapping = {
+            'verre': 'verre',
+            'pet': 'pet', 
+            'ciel': 'ciel',
+            'bottle': 'verre',  # Mapping anglais
+            'plastic': 'pet',   # Mapping anglais
+            'can': 'ciel'       # Mapping anglais
+        }
+        df['Type Emballage'] = df['Type Emballage'].map(packaging_mapping).fillna(df['Type Emballage'])
+        
         # Supprimer les lignes avec données manquantes essentielles
-        df = df.dropna(subset=['Article', 'Point d\'Expédition', 'Quantité Commandée'])
+        df = df.dropna(subset=['Article', 'Point d\'Expédition', 'Quantité Commandée', 'Type Emballage'])
         
         # Remplir Stock Utilisation Libre manquant par 0
         df['Stock Utilisation Libre'] = df['Stock Utilisation Libre'].fillna(0)
