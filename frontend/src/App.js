@@ -221,9 +221,9 @@ function App() {
   // Gérer la sélection des items
   const handleItemSelection = (item) => {
     setSelectedItems(prev => {
-      const exists = prev.some(i => i.article === item.article && i.depot === item.depot);
+      const exists = prev.some(i => i.article === item.article && i.depot === item.depot && i.packaging === item.packaging);
       if (exists) {
-        return prev.filter(i => !(i.article === item.article && i.depot === item.depot));
+        return prev.filter(i => !(i.article === item.article && i.depot === item.depot && i.packaging === item.packaging));
       } else {
         return [...prev, item];
       }
