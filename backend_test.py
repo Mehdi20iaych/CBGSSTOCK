@@ -3277,6 +3277,13 @@ def main():
         ("Upload Invalid Inventory Excel (Missing Columns)", tester.test_upload_inventory_excel_missing_columns),
         ("Get Inventory Data", tester.test_get_inventory_data),
         ("Get Inventory Data (Invalid Session)", tester.test_get_inventory_data_invalid_session),
+        
+        # NEW FORMULA TESTS - HIGH PRIORITY
+        ("🧮 NEW FORMULA - Basic Calculation", tester.test_new_formula_basic_calculation),
+        ("🧮 NEW FORMULA - Enhanced Calculation", tester.test_new_formula_enhanced_calculation),
+        ("🧮 NEW FORMULA - Negative Scenarios", tester.test_new_formula_negative_scenarios),
+        ("🧮 NEW FORMULA - Regression Check", tester.test_new_formula_regression_check),
+        
         ("Enhanced Calculate with Inventory Cross-Reference", tester.test_enhanced_calculate_with_inventory),
         ("Enhanced Calculate without Inventory", tester.test_enhanced_calculate_without_inventory),
         ("Enhanced Calculate (Invalid Order Session)", tester.test_enhanced_calculate_invalid_order_session),
