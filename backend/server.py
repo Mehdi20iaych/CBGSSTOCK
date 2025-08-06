@@ -494,58 +494,129 @@ async def get_sessions():
 
 @app.post("/api/export-excel")
 async def export_excel(request: ExportRequest):
-    """Export Excel simplifié"""
+    """Export Excel intelligent organisé par dépôt"""
     try:
         if not request.selected_items:
             raise HTTPException(status_code=400, detail="Aucun élément sélectionné pour l'export")
         
+        # Trier les données par dépôt puis par quantité à envoyer (décroissant)
+        sorted_items = sorted(request.selected_items, 
+                            key=lambda x: (x['depot'], -x['quantite_a_envoyer']))
+        
+        # Grouper par dépôt pour les statistiques
+        depot_groups = {}
+        for item in sorted_items:
+            depot = item['depot']
+            if depot not in depot_groups:
+                depot_groups[depot] = {
+                    'items': [],
+                    'total_palettes': 0,
+                    'total_articles': 0
+                }
+            depot_groups[depot]['items'].append(item)
+            depot_groups[depot]['total_palettes'] += item.get('palettes_needed', 0)
+            depot_groups[depot]['total_articles'] += 1
+        
         # Créer un nouveau classeur Excel
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.title = "Résultats Calcul Stock"
+        ws.title = "Livraisons par Dépôt"
         
-        # En-têtes
-        headers = [
-            "Code Article", "Code Dépôt", "Quantité Commandée", "Stock Actuel", 
-            "Quantité en Transit", "Quantité à Envoyer", "Palettes", "Stock Dispo M210", "Statut"
-        ]
+        # En-têtes essentiels (focus sur l'important)
+        headers = ["Dépôt", "Code Article", "Quantité à Livrer", "Palettes", "Statut"]
+        
+        # Style simple et professionnel
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="4F4F4F", end_color="4F4F4F", fill_type="solid")
         
         # Ajouter les en-têtes
         for col, header in enumerate(headers, 1):
             cell = ws.cell(row=1, column=col, value=header)
-            cell.font = Font(bold=True)
-            cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-            cell.font = Font(bold=True, color="FFFFFF")
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal='center', vertical='center')
         
-        # Ajouter les données
-        for row_idx, item in enumerate(request.selected_items, 2):
-            ws.cell(row=row_idx, column=1, value=item['article'])
-            ws.cell(row=row_idx, column=2, value=item['depot'])
-            ws.cell(row=row_idx, column=3, value=item['cqm'])
-            ws.cell(row=row_idx, column=4, value=item['stock_actuel'])
-            ws.cell(row=row_idx, column=5, value=item['stock_transit'])
-            ws.cell(row=row_idx, column=6, value=item['quantite_a_envoyer'])
-            ws.cell(row=row_idx, column=7, value=item['palettes_needed'])
-            ws.cell(row=row_idx, column=8, value=item['stock_dispo_m210'])
-            ws.cell(row=row_idx, column=9, value=item['statut'])
+        current_row = 2
+        current_depot = None
+        
+        # Ajouter les données organisées par dépôt
+        for item in sorted_items:
+            depot = item['depot']
             
-            # Colorer selon le statut
-            status_color = "90EE90" if item['statut'] == "OK" else "FFE4B5" if item['statut'] == "À livrer" else "FFB6C1"
-            for col in range(1, len(headers) + 1):
-                ws.cell(row=row_idx, column=col).fill = PatternFill(start_color=status_color, end_color=status_color, fill_type="solid")
+            # Ajouter une ligne de séparation entre les dépôts
+            if current_depot and current_depot != depot:
+                current_row += 1  # Ligne vide entre dépôts
+                
+                # Ligne de résumé du dépôt précédent
+                depot_stats = depot_groups[current_depot]
+                summary_row = current_row
+                ws.cell(row=summary_row, column=1, value=f"TOTAL {current_depot}")
+                ws.cell(row=summary_row, column=3, value="")
+                ws.cell(row=summary_row, column=4, value=f"{depot_stats['total_palettes']} palettes")
+                trucks_needed = math.ceil(depot_stats['total_palettes'] / 24)
+                efficiency = "Efficace" if depot_stats['total_palettes'] >= 24 else "Inefficace"
+                ws.cell(row=summary_row, column=5, value=f"{trucks_needed} camion(s) - {efficiency}")
+                
+                # Style pour la ligne de résumé
+                for col in range(1, len(headers) + 1):
+                    cell = ws.cell(row=summary_row, column=col)
+                    cell.font = Font(bold=True, color="333333")
+                    cell.fill = PatternFill(start_color="E8E8E8", end_color="E8E8E8", fill_type="solid")
+                
+                current_row += 2  # Espace après le résumé
+            
+            current_depot = depot
+            
+            # Données essentielles seulement
+            ws.cell(row=current_row, column=1, value=item['depot'])
+            ws.cell(row=current_row, column=2, value=item['article'])
+            ws.cell(row=current_row, column=3, value=item['quantite_a_envoyer'])
+            ws.cell(row=current_row, column=4, value=item.get('palettes_needed', 0))
+            ws.cell(row=current_row, column=5, value=item['statut'])
+            
+            # Style minimal - juste les priorités
+            if item['statut'] == 'Non couvert':
+                for col in range(1, len(headers) + 1):
+                    ws.cell(row=current_row, column=col).fill = PatternFill(
+                        start_color="FFEBEE", end_color="FFEBEE", fill_type="solid"
+                    )
+            
+            current_row += 1
         
-        # Ajuster la largeur des colonnes
-        for col in range(1, len(headers) + 1):
-            ws.column_dimensions[get_column_letter(col)].width = 15
+        # Résumé du dernier dépôt
+        if current_depot:
+            current_row += 1
+            depot_stats = depot_groups[current_depot]
+            summary_row = current_row
+            ws.cell(row=summary_row, column=1, value=f"TOTAL {current_depot}")
+            ws.cell(row=summary_row, column=3, value="")
+            ws.cell(row=summary_row, column=4, value=f"{depot_stats['total_palettes']} palettes")
+            trucks_needed = math.ceil(depot_stats['total_palettes'] / 24)
+            efficiency = "Efficace" if depot_stats['total_palettes'] >= 24 else "Inefficace"
+            ws.cell(row=summary_row, column=5, value=f"{trucks_needed} camion(s) - {efficiency}")
+            
+            # Style pour la ligne de résumé
+            for col in range(1, len(headers) + 1):
+                cell = ws.cell(row=summary_row, column=col)
+                cell.font = Font(bold=True, color="333333")
+                cell.fill = PatternFill(start_color="E8E8E8", end_color="E8E8E8", fill_type="solid")
+        
+        # Ajuster les largeurs de colonne intelligemment
+        column_widths = [12, 15, 18, 12, 15]  # Optimisé pour le contenu
+        for col, width in enumerate(column_widths, 1):
+            ws.column_dimensions[get_column_letter(col)].width = width
+        
+        # Figer les en-têtes
+        ws.freeze_panes = 'A2'
         
         # Sauvegarder dans un buffer
         output = BytesIO()
         wb.save(output)
         output.seek(0)
         
-        # Générer le nom de fichier avec timestamp
+        # Nom de fichier intelligent
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"Calcul_Stock_{timestamp}.xlsx"
+        filename = f"Livraisons_Depot_{timestamp}.xlsx"
         
         return StreamingResponse(
             BytesIO(output.read()),
