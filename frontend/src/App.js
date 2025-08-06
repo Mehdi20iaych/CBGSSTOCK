@@ -610,6 +610,15 @@ function App() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.quantite_a_envoyer}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_dispo_m210}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              item.is_locally_made 
+                                ? 'bg-slate-100 text-slate-800 border border-slate-200' 
+                                : 'bg-amber-100 text-amber-800 border border-amber-200'
+                            }`}>
+                              {item.sourcing_text || (item.is_locally_made ? 'Production Locale' : 'Sourcing Externe')}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               {getStatusIcon(item.statut)}
                               <span className={`ml-2 text-sm font-medium ${
