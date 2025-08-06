@@ -154,6 +154,7 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
         # Get unique values for filters
         unique_articles = sorted(df['Article'].astype(str).unique().tolist())
         unique_depots = sorted(df['Point d\'Expédition'].unique().tolist())
+        unique_packaging = sorted(df['Type Emballage'].unique().tolist())
         
         # Store data
         commandes_data[session_id] = {
