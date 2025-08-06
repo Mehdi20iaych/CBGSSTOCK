@@ -710,13 +710,13 @@ class SimplifiedStockManagementTester:
         
         # Test with very high stock values (should result in 0 quantite_a_envoyer)
         high_stock_data = {
-            'A': ['CMD001'],
-            'B': ['ART001'],  # Article
-            'C': ['Desc1'],
-            'D': ['M211'],  # Point d'Expédition
-            'E': ['Extra1'],
-            'F': [10],  # Low Quantité Commandée
-            'G': [10000]  # Very high Stock Utilisation Libre
+            'Dummy_A': ['CMD001'],
+            'Article': ['ART001'],  # Article
+            'Dummy_C': ['Desc1'],
+            'Point d\'Expédition': ['M211'],  # Point d'Expédition
+            'Dummy_E': ['Extra1'],
+            'Quantité Commandée': [10],  # Low Quantité Commandée
+            'Stock Utilisation Libre': [10000]  # Very high Stock Utilisation Libre
         }
         
         df = pd.DataFrame(high_stock_data)
