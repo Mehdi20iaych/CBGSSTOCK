@@ -395,6 +395,10 @@ async def calculate_requirements(request: CalculationRequest):
         items_a_livrer = len([r for r in results if r['statut'] == 'À livrer'])
         items_non_couverts = len([r for r in results if r['statut'] == 'Non couvert'])
         
+        # Calculer les statistiques de sourcing
+        local_items = len([r for r in results if r['is_locally_made']])
+        external_items = len([r for r in results if not r['is_locally_made']])
+        
         return {
             "calculations": results,
             "summary": {
@@ -403,6 +407,12 @@ async def calculate_requirements(request: CalculationRequest):
                 "items_a_livrer": items_a_livrer,
                 "items_non_couverts": items_non_couverts,
                 "jours_couvrir": request.days
+            },
+            "sourcing_summary": {
+                "local_items": local_items,
+                "external_items": external_items,
+                "local_percentage": round((local_items / total_items * 100) if total_items > 0 else 0, 1),
+                "external_percentage": round((external_items / total_items * 100) if total_items > 0 else 0, 1)
             },
             "has_stock_data": len(stock_m210) > 0,
             "has_transit_data": len(transit_stocks) > 0
