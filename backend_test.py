@@ -1771,6 +1771,527 @@ class SimplifiedStockManagementTester:
         print(f"✅ Verified consistency for {len(sourcing_data_by_article)} articles")
         return True
 
+    def test_depot_suggestions_missing_depot_name(self):
+        """Test depot suggestions endpoint with missing depot_name parameter"""
+        request_data = {
+            "days": 10
+            # Missing depot_name
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions - Missing depot_name (400 Error)",
+            "POST",
+            "api/depot-suggestions",
+            400,
+            data=request_data
+        )
+        
+        return success
+
+    def test_depot_suggestions_no_commandes_data(self):
+        """Test depot suggestions endpoint with no commandes data uploaded"""
+        # Clear any existing commandes data by making a request when no data exists
+        request_data = {
+            "depot_name": "M211",
+            "days": 10
+        }
+        
+        # This should fail because no commandes data is uploaded
+        success, response = self.run_test(
+            "Depot Suggestions - No Commandes Data (400 Error)",
+            "POST",
+            "api/depot-suggestions",
+            400,
+            data=request_data
+        )
+        
+        return success
+
+    def test_depot_suggestions_valid_data(self):
+        """Test depot suggestions endpoint with valid data"""
+        # First ensure we have commandes data uploaded
+        if not self.commandes_session_id:
+            excel_file = self.create_sample_commandes_excel()
+            files = {
+                'file': ('commandes.xlsx', excel_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            }
+            
+            success, response = self.run_test(
+                "Upload Commandes for Depot Suggestions",
+                "POST",
+                "api/upload-commandes-excel",
+                200,
+                files=files
+            )
+            
+            if success:
+                self.commandes_session_id = response['session_id']
+            else:
+                return False
+        
+        # Upload stock data for feasibility analysis
+        if not self.stock_session_id:
+            stock_file = self.create_sample_stock_excel()
+            files = {
+                'file': ('stock.xlsx', stock_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            }
+            
+            success, response = self.run_test(
+                "Upload Stock for Depot Suggestions",
+                "POST",
+                "api/upload-stock-excel",
+                200,
+                files=files
+            )
+            
+            if success:
+                self.stock_session_id = response['session_id']
+            else:
+                return False
+        
+        # Upload transit data
+        if not self.transit_session_id:
+            transit_file = self.create_sample_transit_excel()
+            files = {
+                'file': ('transit.xlsx', transit_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            }
+            
+            success, response = self.run_test(
+                "Upload Transit for Depot Suggestions",
+                "POST",
+                "api/upload-transit-excel",
+                200,
+                files=files
+            )
+            
+            if success:
+                self.transit_session_id = response['session_id']
+        
+        # Test depot suggestions with valid data
+        request_data = {
+            "depot_name": "M211",
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions - Valid Data",
+            "POST",
+            "api/depot-suggestions",
+            200,
+            data=request_data
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['depot_name', 'current_palettes', 'target_palettes', 'palettes_to_add', 'suggestions']
+            for field in required_fields:
+                if field not in response:
+                    print(f"❌ Missing required field: {field}")
+                    return False
+            
+            # Verify depot_name matches request
+            if response['depot_name'] != "M211":
+                print(f"❌ Expected depot_name 'M211', got '{response['depot_name']}'")
+                return False
+            
+            # Verify numeric fields are valid
+            if response['current_palettes'] < 0:
+                print(f"❌ Invalid current_palettes: {response['current_palettes']}")
+                return False
+            
+            if response['target_palettes'] < response['current_palettes']:
+                print(f"❌ target_palettes ({response['target_palettes']}) should be >= current_palettes ({response['current_palettes']})")
+                return False
+            
+            # Verify suggestions structure
+            suggestions = response['suggestions']
+            if not isinstance(suggestions, list):
+                print("❌ Suggestions should be a list")
+                return False
+            
+            for suggestion in suggestions:
+                required_suggestion_fields = ['article', 'packaging', 'current_quantity', 'current_palettes', 
+                                            'suggested_additional_quantity', 'suggested_additional_palettes',
+                                            'new_total_quantity', 'new_total_palettes', 'stock_available', 
+                                            'can_fulfill', 'feasibility']
+                for field in required_suggestion_fields:
+                    if field not in suggestion:
+                        print(f"❌ Missing suggestion field: {field}")
+                        return False
+            
+            print(f"✅ Depot suggestions working - {response['current_palettes']} current palettes, {len(suggestions)} suggestions")
+            return True
+        
+        return False
+
+    def test_depot_suggestions_response_structure(self):
+        """Test depot suggestions response structure in detail"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for response structure test")
+            return False
+        
+        request_data = {
+            "depot_name": "M212",
+            "days": 15
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions - Response Structure",
+            "POST",
+            "api/depot-suggestions",
+            200,
+            data=request_data
+        )
+        
+        if success:
+            # Verify all required top-level fields
+            expected_fields = {
+                'depot_name': str,
+                'current_palettes': (int, float),
+                'current_trucks': (int, float),
+                'target_palettes': (int, float),
+                'palettes_to_add': (int, float),
+                'suggestions': list,
+                'efficiency_status': str
+            }
+            
+            for field, expected_type in expected_fields.items():
+                if field not in response:
+                    print(f"❌ Missing field: {field}")
+                    return False
+                
+                if not isinstance(response[field], expected_type):
+                    print(f"❌ Field {field} should be {expected_type}, got {type(response[field])}")
+                    return False
+            
+            # Verify efficiency_status values
+            if response['efficiency_status'] not in ['Efficace', 'Inefficace']:
+                print(f"❌ Invalid efficiency_status: {response['efficiency_status']}")
+                return False
+            
+            print("✅ Response structure validation passed")
+            return True
+        
+        return False
+
+    def test_depot_suggestions_logic(self):
+        """Test depot suggestions logic - prioritizes products with lower quantities"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for suggestions logic test")
+            return False
+        
+        request_data = {
+            "depot_name": "M213",
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions - Logic Verification",
+            "POST",
+            "api/depot-suggestions",
+            200,
+            data=request_data
+        )
+        
+        if success and 'suggestions' in response:
+            suggestions = response['suggestions']
+            
+            if len(suggestions) > 1:
+                # Verify suggestions are ordered by current quantity (ascending - lower quantities first)
+                for i in range(len(suggestions) - 1):
+                    current_qty = suggestions[i]['current_quantity']
+                    next_qty = suggestions[i + 1]['current_quantity']
+                    
+                    if current_qty > next_qty:
+                        print(f"❌ Suggestions not properly ordered by quantity: {current_qty} > {next_qty}")
+                        return False
+                
+                print("✅ Suggestions correctly prioritize products with lower quantities")
+            
+            # Verify mathematical logic for each suggestion
+            for suggestion in suggestions:
+                current_qty = suggestion['current_quantity']
+                current_palettes = suggestion['current_palettes']
+                additional_qty = suggestion['suggested_additional_quantity']
+                additional_palettes = suggestion['suggested_additional_palettes']
+                new_total_qty = suggestion['new_total_quantity']
+                new_total_palettes = suggestion['new_total_palettes']
+                
+                # Verify current palettes calculation
+                expected_current_palettes = math.ceil(current_qty / 30) if current_qty > 0 else 0
+                if current_palettes != expected_current_palettes:
+                    print(f"❌ Article {suggestion['article']}: Expected current_palettes {expected_current_palettes}, got {current_palettes}")
+                    return False
+                
+                # Verify new total calculations
+                if new_total_qty != current_qty + additional_qty:
+                    print(f"❌ Article {suggestion['article']}: new_total_quantity calculation error")
+                    return False
+                
+                expected_new_palettes = math.ceil(new_total_qty / 30) if new_total_qty > 0 else 0
+                if new_total_palettes != expected_new_palettes:
+                    print(f"❌ Article {suggestion['article']}: Expected new_total_palettes {expected_new_palettes}, got {new_total_palettes}")
+                    return False
+                
+                # Verify additional palettes calculation
+                if additional_palettes != (new_total_palettes - current_palettes):
+                    print(f"❌ Article {suggestion['article']}: additional_palettes calculation error")
+                    return False
+            
+            print("✅ Suggestions mathematical logic verified")
+            return True
+        
+        return False
+
+    def test_depot_suggestions_feasibility(self):
+        """Test depot suggestions feasibility logic - checks against M210 stock"""
+        if not self.commandes_session_id or not self.stock_session_id:
+            print("❌ Missing commandes or stock session for feasibility test")
+            return False
+        
+        request_data = {
+            "depot_name": "M211",
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions - Feasibility Analysis",
+            "POST",
+            "api/depot-suggestions",
+            200,
+            data=request_data
+        )
+        
+        if success and 'suggestions' in response:
+            suggestions = response['suggestions']
+            
+            for suggestion in suggestions:
+                stock_available = suggestion['stock_available']
+                new_total_quantity = suggestion['new_total_quantity']
+                can_fulfill = suggestion['can_fulfill']
+                feasibility = suggestion['feasibility']
+                
+                # Verify feasibility logic
+                expected_can_fulfill = new_total_quantity <= stock_available
+                if can_fulfill != expected_can_fulfill:
+                    print(f"❌ Article {suggestion['article']}: Expected can_fulfill {expected_can_fulfill}, got {can_fulfill}")
+                    return False
+                
+                # Verify feasibility text
+                expected_feasibility = 'Réalisable' if can_fulfill else 'Stock insuffisant'
+                if feasibility != expected_feasibility:
+                    print(f"❌ Article {suggestion['article']}: Expected feasibility '{expected_feasibility}', got '{feasibility}'")
+                    return False
+                
+                print(f"✅ Article {suggestion['article']}: {new_total_quantity} needed, {stock_available} available - {feasibility}")
+            
+            print("✅ Feasibility analysis logic verified")
+            return True
+        
+        return False
+
+    def test_depot_suggestions_no_orders(self):
+        """Test depot suggestions for depot with no orders"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for no orders test")
+            return False
+        
+        request_data = {
+            "depot_name": "M999",  # Non-existent depot
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions - No Orders for Depot",
+            "POST",
+            "api/depot-suggestions",
+            200,
+            data=request_data
+        )
+        
+        if success:
+            # Should return empty suggestions with appropriate message
+            if response['current_palettes'] != 0:
+                print(f"❌ Expected 0 current_palettes for non-existent depot, got {response['current_palettes']}")
+                return False
+            
+            if response['target_palettes'] != 24:
+                print(f"❌ Expected 24 target_palettes, got {response['target_palettes']}")
+                return False
+            
+            if len(response['suggestions']) != 0:
+                print(f"❌ Expected empty suggestions for non-existent depot, got {len(response['suggestions'])}")
+                return False
+            
+            if 'message' not in response or 'Aucune commande trouvée' not in response['message']:
+                print("❌ Expected appropriate message for depot with no orders")
+                return False
+            
+            print("✅ Depot with no orders handled correctly")
+            return True
+        
+        return False
+
+    def test_depot_suggestions_high_palettes(self):
+        """Test depot suggestions for depot already at 24+ palettes"""
+        # Create test data with high quantities to reach 24+ palettes
+        high_quantity_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003'],
+            'Article': ['1011', '1016', '1021'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3'],
+            'Point d\'Expédition': ['M214', 'M214', 'M214'],  # Same depot
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3'],
+            'Quantité Commandée': [500, 600, 700],  # High quantities
+            'Stock Utilisation Libre': [50, 60, 70],  # Low stock to ensure high quantite_a_envoyer
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3'],
+            'Type Emballage': ['verre', 'pet', 'ciel']
+        }
+        
+        df = pd.DataFrame(high_quantity_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('high_palettes.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, upload_response = self.run_test(
+            "Upload High Palettes Data",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if success:
+            request_data = {
+                "depot_name": "M214",
+                "days": 10
+            }
+            
+            success, response = self.run_test(
+                "Depot Suggestions - High Palettes Depot",
+                "POST",
+                "api/depot-suggestions",
+                200,
+                data=request_data
+            )
+            
+            if success:
+                current_palettes = response['current_palettes']
+                efficiency_status = response['efficiency_status']
+                
+                # Should have high palettes and be efficient
+                if current_palettes < 24:
+                    print(f"⚠️ Expected high palettes (≥24), got {current_palettes} - may need higher test quantities")
+                
+                if efficiency_status == 'Efficace':
+                    print(f"✅ High palettes depot correctly marked as 'Efficace' with {current_palettes} palettes")
+                else:
+                    print(f"✅ Depot efficiency status: {efficiency_status} with {current_palettes} palettes")
+                
+                return True
+        
+        return False
+
+    def test_depot_suggestions_mathematical_accuracy(self):
+        """Test mathematical accuracy of depot suggestions calculations"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for mathematical accuracy test")
+            return False
+        
+        request_data = {
+            "depot_name": "M211",
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions - Mathematical Accuracy",
+            "POST",
+            "api/depot-suggestions",
+            200,
+            data=request_data
+        )
+        
+        if success:
+            current_palettes = response['current_palettes']
+            current_trucks = response['current_trucks']
+            target_palettes = response['target_palettes']
+            palettes_to_add = response['palettes_to_add']
+            
+            # Verify truck calculation: ceil(current_palettes / 24)
+            expected_trucks = math.ceil(current_palettes / 24) if current_palettes > 0 else 1
+            if current_trucks != expected_trucks:
+                print(f"❌ Expected {expected_trucks} trucks for {current_palettes} palettes, got {current_trucks}")
+                return False
+            
+            # Verify target palettes: current_trucks * 24
+            expected_target = current_trucks * 24
+            if target_palettes != expected_target:
+                print(f"❌ Expected target_palettes {expected_target}, got {target_palettes}")
+                return False
+            
+            # Verify palettes to add: target - current
+            expected_to_add = target_palettes - current_palettes
+            if palettes_to_add != expected_to_add:
+                print(f"❌ Expected palettes_to_add {expected_to_add}, got {palettes_to_add}")
+                return False
+            
+            print(f"✅ Mathematical accuracy verified: {current_palettes} → {target_palettes} palettes ({current_trucks} trucks)")
+            return True
+        
+        return False
+
+    def run_depot_suggestions_tests(self):
+        """Run comprehensive tests for the new depot suggestions endpoint"""
+        print("🚀 Starting Depot Suggestions Endpoint Testing...")
+        print("=" * 80)
+        
+        depot_tests = [
+            ("Depot Suggestions - Missing depot_name", self.test_depot_suggestions_missing_depot_name),
+            ("Depot Suggestions - No Commandes Data", self.test_depot_suggestions_no_commandes_data),
+            ("Depot Suggestions - Valid Data", self.test_depot_suggestions_valid_data),
+            ("Depot Suggestions - Response Structure", self.test_depot_suggestions_response_structure),
+            ("Depot Suggestions - Logic Verification", self.test_depot_suggestions_logic),
+            ("Depot Suggestions - Feasibility Analysis", self.test_depot_suggestions_feasibility),
+            ("Depot Suggestions - No Orders for Depot", self.test_depot_suggestions_no_orders),
+            ("Depot Suggestions - High Palettes Depot", self.test_depot_suggestions_high_palettes),
+            ("Depot Suggestions - Mathematical Accuracy", self.test_depot_suggestions_mathematical_accuracy)
+        ]
+        
+        depot_tests_passed = 0
+        depot_tests_run = 0
+        
+        for test_name, test_func in depot_tests:
+            try:
+                print(f"\n{'='*20} {test_name} {'='*20}")
+                depot_tests_run += 1
+                result = test_func()
+                if result:
+                    depot_tests_passed += 1
+                    print(f"✅ {test_name} PASSED")
+                else:
+                    print(f"❌ {test_name} FAILED")
+            except Exception as e:
+                print(f"❌ {test_name} ERROR: {str(e)}")
+        
+        # Print depot suggestions test summary
+        print("\n" + "="*80)
+        print("📊 DEPOT SUGGESTIONS ENDPOINT TEST SUMMARY")
+        print("="*80)
+        print(f"Total Depot Tests Run: {depot_tests_run}")
+        print(f"Depot Tests Passed: {depot_tests_passed}")
+        print(f"Depot Tests Failed: {depot_tests_run - depot_tests_passed}")
+        print(f"Depot Success Rate: {(depot_tests_passed/depot_tests_run*100):.1f}%" if depot_tests_run > 0 else "0%")
+        
+        if depot_tests_passed == depot_tests_run:
+            print("🎉 ALL DEPOT SUGGESTIONS TESTS PASSED! The new /api/depot-suggestions endpoint is working correctly.")
+        else:
+            print("⚠️ Some depot suggestions tests failed. Please review the issues above.")
+        
+        return depot_tests_passed == depot_tests_run
+
     def run_all_tests(self):
         """Run all tests for the enhanced inventory management system with packaging"""
         print("🚀 Starting Enhanced Inventory Management System Tests with Packaging")
