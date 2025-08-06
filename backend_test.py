@@ -128,7 +128,9 @@ class SimplifiedStockManagementTester:
             'Point d\'Expédition': ['M210', 'M211'],  # Point d'Expédition - M210 should be excluded
             'Dummy_E': ['Extra1', 'Extra2'],
             'Quantité Commandée': [100, 150],  # Quantité Commandée
-            'Stock Utilisation Libre': [50, 75]  # Stock Utilisation Libre
+            'Stock Utilisation Libre': [50, 75],  # Stock Utilisation Libre
+            'Dummy_H': ['Extra1', 'Extra2'],
+            'Type Emballage': ['verre', 'pet']  # Type Emballage
         }
         
         df = pd.DataFrame(data)
