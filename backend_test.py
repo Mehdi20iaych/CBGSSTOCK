@@ -3262,6 +3262,260 @@ class StockManagementAPITester:
         print("✅ All existing functionality preserved with NEW FORMULA")
         return True
 
+    def test_transit_stock_upload_fix(self):
+        """Test the /api/upload-transit-excel endpoint fix to ensure it's working properly"""
+        print("\n🔍 Testing Transit Stock Upload Fix...")
+        
+        # Create sample transit data with proper column structure
+        # Column A = Article, Column C = Division, Column I = Quantité
+        transit_data = {
+            'Article': ['1011', '1016', '1021', '1033', '2011', '2014'],
+            'Column_B': ['Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy'],  # Column B (not used)
+            'Division': ['M212', 'M212', 'M213', 'M212', 'M213', 'M212'],  # Column C
+            'Column_D': ['Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy'],  # Column D (not used)
+            'Column_E': ['Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy'],  # Column E (not used)
+            'Column_F': ['Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy'],  # Column F (not used)
+            'Column_G': ['Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy'],  # Column G (not used)
+            'Column_H': ['Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy'],  # Column H (not used)
+            'Quantité': [30.0, 20.0, 25.0, 15.0, 40.0, 10.0]  # Column I
+        }
+        
+        df = pd.DataFrame(transit_data)
+        
+        # Create Excel file in memory
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('transit_stock_data.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Transit Stock Upload Fix",
+            "POST",
+            "api/upload-transit-excel",
+            200,
+            files=files
+        )
+        
+        if success and 'session_id' in response:
+            self.transit_session_id = response['session_id']
+            print(f"✅ Transit Stock Upload Fix: Session ID obtained: {self.transit_session_id}")
+            
+            # Verify response structure
+            required_fields = ['session_id', 'message', 'records_count', 'summary']
+            for field in required_fields:
+                if field not in response:
+                    print(f"❌ Missing required field in response: {field}")
+                    return False
+            
+            # Verify summary structure
+            summary = response['summary']
+            summary_fields = ['divisions', 'articles_count', 'total_transit_quantity', 'records_count']
+            for field in summary_fields:
+                if field not in summary:
+                    print(f"❌ Missing required field in summary: {field}")
+                    return False
+            
+            print(f"✅ Transit upload successful with {response['records_count']} records")
+            print(f"✅ Total transit quantity: {summary['total_transit_quantity']} units")
+            print(f"✅ Articles count: {summary['articles_count']}")
+            return True
+        else:
+            print("❌ Transit Stock Upload Fix: Failed to get session ID or proper response")
+            return False
+
+    def test_disponibilite_calculation_fix(self):
+        """Test that Disponibilité is based ONLY on inventory data from column D, not transit stock"""
+        print("\n🔍 Testing Disponibilité Calculation Fix...")
+        
+        if not self.session_id or not self.inventory_session_id:
+            print("❌ Missing required session IDs for Disponibilité test")
+            return False
+        
+        # Test with both inventory and transit data to ensure Disponibilité ignores transit
+        calculation_data = {
+            "days": 30,
+            "order_session_id": self.session_id,
+            "inventory_session_id": self.inventory_session_id,
+            "transit_session_id": getattr(self, 'transit_session_id', None),
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Disponibilité Calculation Fix - Enhanced Calculate",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            print(f"📋 Testing Disponibilité logic on {len(calculations)} items...")
+            
+            for calc in calculations:
+                article_code = calc.get('article_code', 'Unknown')
+                inventory_available = calc.get('inventory_available', 0)
+                transit_available = calc.get('transit_available', 0)
+                total_available = calc.get('total_available', 0)
+                quantity_to_send = calc.get('quantity_to_send', 0)
+                inventory_status_text = calc.get('inventory_status_text', 'Unknown')
+                
+                print(f"\n📋 Article {article_code}:")
+                print(f"   Inventory Available: {inventory_available}")
+                print(f"   Transit Available: {transit_available}")
+                print(f"   Total Available: {total_available}")
+                print(f"   Quantity to Send: {quantity_to_send}")
+                print(f"   Disponibilité Status: {inventory_status_text}")
+                
+                # Key test: Disponibilité should be based ONLY on inventory_available vs quantity_to_send
+                # NOT on total_available (which includes transit)
+                
+                if inventory_available >= quantity_to_send:
+                    expected_status = "EN STOCK"
+                elif inventory_available > 0:
+                    expected_status = "STOCK FAIBLE"
+                else:
+                    expected_status = "HORS STOCK"
+                
+                # Check if the status matches expected (based only on inventory, not transit)
+                if expected_status in inventory_status_text:
+                    print(f"   ✅ Correct: Disponibilité '{inventory_status_text}' matches expected '{expected_status}' (based on inventory only)")
+                else:
+                    print(f"   ❌ Error: Disponibilité '{inventory_status_text}' should be '{expected_status}' (based on inventory {inventory_available} vs needed {quantity_to_send})")
+                    
+                    # Additional check: if transit stock would change the status but inventory-only status is correct
+                    if total_available >= quantity_to_send and inventory_available < quantity_to_send:
+                        print(f"   🔍 Transit stock ({transit_available}) would make this sufficient, but Disponibilité correctly ignores it")
+                    
+                    return False
+            
+            print("\n✅ Disponibilité Calculation Fix: All items correctly show status based ONLY on inventory data (Column D)")
+            return True
+        else:
+            print("❌ Failed to get calculations for Disponibilité test")
+            return False
+
+    def test_regression_all_functionality(self):
+        """Test that all other functionality still works correctly after the fixes"""
+        print("\n🔍 Testing Regression - All Functionality Still Works...")
+        
+        # Test a comprehensive calculation to ensure nothing is broken
+        if not self.session_id or not self.inventory_session_id:
+            print("❌ Missing session IDs for regression test")
+            return False
+        
+        calculation_data = {
+            "days": 30,
+            "order_session_id": self.session_id,
+            "inventory_session_id": self.inventory_session_id,
+            "transit_session_id": getattr(self, 'transit_session_id', None),
+            "product_filter": None,
+            "packaging_filter": None
+        }
+        
+        success, response = self.run_test(
+            "Regression Test - Full Enhanced Calculate",
+            "POST",
+            "api/enhanced-calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            summary = response.get('summary', {})
+            
+            # Check that all expected features are still working
+            features_to_check = [
+                ('Sourcing Intelligence', lambda c: 'sourcing_status' in c and 'is_locally_made' in c),
+                ('Delivery Optimization', lambda c: 'delivery_efficient' in c and 'delivery_status' in c),
+                ('Palette Calculation', lambda c: 'palette_quantity' in c),
+                ('Priority Calculation', lambda c: 'priority' in c and 'priority_text' in c),
+                ('Transit Integration', lambda c: 'transit_available' in c),
+                ('Inventory Cross-Reference', lambda c: 'inventory_available' in c and 'inventory_status_text' in c)
+            ]
+            
+            all_features_working = True
+            
+            if calculations:
+                sample_calc = calculations[0]
+                for feature_name, check_func in features_to_check:
+                    if check_func(sample_calc):
+                        print(f"✅ {feature_name}: Working")
+                    else:
+                        print(f"❌ {feature_name}: Missing or broken")
+                        all_features_working = False
+            
+            # Check summary features
+            summary_features = [
+                ('Delivery Optimization Summary', 'delivery_optimization'),
+                ('Sourcing Summary', 'sourcing_summary'),
+                ('Inventory Summary', 'sufficient_items')
+            ]
+            
+            for feature_name, key in summary_features:
+                if key in summary:
+                    print(f"✅ {feature_name}: Present in summary")
+                else:
+                    print(f"❌ {feature_name}: Missing from summary")
+                    all_features_working = False
+            
+            if all_features_working:
+                print("✅ Regression Test: All existing functionality preserved")
+                return True
+            else:
+                print("❌ Regression Test: Some functionality broken")
+                return False
+        else:
+            print("❌ Regression test failed to get response")
+            return False
+
+    def run_focused_tests(self):
+        """Run focused tests for the specific issues mentioned in the review request"""
+        print("🚀 Starting Focused Tests for Transit Stock Upload Fix and Disponibilité Calculation Fix...")
+        print(f"Base URL: {self.base_url}")
+        
+        # First, set up the necessary data
+        setup_tests = [
+            ("Upload Excel File", self.test_upload_excel),
+            ("Upload Inventory Excel", self.test_upload_inventory_excel),
+        ]
+        
+        for test_name, test_func in setup_tests:
+            try:
+                success = test_func()
+                if not success:
+                    print(f"❌ Setup failed: {test_name}")
+                    return False
+            except Exception as e:
+                print(f"❌ Setup failed: {test_name} with exception: {str(e)}")
+                return False
+        
+        # Now run the focused tests
+        focused_tests = [
+            ("Transit Stock Upload Fix", self.test_transit_stock_upload_fix),
+            ("Disponibilité Calculation Fix", self.test_disponibilite_calculation_fix),
+            ("Regression - All Functionality", self.test_regression_all_functionality),
+        ]
+        
+        for test_name, test_func in focused_tests:
+            try:
+                success = test_func()
+                if not success:
+                    print(f"❌ {test_name} failed")
+            except Exception as e:
+                print(f"❌ {test_name} failed with exception: {str(e)}")
+        
+        print(f"\n📊 Focused Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        return self.tests_passed == self.tests_run
+
 def main():
     print("🚀 Starting Stock Management API Tests")
     print("=" * 50)
