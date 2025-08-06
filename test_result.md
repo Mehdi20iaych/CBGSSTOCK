@@ -369,6 +369,21 @@
           agent: "testing"
           comment: "✅ COMPREHENSIVE PROFESSIONAL EXCEL EXPORT TESTING COMPLETED: All requirements successfully verified! Executed 37/37 tests with 100% pass rate. KEY ACHIEVEMENTS: (1) Multi-Sheet Architecture: Confirmed 3 professional sheets - 'Résumé Exécutif', 'Articles Critiques', 'Analyse Détaillée', (2) Executive Summary Excellence: Professional company header, 4 key statistical sections (priority breakdown, sourcing analysis, logistics impact), comprehensive metadata, (3) Enhanced Critical Items Sheet: 12 professional columns with proper headers, auto-filter enabled, frozen panes at A4, 12 cell comments/descriptions for user guidance, (4) Professional Formatting: Header background colors, bold fonts, borders, conditional formatting based on priority/sourcing, (5) Advanced Excel Features: Auto-filter functionality, frozen panes for navigation, hover descriptions, professional color scheme, (6) Data Integrity: Perfect data consistency across all sheets, proper sorting (critical items first), accurate statistical calculations, (7) Professional Filename: Enhanced format 'CBGS_Rapport_Stocks_Critiques_YYYYMMDD_HHMMSS.xlsx', (8) Depot-Specific Analysis: Detailed breakdowns by depot with KPI calculations. MAJOR TRANSFORMATION: Successfully upgraded from basic single-sheet export to enterprise-grade multi-sheet business intelligence reporting system suitable for executive presentations and operational planning. All sourcing intelligence, inventory cross-reference, and existing functionality preserved. System ready for production use with comprehensive professional reporting capabilities."
 
+  - task: "Enhanced depot suggestions with lowest stock quantity priority"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "MAJOR ENHANCEMENT: Modified depot suggestions system to suggest specific products based on LOWEST stock quantities instead of just increasing existing product quantities. New logic analyzes ALL M210 stock products, sorts by ascending stock quantity, suggests products NOT already ordered for the depot, and calculates quantities needed to complete remaining palettes to reach 24 per truck. Updated frontend to display new suggestion structure with stock levels and reasoning."
+        - working: true
+          agent: "testing"
+          comment: "✅ ENHANCED DEPOT SUGGESTIONS TESTING COMPLETED: All 12 comprehensive tests passed (100% success rate)! MAJOR ACHIEVEMENTS: (1) NEW LOGIC VERIFIED: Suggests products with LOWEST stock quantities first, confirmed suggestions prioritized articles with 5, 8, 12, 15, 18 units in perfect ascending order, (2) EXCLUSION LOGIC: Only suggests products NOT already ordered for depot, tested with M211 having orders for articles 1011/1016, all suggestions were for different articles, (3) NEW RESPONSE STRUCTURE: All required fields present (article, packaging, stock_m210, suggested_quantity, suggested_palettes, can_fulfill, feasibility, reason), (4) PALETTE COMPLETION: Calculates suggestions to complete remaining palettes to reach multiples of 24, mathematical accuracy verified, (5) FEASIBILITY ANALYSIS: Comprehensive M210 stock availability checks with accurate status, (6) EDGE CASES: Depot with no orders and high palette depots handled correctly. The enhanced system successfully prioritizes inventory management by suggesting low-stock products while optimizing truck efficiency."
+
   - task: "Test new /api/depot-suggestions endpoint"
     implemented: true
     working: true
