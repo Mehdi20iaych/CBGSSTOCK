@@ -683,6 +683,16 @@ function App() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.article}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.depot}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                              item.packaging === 'verre' ? 'bg-blue-100 text-blue-800' :
+                              item.packaging === 'pet' ? 'bg-green-100 text-green-800' :
+                              item.packaging === 'ciel' ? 'bg-purple-100 text-purple-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {item.packaging}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.cqm}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_actuel}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_transit}</td>
