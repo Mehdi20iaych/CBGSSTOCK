@@ -627,6 +627,50 @@ function App() {
                   )}
                 </div>
               )}
+
+              {/* Depot Summary */}
+              {calculations.depot_summary && calculations.depot_summary.length > 0 && (
+                <div className="border-t pt-4 mt-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <TruckIcon className="w-4 h-4 mr-2" />
+                    Logistique par Dépôt
+                  </h3>
+                  <div className="space-y-3">
+                    {calculations.depot_summary.map((depot, index) => (
+                      <div key={index} className={`p-3 rounded-lg border ${
+                        depot.delivery_efficiency === 'Efficace' 
+                          ? 'bg-green-50 border-green-200' 
+                          : 'bg-orange-50 border-orange-200'
+                      }`}>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-4">
+                            <span className="font-medium text-gray-900">{depot.depot}</span>
+                            <div className="flex items-center space-x-2 text-sm">
+                              <span className="text-gray-600">{depot.total_palettes} palettes</span>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-gray-600">{depot.trucks_needed} camion(s)</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              depot.delivery_efficiency === 'Efficace' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-orange-100 text-orange-800'
+                            }`}>
+                              {depot.delivery_efficiency}
+                            </span>
+                          </div>
+                        </div>
+                        {depot.delivery_efficiency === 'Inefficace' && (
+                          <div className="mt-2 text-xs text-orange-700">
+                            ⚠️ Livraison inefficace: moins de 24 palettes par camion
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Tableau des résultats */}
