@@ -715,15 +715,23 @@ function App() {
                                 {depot.delivery_efficiency}
                               </span>
                               {/* Arrow icon for suggestions */}
-                              {depot.delivery_efficiency === 'Inefficace' && (
+                              {hasIncompletetrucks(depot) && (
                                 <button
                                   onClick={() => toggleSuggestions(depot.depot)}
-                                  className="p-1 text-orange-600 hover:text-orange-800 hover:bg-orange-100 rounded transition-colors"
-                                  title="Voir les suggestions pour compléter 24 palettes"
+                                  className={`p-1 rounded transition-colors ${
+                                    depot.delivery_efficiency === 'Efficace'
+                                      ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-100'
+                                      : 'text-orange-600 hover:text-orange-800 hover:bg-orange-100'
+                                  }`}
+                                  title="Voir les suggestions pour compléter des camions complets (24 palettes)"
                                   disabled={loadingSuggestions[depot.depot]}
                                 >
                                   {loadingSuggestions[depot.depot] ? (
-                                    <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                                    <div className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${
+                                      depot.delivery_efficiency === 'Efficace'
+                                        ? 'border-blue-600'
+                                        : 'border-orange-600'
+                                    }`} />
                                   ) : (
                                     <ChevronRightIcon className={`w-4 h-4 transition-transform ${
                                       showSuggestions[depot.depot] ? 'rotate-90' : ''
