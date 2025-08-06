@@ -3,6 +3,7 @@ import sys
 import json
 import io
 import pandas as pd
+import math
 from datetime import datetime, timedelta
 
 class SimplifiedStockManagementTester:
