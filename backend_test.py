@@ -82,10 +82,10 @@ class SimplifiedStockManagementTester:
         """Create sample stock M210 Excel file with columns A, B, D"""
         # Create sample stock data for M210 only
         data = {
-            'A': ['M210', 'M210', 'M210', 'M210', 'M210'],  # Division (Column A)
-            'B': ['ART001', 'ART002', 'ART003', 'ART004', 'ART005'],  # Article (Column B)
-            'C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5'],  # Dummy column C
-            'D': [500, 300, 200, 400, 250]  # STOCK A DATE (Column D)
+            'Division': ['M210', 'M210', 'M210', 'M210', 'M210'],  # Division (Column A)
+            'Article': ['ART001', 'ART002', 'ART003', 'ART004', 'ART005'],  # Article (Column B)
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5'],  # Dummy column C
+            'STOCK A DATE': [500, 300, 200, 400, 250]  # STOCK A DATE (Column D)
         }
         
         df = pd.DataFrame(data)
