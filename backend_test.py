@@ -1468,16 +1468,25 @@ class SimplifiedStockManagementTester:
         return True
 
     def run_all_tests(self):
-        """Run all tests for the simplified stock management system"""
-        print("🚀 Starting Simplified Stock Management System Tests")
-        print("=" * 60)
+        """Run all tests for the enhanced inventory management system with packaging"""
+        print("🚀 Starting Enhanced Inventory Management System Tests with Packaging")
+        print("=" * 70)
         
         tests = [
             ("Health Check", self.test_health_check),
-            ("Upload Commandes Excel", self.test_upload_commandes_excel),
+            ("Enhanced Upload with Packaging", self.test_enhanced_upload_with_packaging),
+            ("Packaging Type Normalization", self.test_packaging_normalization),
+            ("Missing Packaging Column Error", self.test_missing_packaging_column_error),
             ("Upload Stock Excel", self.test_upload_stock_excel),
             ("Upload Transit Excel", self.test_upload_transit_excel),
             ("M210 Filtering Validation", self.test_m210_filtering_validation),
+            ("Packaging Filter - Single Type", self.test_packaging_filter_single_type),
+            ("Packaging Filter - Multiple Types", self.test_packaging_filter_multiple_types),
+            ("Packaging Filter - All Types", self.test_packaging_filter_all_types),
+            ("Comprehensive Grouping with Packaging", self.test_comprehensive_grouping_with_packaging),
+            ("Packaging Results Integrity", self.test_packaging_in_results_integrity),
+            ("Packaging Filter Combinations", self.test_packaging_filter_combinations),
+            ("Packaging with Sourcing Intelligence", self.test_packaging_with_sourcing_intelligence),
             ("Simplified Calculation Formula", self.test_simplified_calculation_formula),
             ("Calculation with All Data Types", self.test_calculation_with_all_data_types),
             ("Calculation without Optional Data", self.test_calculation_without_optional_data),
@@ -1503,16 +1512,16 @@ class SimplifiedStockManagementTester:
                 self.tests_run += 1  # Count as attempted
         
         # Print final summary
-        print("\n" + "="*60)
-        print("📊 TEST SUMMARY")
-        print("="*60)
+        print("\n" + "="*70)
+        print("📊 ENHANCED PACKAGING SYSTEM TEST SUMMARY")
+        print("="*70)
         print(f"Total Tests Run: {self.tests_run}")
         print(f"Tests Passed: {self.tests_passed}")
         print(f"Tests Failed: {self.tests_run - self.tests_passed}")
         print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%" if self.tests_run > 0 else "0%")
         
         if self.tests_passed == self.tests_run:
-            print("🎉 ALL TESTS PASSED! Simplified system is working correctly.")
+            print("🎉 ALL PACKAGING TESTS PASSED! Enhanced system with packaging filtering is working correctly.")
         else:
             print("⚠️ Some tests failed. Please review the issues above.")
         
