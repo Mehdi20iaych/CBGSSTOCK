@@ -741,9 +741,16 @@ function App() {
                               )}
                             </div>
                           </div>
-                          {depot.delivery_efficiency === 'Inefficace' && (
-                            <div className="mt-2 text-xs text-orange-700">
-                              ⚠️ Livraison inefficace: moins de 24 palettes par camion
+                          {hasIncompletetrucks(depot) && (
+                            <div className={`mt-2 text-xs ${
+                              depot.delivery_efficiency === 'Efficace'
+                                ? 'text-blue-700'
+                                : 'text-orange-700'
+                            }`}>
+                              {depot.delivery_efficiency === 'Efficace' 
+                                ? '💡 Optimisation possible: camion incomplet détecté'
+                                : '⚠️ Livraison inefficace: camion(s) incomplet(s)'
+                              }
                             </div>
                           )}
                         </div>
