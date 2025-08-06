@@ -103,19 +103,38 @@
 #====================================================================================================
 
 ## user_problem_statement: |
-  User requested to add Excel import functionality for inventory data to complement existing order data:
-  - Column A: Division (M210 for local production)
-  - Column B: Article (unique product code)  
-  - Column C: Désignation article (product name and packaging details)
-  - Column D: STOCK À DATE (current stock quantity)
-  
-  The system should cross-reference order requirements with inventory availability and show fulfillment status.
-  
-  LATEST ENHANCEMENT: Added 20-palette minimum delivery constraint per depot for logistics optimization. 
-  - System now calculates total palettes needed per depot
-  - If depot has <20 palettes, system suggests additional products to reach minimum
-  - Priorities are modified based on delivery efficiency (efficient depots get priority boost, inefficient get reduced priority)
-  - Frontend displays delivery optimization summary and efficiency status per item
+  Tester la nouvelle version simplifiée du backend avec les spécifications suivantes :
+
+  **Context:**
+  J'ai remplacé le système complexe précédent par une version simplifiée selon les spécifications utilisateur. Le nouveau système utilise 3 fichiers Excel avec des colonnes spécifiques et une formule simplifiée.
+
+  **Nouvelle Architecture:**
+  1. **Fichier Commandes** - Colonnes : B(Article), D(Point d'Expédition), F(Quantité Commandée), G(Stock Utilisation Libre)
+  2. **Fichier Stock** - Colonnes : A(Division), B(Article), D(STOCK A DATE) - filtré uniquement pour M210
+  3. **Fichier Transit** - Colonnes : A(Article), C(Division), G(Division cédante), I(Quantité) - filtré uniquement depuis M210
+
+  **Formule simplifiée:**
+  Quantité à Envoyer = max(0, (Quantité Commandée × Jours à Couvrir) - Stock Utilisation Libre - Quantité en Transit)
+
+  **Endpoints à tester:**
+  1. `/api/upload-commandes-excel` - Upload fichier commandes
+  2. `/api/upload-stock-excel` - Upload fichier stock M210 
+  3. `/api/upload-transit-excel` - Upload fichier transit
+  4. `/api/calculate` - Calcul avec la nouvelle formule
+  5. `/api/export-excel` - Export des résultats
+  6. `/api/sessions` - Obtenir les sessions actives
+
+  **Tests spécifiques:**
+  1. Tester les uploads avec validation des colonnes spécifiques
+  2. Vérifier que M210 est exclu des dépôts destinataires (commandes)
+  3. Vérifier que seul M210 est inclus dans le stock
+  4. Vérifier que seuls les transits depuis M210 sont inclus
+  5. Tester la nouvelle formule de calcul avec différents scénarios
+  6. Vérifier que les valeurs négatives sont limitées à 0
+  7. Tester l'export Excel
+  8. Tester avec données manquantes (stock et/ou transit optionnels)
+
+  **Objectif:** S'assurer que la nouvelle version simplifiée fonctionne correctement selon les spécifications et que la logique de calcul est exacte.
 
 ## backend:
   - task: "Add inventory Excel upload endpoint"
