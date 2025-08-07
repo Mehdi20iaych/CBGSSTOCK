@@ -11,7 +11,9 @@ import {
   ClipboardDocumentListIcon,
   TruckIcon,
   ChevronRightIcon,
-  LightBulbIcon
+  LightBulbIcon,
+  ChatBubbleLeftRightIcon,
+  PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
 
 // Use same origin for API calls - all backend calls go through /api prefix
