@@ -14,25 +14,8 @@ import {
   LightBulbIcon
 } from '@heroicons/react/24/outline';
 
-// For compatibility with different React environments
-const getApiBaseUrl = () => {
-  // Try different ways to access the environment variable
-  if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_BACKEND_URL) {
-    return process.env.REACT_APP_BACKEND_URL;
-  }
-  // For build-time injection
-  if (typeof window !== 'undefined' && window.REACT_APP_BACKEND_URL) {
-    return window.REACT_APP_BACKEND_URL;
-  }
-  // Check if running in browser and use relative URLs
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  // Fallback
-  return 'http://localhost:8001';
-};
-
-const API_BASE_URL = getApiBaseUrl();
+// Use window.location.origin for API base URL to ensure same-origin requests
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
 function App() {
   // États pour les données uploadées
