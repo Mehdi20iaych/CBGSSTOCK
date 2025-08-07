@@ -9,6 +9,18 @@ import uuid
 import json
 import math
 from typing import List, Dict, Optional
+
+# JSON serialization helper for datetime objects
+def json_serializable(obj):
+    """Convert datetime objects to ISO format strings for JSON serialization"""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {key: json_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [json_serializable(item) for item in obj]
+    else:
+        return obj
 import google.generativeai as genai
 from pymongo import MongoClient
 from pydantic import BaseModel
