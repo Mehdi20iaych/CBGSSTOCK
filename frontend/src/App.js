@@ -351,7 +351,7 @@ function App() {
     const newUserMessage = {
       type: 'user',
       content: userMessage,
-      timestamp: new Date()
+      timestamp: new Date().toISOString()
     };
     setChatMessages(prev => [...prev, newUserMessage]);
 
@@ -383,7 +383,7 @@ function App() {
       const aiMessage = {
         type: 'ai',
         content: data.response,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
         hasData: data.has_data,
         dataTypes: data.data_types || []
       };
@@ -393,7 +393,7 @@ function App() {
       const errorMessage = {
         type: 'error',
         content: `Erreur: ${err.message}`,
-        timestamp: new Date()
+        timestamp: new Date().toISOString()
       };
       setChatMessages(prev => [...prev, errorMessage]);
     } finally {
