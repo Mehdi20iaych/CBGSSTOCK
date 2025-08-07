@@ -860,9 +860,13 @@ async def chat_with_ai(request: ChatRequest):
                 system_prompt += f"\n{data_type.upper()}:"
                 system_prompt += f"\n- Total enregistrements: {info['total_records']}"
                 if 'summary' in info:
-                    system_prompt += f"\n- Résumé: {json.dumps(info['summary'], ensure_ascii=False)}"
+                    # Use safe JSON serialization for datetime objects
+                    safe_summary = json_serializable(info['summary'])
+                    system_prompt += f"\n- Résumé: {json.dumps(safe_summary, ensure_ascii=False)}"
                 if info['sample_data']:
-                    system_prompt += f"\n- Exemple données: {json.dumps(info['sample_data'][:2], ensure_ascii=False)}"
+                    # Use safe JSON serialization for datetime objects
+                    safe_sample_data = json_serializable(info['sample_data'][:2])
+                    system_prompt += f"\n- Exemple données: {json.dumps(safe_sample_data, ensure_ascii=False)}"
         else:
             system_prompt += "\nAucune donnée uploadée actuellement."
         
