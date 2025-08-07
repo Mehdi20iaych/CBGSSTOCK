@@ -53,7 +53,11 @@ class CalculationRequest(BaseModel):
 
 class GeminiQueryRequest(BaseModel):
     query: str
-    session_id: str
+    session_id: Optional[str] = None
+
+class ChatRequest(BaseModel):
+    message: str
+    conversation_id: Optional[str] = None
 
 class ExportRequest(BaseModel):
     selected_items: List[Dict]
