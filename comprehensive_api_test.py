@@ -10,7 +10,7 @@ import io
 import pandas as pd
 
 class ComprehensiveAPITester:
-    def __init__(self, base_url="https://0b1148a7-45f8-4a8e-ab3e-7cdbb368c2e4.preview.emergentagent.com"):
+    def __init__(self, base_url="https://5f3ea6ab-31d5-4e5a-8cbb-270f780566e3.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
