@@ -42,6 +42,12 @@ function App() {
   const [loadingSuggestions, setLoadingSuggestions] = useState({});
   const [showSuggestions, setShowSuggestions] = useState({});
   
+  // États pour le chat IA
+  const [chatMessages, setChatMessages] = useState([]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
+  
   // Références pour les inputs de fichiers
   const commandesFileRef = useRef(null);
   const stockFileRef = useRef(null);
