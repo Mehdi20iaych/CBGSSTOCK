@@ -2712,6 +2712,121 @@ class SimplifiedStockManagementTester:
         
         return True
 
+    def test_chat_json_serialization_fix(self):
+        """Test that AI chat properly handles JSON serialization of datetime objects"""
+        print("\n🔍 Testing AI Chat JSON Serialization Fix...")
+        
+        # First ensure we have uploaded data with datetime objects
+        if not all([self.commandes_session_id, self.stock_session_id, self.transit_session_id]):
+            print("⚠️ Uploading sample data for JSON serialization test...")
+            
+            # Upload sample data which creates datetime objects in upload_time fields
+            if not self.test_upload_commandes_excel():
+                print("❌ Failed to upload commandes data for JSON serialization test")
+                return False
+            if not self.test_upload_stock_excel():
+                print("❌ Failed to upload stock data for JSON serialization test")
+                return False
+            if not self.test_upload_transit_excel():
+                print("❌ Failed to upload transit data for JSON serialization test")
+                return False
+        
+        # Test questions that would trigger context building from uploaded data
+        # These questions should cause the system to serialize datetime objects
+        serialization_test_questions = [
+            "Quand ont été uploadées mes données?",
+            "Donne-moi un résumé détaillé de toutes mes données uploadées",
+            "Analyse complète de ma situation avec toutes les données disponibles",
+            "Montre-moi les informations sur mes sessions de données"
+        ]
+        
+        for question in serialization_test_questions:
+            chat_data = {
+                "message": question
+            }
+            
+            success, response = self.run_test(
+                f"JSON Serialization Test: {question[:40]}...",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success:
+                # Verify response structure is properly JSON serialized
+                required_fields = ['response', 'conversation_id', 'has_data', 'data_types', 'message']
+                for field in required_fields:
+                    if field not in response:
+                        print(f"❌ Missing required field: {field} - JSON serialization may have failed")
+                        return False
+                
+                # Verify has_data is True (indicating context was built from uploaded data)
+                if response['has_data'] != True:
+                    print(f"❌ Expected has_data=True when data uploaded, got {response['has_data']}")
+                    return False
+                
+                # Verify data_types includes all expected types (indicating datetime objects were processed)
+                expected_types = ['commandes', 'stock', 'transit']
+                data_types = response['data_types']
+                
+                for expected_type in expected_types:
+                    if expected_type not in data_types:
+                        print(f"❌ Expected data type '{expected_type}' not found - context building may have failed due to serialization")
+                        return False
+                
+                # Verify response is not empty (indicating AI processing worked)
+                if not response['response'] or len(response['response']) < 50:
+                    print("❌ Response too short - AI processing may have failed due to serialization issues")
+                    return False
+                
+                # Verify conversation_id is properly generated (string format)
+                if not isinstance(response['conversation_id'], str) or len(response['conversation_id']) < 10:
+                    print("❌ Invalid conversation_id format - JSON serialization may have issues")
+                    return False
+                
+                print(f"✅ JSON serialization working correctly for question: {question[:30]}...")
+                print(f"   Response length: {len(response['response'])} characters")
+                print(f"   Data types processed: {data_types}")
+                
+            else:
+                print(f"❌ Failed to get response for serialization test question: {question}")
+                return False
+        
+        # Additional test: Make a request that would specifically trigger datetime serialization
+        # by asking about upload times or session information
+        datetime_specific_question = {
+            "message": "Donne-moi les détails techniques de mes sessions de données avec les heures d'upload"
+        }
+        
+        success, response = self.run_test(
+            "Datetime Serialization Specific Test",
+            "POST",
+            "api/chat",
+            200,
+            data=datetime_specific_question
+        )
+        
+        if success:
+            # This should work without any "Object of type Timestamp is not JSON serializable" errors
+            print("✅ Datetime-specific question processed successfully")
+            print(f"   Context built with {len(response['data_types'])} data types")
+            
+            # Verify the response mentions data or time-related information
+            response_text = response['response'].lower()
+            time_indicators = ['données', 'session', 'upload', 'fichier', 'temps', 'heure']
+            found_indicators = [indicator for indicator in time_indicators if indicator in response_text]
+            
+            if len(found_indicators) >= 2:
+                print(f"✅ Response appropriately references time/data concepts: {found_indicators}")
+            else:
+                print(f"⚠️ Response may not fully address datetime question, but serialization worked")
+            
+            return True
+        else:
+            print("❌ Datetime-specific serialization test failed")
+            return False
+
     def run_ai_chat_tests(self):
         """Run comprehensive AI chat functionality tests"""
         print("🚀 Starting AI Chat Functionality Testing...")
