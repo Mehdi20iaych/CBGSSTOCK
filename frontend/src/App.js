@@ -1102,7 +1102,7 @@ function App() {
                             <div className={`mt-1 text-xs ${
                               message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
                             }`}>
-                              {message.timestamp.toLocaleTimeString()}
+                              {new Date(message.timestamp).toLocaleTimeString()}
                             </div>
                           </div>
                         </div>
