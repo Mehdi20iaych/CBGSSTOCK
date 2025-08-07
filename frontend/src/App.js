@@ -14,8 +14,8 @@ import {
   LightBulbIcon
 } from '@heroicons/react/24/outline';
 
-// Use window.location.origin for API base URL to ensure same-origin requests
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+// Use same origin for API calls - all backend calls go through /api prefix
+const API_BASE_URL = window.location.origin;
 
 function App() {
   // États pour les données uploadées
