@@ -1023,6 +1023,143 @@ function App() {
             </div>
           </div>
         )}
+
+        {/* Tab Chat IA */}
+        {activeTab === 'chat' && (
+          <div className="space-y-6">
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-lg font-medium flex items-center">
+                  <ChatBubbleLeftRightIcon className="w-6 h-6 mr-2 text-blue-600" />
+                  Chat avec l'Assistant IA
+                </h2>
+                {chatMessages.length > 0 && (
+                  <button
+                    onClick={clearChat}
+                    className="px-4 py-2 text-sm font-medium text-red-600 border border-red-300 rounded-md hover:bg-red-50"
+                  >
+                    Effacer la conversation
+                  </button>
+                )}
+              </div>
+
+              {/* Statut des données */}
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">État des données :</h4>
+                <div className="flex space-x-4 text-sm">
+                  <span className={`inline-flex items-center ${commandesData ? 'text-green-600' : 'text-gray-500'}`}>
+                    {commandesData ? '✓' : '○'} Commandes {commandesData && `(${commandesData.summary.total_records} enreg.)`}
+                  </span>
+                  <span className={`inline-flex items-center ${stockData ? 'text-green-600' : 'text-gray-500'}`}>
+                    {stockData ? '✓' : '○'} Stock M210 {stockData && `(${stockData.summary.unique_articles} articles)`}
+                  </span>
+                  <span className={`inline-flex items-center ${transitData ? 'text-green-600' : 'text-gray-500'}`}>
+                    {transitData ? '✓' : '○'} Transit {transitData && `(${transitData.summary.total_records} enreg.)`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Zone de chat */}
+              <div className="border rounded-lg bg-gray-50 h-96 flex flex-col">
+                {/* Messages */}
+                <div className="flex-1 p-4 overflow-y-auto">
+                  {chatMessages.length === 0 ? (
+                    <div className="text-center py-8">
+                      <ChatBubbleLeftRightIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Commencez une conversation</h3>
+                      <p className="text-gray-600 mb-4">
+                        L'IA peut vous aider à analyser vos données d'inventaire et répondre à vos questions.
+                      </p>
+                      <div className="text-sm text-gray-500">
+                        <p className="mb-2"><strong>Exemples de questions :</strong></p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>"Quels sont les produits qui nécessitent un réapprovisionnement urgent ?"</li>
+                          <li>"Analyse les problèmes de stock principaux"</li>
+                          <li>"Quel est l'impact des transits sur mes calculs ?"</li>
+                          <li>"Comment optimiser la logistique de mes palettes ?"</li>
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {chatMessages.map((message, index) => (
+                        <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            message.type === 'user' 
+                              ? 'bg-blue-600 text-white' 
+                              : message.type === 'error'
+                              ? 'bg-red-100 text-red-800 border border-red-300'
+                              : 'bg-white text-gray-800 border border-gray-200'
+                          }`}>
+                            {message.type === 'ai' && message.hasData && (
+                              <div className="mb-2 text-xs text-gray-500 border-b pb-1">
+                                Données analysées: {message.dataTypes.join(', ')}
+                              </div>
+                            )}
+                            <div className="whitespace-pre-wrap text-sm">
+                              {message.content}
+                            </div>
+                            <div className={`mt-1 text-xs ${
+                              message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                            }`}>
+                              {message.timestamp.toLocaleTimeString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {chatLoading && (
+                        <div className="flex justify-start">
+                          <div className="bg-white text-gray-800 border border-gray-200 px-4 py-2 rounded-lg max-w-xs">
+                            <div className="flex items-center space-x-2">
+                              <div className="flex space-x-1">
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                              </div>
+                              <span className="text-sm text-gray-600">IA réfléchit...</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Zone de saisie */}
+                <div className="border-t bg-white p-4">
+                  <div className="flex space-x-2">
+                    <textarea
+                      value={currentMessage}
+                      onChange={(e) => setCurrentMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Tapez votre question sur l'inventaire..."
+                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      rows="2"
+                      disabled={chatLoading}
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!currentMessage.trim() || chatLoading}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      <PaperAirplaneIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 p-4 bg-green-50 rounded-lg">
+                <h4 className="text-sm font-medium text-green-900">💡 Conseils d'utilisation :</h4>
+                <ul className="mt-2 text-sm text-green-800 list-disc list-inside space-y-1">
+                  <li>Posez des questions spécifiques sur vos données d'inventaire</li>
+                  <li>L'IA peut analyser les problèmes de stock, optimisations logistiques</li>
+                  <li>Plus vous uploadez de données, plus les analyses sont précises</li>
+                  <li>Demandez des recommandations pour améliorer votre gestion</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
