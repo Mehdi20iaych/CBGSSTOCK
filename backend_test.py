@@ -2840,7 +2840,8 @@ class SimplifiedStockManagementTester:
             ("Chat Conversation Management", self.test_chat_conversation_management),
             ("Chat Context Building", self.test_chat_context_building),
             ("Chat Error Handling", self.test_chat_error_handling),
-            ("Chat Data Types Combinations", self.test_chat_data_types_combinations)
+            ("Chat Data Types Combinations", self.test_chat_data_types_combinations),
+            ("Chat JSON Serialization Fix", self.test_chat_json_serialization_fix)
         ]
         
         chat_tests_passed = 0
