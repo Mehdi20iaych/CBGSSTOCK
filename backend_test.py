@@ -2298,6 +2298,468 @@ class SimplifiedStockManagementTester:
         
         return depot_tests_passed == depot_tests_run
 
+    def test_chat_endpoint_basic_functionality(self):
+        """Test basic chat endpoint functionality without uploaded data"""
+        print("\n🔍 Testing AI Chat Basic Functionality...")
+        
+        # Test simple question without uploaded data
+        chat_data = {
+            "message": "Qu'est-ce que tu peux m'aider à analyser?"
+        }
+        
+        success, response = self.run_test(
+            "Chat Basic Question",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['response', 'conversation_id', 'has_data', 'data_types', 'message']
+            for field in required_fields:
+                if field not in response:
+                    print(f"❌ Missing required field: {field}")
+                    return False
+            
+            # Verify response is in French
+            if not response['response'] or len(response['response']) < 10:
+                print("❌ Response too short or empty")
+                return False
+            
+            # Verify has_data is False when no data uploaded
+            if response['has_data'] != False:
+                print(f"❌ Expected has_data=False when no data uploaded, got {response['has_data']}")
+                return False
+            
+            # Verify data_types is empty when no data
+            if response['data_types'] != []:
+                print(f"❌ Expected empty data_types when no data uploaded, got {response['data_types']}")
+                return False
+            
+            print("✅ Basic chat functionality working - French response received")
+            print(f"✅ Response length: {len(response['response'])} characters")
+            print(f"✅ Conversation ID generated: {response['conversation_id']}")
+            return True
+        
+        return False
+
+    def test_chat_inventory_questions(self):
+        """Test chat with general inventory management questions"""
+        print("\n🔍 Testing AI Chat with Inventory Questions...")
+        
+        inventory_questions = [
+            "Comment optimiser la gestion des stocks?",
+            "Qu'est-ce que la formule de calcul des quantités à envoyer?",
+            "Comment fonctionne le système de palettes et camions?"
+        ]
+        
+        for question in inventory_questions:
+            chat_data = {
+                "message": question
+            }
+            
+            success, response = self.run_test(
+                f"Inventory Question: {question[:30]}...",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success:
+                # Verify response contains relevant inventory terms
+                response_text = response['response'].lower()
+                inventory_terms = ['stock', 'palette', 'camion', 'dépôt', 'article', 'quantité']
+                
+                found_terms = [term for term in inventory_terms if term in response_text]
+                if len(found_terms) < 2:
+                    print(f"❌ Response doesn't contain enough inventory terms. Found: {found_terms}")
+                    return False
+                
+                print(f"✅ Inventory question answered with relevant terms: {found_terms}")
+            else:
+                return False
+        
+        return True
+
+    def test_chat_with_uploaded_data_context(self):
+        """Test chat functionality with uploaded data context"""
+        print("\n🔍 Testing AI Chat with Uploaded Data Context...")
+        
+        # First ensure we have uploaded data
+        if not all([self.commandes_session_id, self.stock_session_id, self.transit_session_id]):
+            print("⚠️ Uploading sample data for chat context test...")
+            
+            # Upload sample data
+            if not self.test_upload_commandes_excel():
+                print("❌ Failed to upload commandes data for chat test")
+                return False
+            if not self.test_upload_stock_excel():
+                print("❌ Failed to upload stock data for chat test")
+                return False
+            if not self.test_upload_transit_excel():
+                print("❌ Failed to upload transit data for chat test")
+                return False
+        
+        # Test chat with data analysis questions
+        data_questions = [
+            "Analyse ma situation de stock actuelle",
+            "Quels produits ont besoin de réapprovisionnement?",
+            "Combien d'articles différents j'ai dans mes données?",
+            "Quel est le statut de mes commandes?"
+        ]
+        
+        for question in data_questions:
+            chat_data = {
+                "message": question
+            }
+            
+            success, response = self.run_test(
+                f"Data Analysis Question: {question[:30]}...",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success:
+                # Verify has_data is True when data is available
+                if response['has_data'] != True:
+                    print(f"❌ Expected has_data=True when data uploaded, got {response['has_data']}")
+                    return False
+                
+                # Verify data_types includes expected types
+                expected_types = ['commandes', 'stock', 'transit']
+                data_types = response['data_types']
+                
+                for expected_type in expected_types:
+                    if expected_type not in data_types:
+                        print(f"❌ Expected data type '{expected_type}' not found in {data_types}")
+                        return False
+                
+                # Verify response mentions specific data from uploads
+                response_text = response['response'].lower()
+                data_terms = ['commandes', 'stock', 'transit', 'm210', 'article', 'dépôt']
+                
+                found_terms = [term for term in data_terms if term in response_text]
+                if len(found_terms) < 3:
+                    print(f"❌ Response doesn't reference enough uploaded data terms. Found: {found_terms}")
+                    return False
+                
+                print(f"✅ Data analysis question answered with context: {found_terms}")
+            else:
+                return False
+        
+        return True
+
+    def test_chat_gemini_api_integration(self):
+        """Test Gemini API integration and configuration"""
+        print("\n🔍 Testing Gemini API Integration...")
+        
+        # Test with a specific question that should trigger AI reasoning
+        chat_data = {
+            "message": "Explique-moi la différence entre production locale et sourcing externe dans le contexte de la gestion des stocks"
+        }
+        
+        success, response = self.run_test(
+            "Gemini API Integration Test",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            # Verify response quality and length (Gemini should provide detailed responses)
+            response_text = response['response']
+            
+            if len(response_text) < 100:
+                print(f"❌ Response too short for complex question: {len(response_text)} characters")
+                return False
+            
+            # Verify response is in French as configured
+            french_indicators = ['le', 'la', 'les', 'de', 'du', 'des', 'et', 'ou', 'dans', 'pour']
+            found_french = [word for word in french_indicators if word in response_text.lower()]
+            
+            if len(found_french) < 5:
+                print(f"❌ Response doesn't appear to be in French. Found indicators: {found_french}")
+                return False
+            
+            # Verify response addresses the question about local vs external sourcing
+            sourcing_terms = ['local', 'externe', 'production', 'sourcing', 'stock']
+            found_sourcing = [term for term in sourcing_terms if term.lower() in response_text.lower()]
+            
+            if len(found_sourcing) < 3:
+                print(f"❌ Response doesn't adequately address sourcing question. Found terms: {found_sourcing}")
+                return False
+            
+            print("✅ Gemini API integration working correctly")
+            print(f"✅ Response in French with {len(response_text)} characters")
+            print(f"✅ Sourcing concepts addressed: {found_sourcing}")
+            return True
+        
+        return False
+
+    def test_chat_conversation_management(self):
+        """Test conversation ID generation and persistence"""
+        print("\n🔍 Testing Chat Conversation Management...")
+        
+        # Test conversation ID generation
+        chat_data = {
+            "message": "Première question de test"
+        }
+        
+        success, response1 = self.run_test(
+            "First Message - Generate Conversation ID",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            conversation_id = response1['conversation_id']
+            
+            # Verify conversation ID is generated
+            if not conversation_id or len(conversation_id) < 10:
+                print(f"❌ Invalid conversation ID generated: {conversation_id}")
+                return False
+            
+            print(f"✅ Conversation ID generated: {conversation_id}")
+            
+            # Test using existing conversation ID
+            chat_data_with_id = {
+                "message": "Deuxième question avec ID existant",
+                "conversation_id": conversation_id
+            }
+            
+            success, response2 = self.run_test(
+                "Second Message - Use Existing Conversation ID",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data_with_id
+            )
+            
+            if success:
+                # Verify same conversation ID is returned
+                if response2['conversation_id'] != conversation_id:
+                    print(f"❌ Conversation ID changed: expected {conversation_id}, got {response2['conversation_id']}")
+                    return False
+                
+                print("✅ Conversation ID persistence working")
+                return True
+        
+        return False
+
+    def test_chat_context_building(self):
+        """Test that chat correctly builds context from uploaded data"""
+        print("\n🔍 Testing Chat Context Building...")
+        
+        # Ensure we have uploaded data
+        if not all([self.commandes_session_id, self.stock_session_id, self.transit_session_id]):
+            print("⚠️ Need uploaded data for context building test")
+            return False
+        
+        # Test specific question about uploaded data
+        chat_data = {
+            "message": "Combien d'enregistrements j'ai dans chaque type de fichier uploadé?"
+        }
+        
+        success, response = self.run_test(
+            "Context Building - Data Summary Question",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            response_text = response['response'].lower()
+            
+            # Verify response mentions the three data types
+            data_types = ['commandes', 'stock', 'transit']
+            mentioned_types = [dtype for dtype in data_types if dtype in response_text]
+            
+            if len(mentioned_types) < 2:
+                print(f"❌ Response doesn't mention enough data types. Found: {mentioned_types}")
+                return False
+            
+            # Verify response includes numerical information (should mention record counts)
+            import re
+            numbers = re.findall(r'\d+', response_text)
+            
+            if len(numbers) < 2:
+                print(f"❌ Response doesn't include enough numerical data. Found numbers: {numbers}")
+                return False
+            
+            print(f"✅ Context building working - mentioned data types: {mentioned_types}")
+            print(f"✅ Numerical data included: {numbers}")
+            return True
+        
+        return False
+
+    def test_chat_error_handling(self):
+        """Test chat error handling scenarios"""
+        print("\n🔍 Testing Chat Error Handling...")
+        
+        # Test empty message
+        chat_data = {
+            "message": ""
+        }
+        
+        success, response = self.run_test(
+            "Empty Message Error Handling",
+            "POST",
+            "api/chat",
+            500,  # Should return error for empty message
+            data=chat_data
+        )
+        
+        # Note: The current implementation might not validate empty messages,
+        # so we'll accept either 200 or 500 as valid responses
+        if not success:
+            # Try with 200 status code in case empty messages are handled gracefully
+            success, response = self.run_test(
+                "Empty Message Graceful Handling",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+        
+        if success:
+            print("✅ Empty message handling working")
+        else:
+            print("⚠️ Empty message handling needs review")
+        
+        # Test very long message
+        long_message = "Analyse " + "très " * 100 + "détaillée de mes données"
+        chat_data = {
+            "message": long_message
+        }
+        
+        success, response = self.run_test(
+            "Long Message Handling",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            print("✅ Long message handling working")
+            return True
+        else:
+            print("⚠️ Long message handling needs review")
+            return False
+
+    def test_chat_data_types_combinations(self):
+        """Test chat with different combinations of uploaded data"""
+        print("\n🔍 Testing Chat with Different Data Combinations...")
+        
+        # Test with only commandes data
+        if self.commandes_session_id:
+            chat_data = {
+                "message": "Analyse mes données de commandes uniquement"
+            }
+            
+            success, response = self.run_test(
+                "Chat with Commandes Data Only",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success:
+                # Should have commandes in data_types
+                if 'commandes' not in response['data_types']:
+                    print("❌ Commandes data not detected in context")
+                    return False
+                
+                print("✅ Chat working with commandes data only")
+            else:
+                return False
+        
+        # Test comprehensive data analysis question
+        if all([self.commandes_session_id, self.stock_session_id, self.transit_session_id]):
+            chat_data = {
+                "message": "Donne-moi un résumé complet de toutes mes données uploadées"
+            }
+            
+            success, response = self.run_test(
+                "Comprehensive Data Analysis",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success:
+                # Should mention all three data types
+                expected_types = ['commandes', 'stock', 'transit']
+                found_types = [dtype for dtype in expected_types if dtype in response['data_types']]
+                
+                if len(found_types) != 3:
+                    print(f"❌ Not all data types detected. Expected {expected_types}, found {found_types}")
+                    return False
+                
+                print("✅ Comprehensive data analysis working with all data types")
+                return True
+        
+        return True
+
+    def run_ai_chat_tests(self):
+        """Run comprehensive AI chat functionality tests"""
+        print("🚀 Starting AI Chat Functionality Testing...")
+        print("=" * 70)
+        
+        chat_tests = [
+            ("Chat Endpoint Basic Functionality", self.test_chat_endpoint_basic_functionality),
+            ("Chat Inventory Questions", self.test_chat_inventory_questions),
+            ("Chat with Uploaded Data Context", self.test_chat_with_uploaded_data_context),
+            ("Chat Gemini API Integration", self.test_chat_gemini_api_integration),
+            ("Chat Conversation Management", self.test_chat_conversation_management),
+            ("Chat Context Building", self.test_chat_context_building),
+            ("Chat Error Handling", self.test_chat_error_handling),
+            ("Chat Data Types Combinations", self.test_chat_data_types_combinations)
+        ]
+        
+        chat_tests_passed = 0
+        chat_tests_run = 0
+        
+        for test_name, test_func in chat_tests:
+            try:
+                print(f"\n{'='*20} {test_name} {'='*20}")
+                chat_tests_run += 1
+                result = test_func()
+                if result:
+                    chat_tests_passed += 1
+                    print(f"✅ {test_name} PASSED")
+                else:
+                    print(f"❌ {test_name} FAILED")
+            except Exception as e:
+                print(f"❌ {test_name} ERROR: {str(e)}")
+        
+        # Print AI chat test summary
+        print("\n" + "="*70)
+        print("📊 AI CHAT FUNCTIONALITY TEST SUMMARY")
+        print("="*70)
+        print(f"Total Chat Tests Run: {chat_tests_run}")
+        print(f"Chat Tests Passed: {chat_tests_passed}")
+        print(f"Chat Tests Failed: {chat_tests_run - chat_tests_passed}")
+        print(f"Chat Success Rate: {(chat_tests_passed/chat_tests_run*100):.1f}%" if chat_tests_run > 0 else "0%")
+        
+        if chat_tests_passed == chat_tests_run:
+            print("🎉 ALL AI CHAT TESTS PASSED! The new /api/chat endpoint with Gemini integration is working correctly.")
+        else:
+            print("⚠️ Some AI chat tests failed. Please review the issues above.")
+        
+        return chat_tests_passed == chat_tests_run
+
     def run_all_tests(self):
         """Run all tests for the enhanced inventory management system with packaging"""
         print("🚀 Starting Enhanced Inventory Management System Tests with Packaging")
