@@ -425,6 +425,7 @@
 
 ## test_plan:
   current_focus:
+    - "AI Chat functionality with Gemini API integration"
     - "Enhanced inventory management system with packaging type filtering"
     - "Test nouvelle version simplifiée du backend"
     - "Upload fichier commandes avec validation colonnes B,D,F,G"
