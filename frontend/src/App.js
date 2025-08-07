@@ -339,6 +339,80 @@ function App() {
     return depot.total_palettes > 0 && depot.total_palettes % 24 !== 0;
   };
 
+  // Fonctions pour le chat IA
+  const handleSendMessage = async () => {
+    if (!currentMessage.trim() || chatLoading) return;
+
+    const userMessage = currentMessage.trim();
+    setCurrentMessage('');
+    setChatLoading(true);
+
+    // Ajouter le message utilisateur
+    const newUserMessage = {
+      type: 'user',
+      content: userMessage,
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, newUserMessage]);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          conversation_id: conversationId
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Erreur lors de la communication avec l\'IA');
+      }
+
+      const data = await response.json();
+
+      // Mettre à jour l'ID de conversation
+      if (!conversationId && data.conversation_id) {
+        setConversationId(data.conversation_id);
+      }
+
+      // Ajouter la réponse de l'IA
+      const aiMessage = {
+        type: 'ai',
+        content: data.response,
+        timestamp: new Date(),
+        hasData: data.has_data,
+        dataTypes: data.data_types || []
+      };
+      setChatMessages(prev => [...prev, aiMessage]);
+
+    } catch (err) {
+      const errorMessage = {
+        type: 'error',
+        content: `Erreur: ${err.message}`,
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const clearChat = () => {
+    setChatMessages([]);
+    setConversationId(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
