@@ -21,7 +21,7 @@ import openpyxl.comments
 import openpyxl.styles
 
 # Configure Gemini API
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', "AIzaSyDaUyWzYQEDBqFwuniG8KiqKHgtk-l5Dco")
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', "AIzaSyB6DG8yocaGBjwfp7TatlDDHlKELYm56BU")
 genai.configure(api_key=GEMINI_API_KEY)
 
 app = FastAPI()
