@@ -466,6 +466,17 @@ function App() {
             <ArrowTrendingUpIcon className="w-5 h-5 inline mr-2" />
             Résultats
           </button>
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'chat'
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ChatBubbleLeftRightIcon className="w-5 h-5 inline mr-2" />
+            Chat IA
+          </button>
         </nav>
       </div>
 
