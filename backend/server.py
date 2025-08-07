@@ -865,7 +865,7 @@ async def chat_with_ai(request: ChatRequest):
         """
         
         # Create the chat
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         # Prepare the full prompt
         full_prompt = f"{system_prompt}\n\nQUESTION UTILISATEUR: {request.message}"
