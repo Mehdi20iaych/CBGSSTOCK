@@ -793,6 +793,103 @@ async def get_depot_suggestions(request: dict):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erreur lors de la génération des suggestions: {str(e)}")
 
+@app.post("/api/chat")
+async def chat_with_ai(request: ChatRequest):
+    """Chat with AI about uploaded files and inventory data"""
+    try:
+        # Get available data context
+        data_context = {}
+        
+        # Add commandes data if available
+        if commandes_data:
+            latest_commandes = list(commandes_data.keys())[-1]
+            commandes_info = commandes_data[latest_commandes]
+            data_context['commandes'] = {
+                'total_records': len(commandes_info['data']),
+                'summary': commandes_info.get('summary', {}),
+                'sample_data': commandes_info['data'][:3] if len(commandes_info['data']) > 0 else []
+            }
+        
+        # Add stock data if available
+        if stock_data:
+            latest_stock = list(stock_data.keys())[-1]
+            stock_info = stock_data[latest_stock]
+            data_context['stock'] = {
+                'total_records': len(stock_info['data']),
+                'summary': stock_info.get('summary', {}),
+                'sample_data': stock_info['data'][:3] if len(stock_info['data']) > 0 else []
+            }
+        
+        # Add transit data if available
+        if transit_data:
+            latest_transit = list(transit_data.keys())[-1]
+            transit_info = transit_data[latest_transit]
+            data_context['transit'] = {
+                'total_records': len(transit_info['data']),
+                'sample_data': transit_info['data'][:3] if len(transit_info['data']) > 0 else []
+            }
+        
+        # Build context prompt
+        system_prompt = """Tu es un assistant IA spécialisé dans l'analyse d'inventaire et la gestion des stocks. 
+        Tu aides les utilisateurs à comprendre et analyser leurs données d'inventaire.
+
+        CONTEXTE DU SYSTÈME:
+        - Système de gestion des stocks pour distribution depuis dépôt central M210
+        - Trois types de fichiers: Commandes, Stock M210, Transit
+        - Formule de calcul: Quantité à Envoyer = max(0, (Quantité Commandée × Jours) - Stock Actuel - Transit)
+        - Articles locaux vs sourcing externe
+        - Logistique palettes (30 produits/palette) et camions (24 palettes/camion)
+
+        DONNÉES DISPONIBLES:
+        """
+        
+        if data_context:
+            for data_type, info in data_context.items():
+                system_prompt += f"\n{data_type.upper()}:"
+                system_prompt += f"\n- Total enregistrements: {info['total_records']}"
+                if 'summary' in info:
+                    system_prompt += f"\n- Résumé: {json.dumps(info['summary'], ensure_ascii=False)}"
+                if info['sample_data']:
+                    system_prompt += f"\n- Exemple données: {json.dumps(info['sample_data'][:2], ensure_ascii=False)}"
+        else:
+            system_prompt += "\nAucune donnée uploadée actuellement."
+        
+        system_prompt += """
+
+        INSTRUCTIONS:
+        - Réponds en français
+        - Sois précis et factuel basé sur les données disponibles
+        - Si pas de données, explique ce que tu pourrais analyser avec des données
+        - Propose des analyses pertinentes selon le contexte
+        - Utilise les termes métier: dépôts, articles, palettes, camions, sourcing
+        """
+        
+        # Create the chat
+        model = genai.GenerativeModel('gemini-pro')
+        
+        # Prepare the full prompt
+        full_prompt = f"{system_prompt}\n\nQUESTION UTILISATEUR: {request.message}"
+        
+        # Generate response
+        response = model.generate_content(full_prompt)
+        
+        if not response.text:
+            raise HTTPException(status_code=500, detail="Aucune réponse générée par l'IA")
+        
+        # Generate conversation ID if not provided
+        conversation_id = request.conversation_id or str(uuid.uuid4())
+        
+        return {
+            "response": response.text,
+            "conversation_id": conversation_id,
+            "has_data": len(data_context) > 0,
+            "data_types": list(data_context.keys()),
+            "message": request.message
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la génération de réponse: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
