@@ -441,6 +441,21 @@
   test_all: false
   test_priority: "high_first"
 
+  - task: "Test new depot constraint functionality"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "New depot constraint functionality implemented. System now only considers specific allowed depots: M115, M120, M130, M170, M171, and everything between M212-M280 (inclusive range). Added is_allowed_depot() function with case-insensitive and whitespace-tolerant validation. Applied filtering to commandes upload, transit upload, and depot suggestions endpoints."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE DEPOT CONSTRAINT TESTING COMPLETED: All 16/16 tests passed with 100% success rate! MAJOR ACHIEVEMENTS: (1) ALLOWED DEPOTS VERIFICATION: Successfully verified that only allowed depots (M115, M120, M130, M170, M171, M212-M280) are accepted in commandes upload, all 8 test depots correctly accepted, (2) NON-ALLOWED DEPOTS FILTERING: Mixed depot data correctly filtered - from 7 input depots (M115, M210, M211, M281, M300, M120, M212), only 3 allowed depots (M115, M120, M212) were kept, (3) ERROR HANDLING: When no allowed depots found, system correctly returns 400 error with clear message listing allowed depots: 'M115, M120, M130, M170, M171, et M212-M280', (4) TRANSIT FILTERING: Transit destinations correctly filtered to only allowed depots, from 7 mixed destinations only 3 allowed remained, (5) DEPOT SUGGESTIONS VALIDATION: /api/depot-suggestions correctly accepts allowed depots (M115 works) and rejects non-allowed depots (M300 returns 400 error with allowed depots list), (6) CASE SENSITIVITY: System is case-insensitive - accepts 'm115', 'M115', 'm120', 'M120' and preserves original format in data, (7) WHITESPACE HANDLING: System is whitespace-tolerant - accepts ' M115 ', '  M120', 'M130  ', ' M170 ' and preserves original format, (8) BOUNDARY VALUES: Correctly handles boundary values - M212 and M280 allowed, M211 and M281 filtered out, (9) INVALID FORMATS: Correctly filters invalid depot formats - only valid 'M' prefix with numbers accepted, (10) RANGE VERIFICATION: All values in M212-M280 range (M212, M220, M235, M250, M265, M280) correctly accepted, (11) CALCULATION INTEGRATION: Calculations work correctly with filtered depot data, only allowed depots appear in results, (12) CASE INSENSITIVE SUGGESTIONS: Depot suggestions endpoint accepts lowercase depot names ('m115') and works correctly. The depot constraint functionality is production-ready with comprehensive validation, flexible input handling (case-insensitive, whitespace-tolerant), proper error messages, and seamless integration with all existing functionality."
+
 ## agent_communication:
     - agent: "main"
       message: "NOUVELLE VERSION SIMPLIFIÉE IMPLÉMENTÉE: Remplacé le système complexe précédent par une version simplifiée selon les spécifications utilisateur. Le nouveau système utilise 3 fichiers Excel avec des colonnes spécifiques: (1) Fichier Commandes - Colonnes B(Article), D(Point d'Expédition), F(Quantité Commandée), G(Stock Utilisation Libre), (2) Fichier Stock - Colonnes A(Division), B(Article), D(STOCK A DATE) filtré uniquement pour M210, (3) Fichier Transit - Colonnes A(Article), C(Division), G(Division cédante), I(Quantité) filtré uniquement depuis M210. Formule simplifiée: Quantité à Envoyer = max(0, (Quantité Commandée × Jours à Couvrir) - Stock Utilisation Libre - Quantité en Transit). Endpoints implémentés: /api/upload-commandes-excel, /api/upload-stock-excel, /api/upload-transit-excel, /api/calculate, /api/export-excel, /api/sessions."
