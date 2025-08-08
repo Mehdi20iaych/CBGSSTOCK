@@ -319,7 +319,6 @@ class DepotConstraintTester:
         
         # Test with different cases
         case_variants = ['m115', 'M115', 'm120', 'M120']
-        expected_normalized = ['M115', 'M120']  # Should be normalized to uppercase
         
         excel_file = self.create_depot_test_commandes_excel(case_variants)
         
@@ -336,18 +335,19 @@ class DepotConstraintTester:
         )
         
         if success:
-            # All case variants should be accepted and normalized
+            # All case variants should be accepted (validation is case-insensitive)
             if response['summary']['total_records'] != len(case_variants):
                 print(f"❌ Expected {len(case_variants)} records, got {response['summary']['total_records']}")
                 return False
             
+            # Original format should be preserved
             found_depots = set(response['filters']['depots'])
-            expected_depots = set(expected_normalized)
+            expected_depots = set(case_variants)
             if found_depots != expected_depots:
-                print(f"❌ Expected normalized depots {expected_depots}, got {found_depots}")
+                print(f"❌ Expected original case preserved {expected_depots}, got {found_depots}")
                 return False
             
-            print("✅ Case sensitivity handled correctly - lowercase converted to uppercase")
+            print("✅ Case sensitivity handled correctly - all case variations accepted, original format preserved")
             return True
         return False
 
