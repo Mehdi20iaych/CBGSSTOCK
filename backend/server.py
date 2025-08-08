@@ -85,6 +85,32 @@ LOCALLY_MADE_ARTICLES = {
     '7521', '7532', '7620', '7630', '7640', '7659', '7949', '7953'
 }
 
+# Allowed depots constraint
+def is_allowed_depot(depot_code):
+    """Check if a depot code is allowed based on the specified constraints"""
+    if not depot_code or not isinstance(depot_code, str):
+        return False
+    
+    # Clean the depot code (remove whitespace, convert to uppercase)
+    depot = depot_code.strip().upper()
+    
+    # Check specific allowed depots
+    specific_depots = {'M115', 'M120', 'M130', 'M170', 'M171'}
+    if depot in specific_depots:
+        return True
+    
+    # Check range M212-M280
+    if depot.startswith('M') and len(depot) >= 4:
+        try:
+            depot_num = int(depot[1:])  # Extract number after 'M'
+            if 212 <= depot_num <= 280:
+                return True
+        except ValueError:
+            # If depot code doesn't have a valid number, it's not allowed
+            pass
+    
+    return False
+
 # Store uploaded data temporarily
 commandes_data = {}  # Fichier commandes
 stock_data = {}      # Fichier stock M210
