@@ -190,6 +190,22 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
         # Filtrer pour exclure M210 des dépôts destinataires (M210 ne doit jamais être approvisionné)
         df = df[df['Point d\'Expédition'] != 'M210']
         
+        # Apply depot constraint: only consider allowed depots
+        df['is_allowed_depot'] = df['Point d\'Expédition'].apply(is_allowed_depot)
+        original_count = len(df)
+        df = df[df['is_allowed_depot']].drop(columns=['is_allowed_depot'])
+        filtered_count = len(df)
+        
+        print(f"Depot filtering applied: {original_count} -> {filtered_count} records")
+        allowed_depots = sorted(df['Point d\'Expédition'].unique())
+        print(f"Allowed depots found: {allowed_depots}")
+        
+        if len(df) == 0:
+            raise HTTPException(
+                status_code=400, 
+                detail="Aucun dépôt autorisé trouvé. Les dépôts autorisés sont: M115, M120, M130, M170, M171, et M212-M280"
+            )
+        
         # Generate session ID
         session_id = str(uuid.uuid4())
         
