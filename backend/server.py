@@ -350,6 +350,16 @@ async def upload_transit_excel(file: UploadFile = File(...)):
         # Filtrer seulement les transits depuis M210 (dépôt central)
         df = df[df['Division cédante'] == 'M210']
         
+        # Apply depot constraint: only consider allowed destination depots
+        df['is_allowed_depot'] = df['Division'].apply(is_allowed_depot)
+        original_count = len(df)
+        df = df[df['is_allowed_depot']].drop(columns=['is_allowed_depot'])
+        filtered_count = len(df)
+        
+        print(f"Transit depot filtering applied: {original_count} -> {filtered_count} records")
+        allowed_depots = sorted(df['Division'].unique())
+        print(f"Allowed transit destination depots: {allowed_depots}")
+        
         # Nettoyer les données
         df['Quantité'] = pd.to_numeric(df['Quantité'], errors='coerce')
         df = df.dropna(subset=['Article', 'Division', 'Quantité'])
