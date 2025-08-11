@@ -8,7 +8,7 @@ import json
 import sys
 
 class NetworkConnectivityTester:
-    def __init__(self, base_url="https://2d405bcb-1210-461d-9403-54f42d429656.preview.emergentagent.com"):
+    def __init__(self, base_url="https://791080b9-b01b-46a5-8e36-9c2c155edd81.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
