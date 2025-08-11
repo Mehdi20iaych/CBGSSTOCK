@@ -201,11 +201,11 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Erreur lors du calcul');
+        const errorData = await parseJSONSafe(response);
+        throw new Error((errorData && (errorData.detail || errorData.message)) || 'Erreur lors du calcul');
       }
 
-      const data = await response.json();
+      const data = await parseJSONSafe(response) || {};
       setCalculations(data);
       setActiveTab('results');
     } catch (err) {
