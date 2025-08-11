@@ -936,6 +936,21 @@ async def chat_with_ai(request: ChatRequest):
         • Analyse les données quand disponibles
         • Réponds toujours même si données limitées"""
         
+        # Lazy import and configure Google Generative AI
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=GEMINI_API_KEY)
+        except ImportError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Google Generative AI library not available. Please install google-generativeai package."
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Failed to configure Gemini API: {str(e)}"
+            )
+        
         # Create the chat
         model = genai.GenerativeModel('gemini-1.5-flash')
         
