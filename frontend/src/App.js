@@ -509,7 +509,7 @@ function App() {
                     <DocumentIcon className="mx-auto h-12 w-12 text-gray-400" />
                     <h3 className="mt-2 text-sm font-medium text-gray-900">Fichier Commandes</h3>
                     <p className="mt-1 text-sm text-gray-500">
-                      Colonnes: B(Article), D(Point d'Expédition), F(Quantité Commandée), G(Stock Utilisation Libre), I(Type Emballage)
+                      Colonnes: B(Article), D(Point d'Expédition), F(Quantité), G(Stock), I(Type Emballage), K(Produits/Palette)
                     </p>
                     <div className="mt-4">
                       <input
