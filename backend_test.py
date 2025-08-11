@@ -2898,7 +2898,7 @@ class SimplifiedStockManagementTester:
                 return False
             
             # Verify bullet point format
-            bullet_count = ai_response.count('•') + ai_response.count('-')
+            bullet_count = ai_response.count('•') + ai_response.count('-') + ai_response.count('*')
             if bullet_count == 0:
                 print(f"❌ Response should contain bullet points")
                 return False
