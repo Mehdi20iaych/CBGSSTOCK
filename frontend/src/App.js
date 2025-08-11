@@ -82,9 +82,12 @@ function App() {
       
       // Mettre à jour les filtres d'emballage disponibles
       if (data.filters && data.filters.packaging) {
-        setAvailablePackaging(data.filters.packaging);
-        // Par défaut, sélectionner tous les types d'emballage
-        setSelectedPackaging(data.filters.packaging);
+        const pkgs = data.filters.packaging;
+        setAvailablePackaging(pkgs);
+        // Par défaut: sélectionner seulement 'pet' et 'verre' si présents
+        const defaultPkgs = pkgs.filter(p => ['pet','verre'].includes(String(p).toLowerCase()));
+        setSelectedPackaging(defaultPkgs.length ? defaultPkgs : pkgs);
+
       }
       
       setError(null);
