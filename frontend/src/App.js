@@ -619,7 +619,7 @@ function App() {
                     {transitData && (
                       <div className="mt-3 text-sm">
                         <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          ✓ {transitData.summary.total_records} enregistrements
+                          ✓ {transitData.summary?.total_records ?? 'chargé'} {transitData.summary?.total_records ? 'enregistrements' : ''}
                         </div>
                       </div>
                     )}
