@@ -20,6 +20,22 @@ import {
 const API_BASE_URL = window.location.origin;
 
 function App() {
+  // Helper pour parser JSON en toute sécurité (gère les réponses vides ou en texte)
+  const parseJSONSafe = async (response) => {
+    try {
+      const text = await response.text();
+      if (!text || text.trim().length === 0) return null;
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        // Si ce n'est pas du JSON valide, on renvoie un objet avec le texte brut
+        return { detail: text };
+      }
+    } catch (e) {
+      return null;
+    }
+  };
+
   // États pour les données uploadées
   const [commandesData, setCommandesData] = useState(null);
   const [stockData, setStockData] = useState(null);
