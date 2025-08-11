@@ -579,7 +579,7 @@ async def get_sessions():
 
 @app.post("/api/export-excel")
 async def export_excel(request: ExportRequest):
-    """Export Excel intelligent organisé par dépôt"""
+    """Export Excel avec table principale et recommandations par dépôt"""
     try:
         if not request.selected_items:
             raise HTTPException(status_code=400, detail="Aucun élément sélectionné pour l'export")
@@ -588,120 +588,234 @@ async def export_excel(request: ExportRequest):
         sorted_items = sorted(request.selected_items, 
                             key=lambda x: (x['depot'], -x['quantite_a_envoyer']))
         
-        # Grouper par dépôt pour les statistiques
-        depot_groups = {}
-        for item in sorted_items:
-            depot = item['depot']
-            if depot not in depot_groups:
-                depot_groups[depot] = {
-                    'items': [],
-                    'total_palettes': 0,
-                    'total_articles': 0
-                }
-            depot_groups[depot]['items'].append(item)
-            depot_groups[depot]['total_palettes'] += item.get('palettes_needed', 0)
-            depot_groups[depot]['total_articles'] += 1
-        
         # Créer un nouveau classeur Excel
         wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Livraisons par Dépôt"
         
-        # En-têtes essentiels (focus sur l'important)
-        headers = ["Dépôt", "Code Article", "Quantité à Livrer", "Palettes", "Statut"]
+        # ========== FEUILLE 1: TABLE PRINCIPALE ==========
+        ws1 = wb.active
+        ws1.title = "Table Principale"
         
-        # Style simple et professionnel
+        # En-têtes selon les spécifications: depot / code article / quantite a livrer / palettes / status
+        headers = ["Dépôt", "Code Article", "Quantité à Livrer", "Palettes", "Status"]
+        
+        # Style des en-têtes
         header_font = Font(bold=True, color="FFFFFF")
         header_fill = PatternFill(start_color="4F4F4F", end_color="4F4F4F", fill_type="solid")
         
         # Ajouter les en-têtes
         for col, header in enumerate(headers, 1):
-            cell = ws.cell(row=1, column=col, value=header)
+            cell = ws1.cell(row=1, column=col, value=header)
             cell.font = header_font
             cell.fill = header_fill
             cell.alignment = Alignment(horizontal='center', vertical='center')
         
-        current_row = 2
-        current_depot = None
-        
-        # Ajouter les données organisées par dépôt
-        for item in sorted_items:
-            depot = item['depot']
+        # Ajouter les données de la table principale
+        for row_idx, item in enumerate(sorted_items, 2):
+            ws1.cell(row=row_idx, column=1, value=item['depot'])
+            ws1.cell(row=row_idx, column=2, value=item['article'])
+            ws1.cell(row=row_idx, column=3, value=item['quantite_a_envoyer'])
+            ws1.cell(row=row_idx, column=4, value=item.get('palettes_needed', 0))
+            ws1.cell(row=row_idx, column=5, value=item['statut'])
             
-            # Ajouter une ligne de séparation entre les dépôts
-            if current_depot and current_depot != depot:
-                current_row += 1  # Ligne vide entre dépôts
-                
-                # Ligne de résumé du dépôt précédent
-                depot_stats = depot_groups[current_depot]
-                summary_row = current_row
-                ws.cell(row=summary_row, column=1, value=f"TOTAL {current_depot}")
-                ws.cell(row=summary_row, column=3, value="")
-                ws.cell(row=summary_row, column=4, value=f"{depot_stats['total_palettes']} palettes")
-                trucks_needed = math.ceil(depot_stats['total_palettes'] / 24)
-                efficiency = "Efficace" if depot_stats['total_palettes'] >= 24 else "Inefficace"
-                ws.cell(row=summary_row, column=5, value=f"{trucks_needed} camion(s) - {efficiency}")
-                
-                # Style pour la ligne de résumé
-                for col in range(1, len(headers) + 1):
-                    cell = ws.cell(row=summary_row, column=col)
-                    cell.font = Font(bold=True, color="333333")
-                    cell.fill = PatternFill(start_color="E8E8E8", end_color="E8E8E8", fill_type="solid")
-                
-                current_row += 2  # Espace après le résumé
-            
-            current_depot = depot
-            
-            # Données essentielles seulement
-            ws.cell(row=current_row, column=1, value=item['depot'])
-            ws.cell(row=current_row, column=2, value=item['article'])
-            ws.cell(row=current_row, column=3, value=item['quantite_a_envoyer'])
-            ws.cell(row=current_row, column=4, value=item.get('palettes_needed', 0))
-            ws.cell(row=current_row, column=5, value=item['statut'])
-            
-            # Style minimal - juste les priorités
+            # Style selon le statut
             if item['statut'] == 'Non couvert':
                 for col in range(1, len(headers) + 1):
-                    ws.cell(row=current_row, column=col).fill = PatternFill(
+                    ws1.cell(row=row_idx, column=col).fill = PatternFill(
                         start_color="FFEBEE", end_color="FFEBEE", fill_type="solid"
                     )
-            
-            current_row += 1
+            elif item['statut'] == 'À livrer':
+                for col in range(1, len(headers) + 1):
+                    ws1.cell(row=row_idx, column=col).fill = PatternFill(
+                        start_color="FFF3E0", end_color="FFF3E0", fill_type="solid"
+                    )
         
-        # Résumé du dernier dépôt
-        if current_depot:
-            current_row += 1
-            depot_stats = depot_groups[current_depot]
-            summary_row = current_row
-            ws.cell(row=summary_row, column=1, value=f"TOTAL {current_depot}")
-            ws.cell(row=summary_row, column=3, value="")
-            ws.cell(row=summary_row, column=4, value=f"{depot_stats['total_palettes']} palettes")
-            trucks_needed = math.ceil(depot_stats['total_palettes'] / 24)
-            efficiency = "Efficace" if depot_stats['total_palettes'] >= 24 else "Inefficace"
-            ws.cell(row=summary_row, column=5, value=f"{trucks_needed} camion(s) - {efficiency}")
-            
-            # Style pour la ligne de résumé
-            for col in range(1, len(headers) + 1):
-                cell = ws.cell(row=summary_row, column=col)
-                cell.font = Font(bold=True, color="333333")
-                cell.fill = PatternFill(start_color="E8E8E8", end_color="E8E8E8", fill_type="solid")
-        
-        # Ajuster les largeurs de colonne intelligemment
-        column_widths = [12, 15, 18, 12, 15]  # Optimisé pour le contenu
+        # Ajuster les largeurs de colonne
+        column_widths = [12, 15, 18, 12, 15]
         for col, width in enumerate(column_widths, 1):
-            ws.column_dimensions[get_column_letter(col)].width = width
+            ws1.column_dimensions[get_column_letter(col)].width = width
         
         # Figer les en-têtes
-        ws.freeze_panes = 'A2'
+        ws1.freeze_panes = 'A2'
+        
+        # ========== FEUILLE 2: RECOMMANDATIONS PAR DÉPÔT ==========
+        ws2 = wb.create_sheet(title="Recommandations Dépôts")
+        
+        # En-têtes pour les recommandations
+        rec_headers = ["Dépôt", "Palettes Actuelles", "Palettes Cibles", "Article Suggéré", 
+                      "Quantité Suggérée", "Palettes Suggérées", "Stock M210", "Faisabilité", "Raison"]
+        
+        # Style des en-têtes
+        for col, header in enumerate(rec_headers, 1):
+            cell = ws2.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+        
+        # Générer les recommandations pour chaque dépôt unique
+        depot_list = list(set(item['depot'] for item in sorted_items))
+        depot_list.sort()
+        
+        current_row = 2
+        
+        # Obtenir les données nécessaires pour les suggestions
+        if not commandes_data:
+            # Si pas de données, ajouter une ligne d'information
+            ws2.cell(row=current_row, column=1, value="Aucune donnée de commandes disponible")
+            ws2.cell(row=current_row, column=2, value="pour générer des recommandations")
+        else:
+            # Prendre la dernière session de commandes
+            commandes_session_id = list(commandes_data.keys())[-1]
+            commandes_df = pd.DataFrame(commandes_data[commandes_session_id]['data'])
+            
+            # Obtenir les données de stock M210
+            stock_m210 = {}
+            if stock_data and len(stock_data) > 0:
+                stock_session_id = list(stock_data.keys())[-1]
+                stock_df = pd.DataFrame(stock_data[stock_session_id]['data'])
+                stock_m210 = dict(zip(stock_df['Article'].astype(str), stock_df['STOCK A DATE']))
+            
+            # Obtenir les données de transit
+            transit_stocks = {}
+            if transit_data and len(transit_data) > 0:
+                transit_session_id = list(transit_data.keys())[-1]
+                transit_df = pd.DataFrame(transit_data[transit_session_id]['data'])
+                
+                for _, row in transit_df.iterrows():
+                    article = str(row['Article'])
+                    if article not in transit_stocks:
+                        transit_stocks[article] = {}
+                    depot = row['Division']
+                    if depot not in transit_stocks[article]:
+                        transit_stocks[article][depot] = 0
+                    transit_stocks[article][depot] += row['Quantité']
+            
+            # Pour chaque dépôt, générer les recommandations
+            for depot in depot_list:
+                # Filtrer les commandes pour ce dépôt
+                depot_commandes = commandes_df[commandes_df['Point d\'Expédition'] == depot]
+                
+                if depot_commandes.empty:
+                    ws2.cell(row=current_row, column=1, value=depot)
+                    ws2.cell(row=current_row, column=2, value="Aucune commande")
+                    current_row += 1
+                    continue
+                
+                # Calculer les palettes actuelles
+                current_palettes = 0
+                depot_products = []
+                current_days = 10  # Valeur par défaut
+                
+                for _, row in depot_commandes.iterrows():
+                    article = str(row['Article'])
+                    packaging = row.get('Type Emballage', 'verre')
+                    cqm = row['Quantité Commandée']
+                    stock_actuel = row['Stock Utilisation Libre']
+                    produits_par_palette = float(row.get('Produits par Palette', 30))
+                    stock_transit = transit_stocks.get(article, {}).get(depot, 0)
+                    
+                    # Calculer avec la formule
+                    quantite_requise = cqm * current_days
+                    quantite_a_envoyer = max(0, quantite_requise - stock_actuel - stock_transit)
+                    palettes_needed = math.ceil(quantite_a_envoyer / produits_par_palette) if quantite_a_envoyer > 0 and produits_par_palette > 0 else 0
+                    
+                    current_palettes += palettes_needed
+                    depot_products.append({'article': article, 'packaging': packaging})
+                
+                # Calculer les palettes cibles (multiples de 24)
+                current_trucks = math.ceil(current_palettes / 24) if current_palettes > 0 else 1
+                target_palettes = current_trucks * 24
+                palettes_to_add = target_palettes - current_palettes
+                
+                # Générer les suggestions basées sur les plus faibles stocks M210
+                if palettes_to_add > 0 and stock_m210:
+                    # Produits avec les plus faibles stocks, non déjà commandés
+                    all_stock_products = []
+                    for article, stock_quantity in stock_m210.items():
+                        article_already_ordered = any(p['article'] == article for p in depot_products)
+                        
+                        if not article_already_ordered and stock_quantity > 0:
+                            all_stock_products.append({
+                                'article': article,
+                                'stock_m210': stock_quantity,
+                                'packaging': 'verre'
+                            })
+                    
+                    # Trier par stock croissant (plus faibles en premier)
+                    all_stock_products.sort(key=lambda x: x['stock_m210'])
+                    
+                    remaining_palettes = palettes_to_add
+                    products_needed_per_palette = 30
+                    suggestions_count = 0
+                    
+                    for product in all_stock_products:
+                        if remaining_palettes <= 0 or suggestions_count >= 5:
+                            break
+                        
+                        suggested_palettes = min(3, remaining_palettes)
+                        suggested_quantity = suggested_palettes * products_needed_per_palette
+                        stock_available = product['stock_m210']
+                        can_fulfill = suggested_quantity <= stock_available
+                        
+                        # Ajouter une ligne de recommandation
+                        if suggestions_count == 0:  # Première suggestion pour ce dépôt
+                            ws2.cell(row=current_row, column=1, value=depot)
+                            ws2.cell(row=current_row, column=2, value=current_palettes)
+                            ws2.cell(row=current_row, column=3, value=target_palettes)
+                        else:
+                            ws2.cell(row=current_row, column=1, value="")
+                            ws2.cell(row=current_row, column=2, value="")
+                            ws2.cell(row=current_row, column=3, value="")
+                        
+                        ws2.cell(row=current_row, column=4, value=product['article'])
+                        ws2.cell(row=current_row, column=5, value=suggested_quantity)
+                        ws2.cell(row=current_row, column=6, value=suggested_palettes)
+                        ws2.cell(row=current_row, column=7, value=stock_available)
+                        ws2.cell(row=current_row, column=8, value='Réalisable' if can_fulfill else 'Stock insuffisant')
+                        ws2.cell(row=current_row, column=9, value=f'Stock faible ({stock_available} unités)')
+                        
+                        # Style selon la faisabilité
+                        if can_fulfill:
+                            for col in range(1, len(rec_headers) + 1):
+                                ws2.cell(row=current_row, column=col).fill = PatternFill(
+                                    start_color="E8F5E8", end_color="E8F5E8", fill_type="solid"
+                                )
+                        else:
+                            for col in range(1, len(rec_headers) + 1):
+                                ws2.cell(row=current_row, column=col).fill = PatternFill(
+                                    start_color="FFEBEE", end_color="FFEBEE", fill_type="solid"
+                                )
+                        
+                        current_row += 1
+                        remaining_palettes -= suggested_palettes
+                        suggestions_count += 1
+                
+                else:
+                    # Dépôt sans besoin de suggestions ou sans données stock
+                    ws2.cell(row=current_row, column=1, value=depot)
+                    ws2.cell(row=current_row, column=2, value=current_palettes)
+                    ws2.cell(row=current_row, column=3, value=target_palettes)
+                    ws2.cell(row=current_row, column=4, value="Aucune suggestion" if palettes_to_add <= 0 else "Données stock manquantes")
+                    current_row += 1
+                
+                # Ligne vide entre les dépôts
+                current_row += 1
+        
+        # Ajuster les largeurs de colonne pour les recommandations
+        rec_column_widths = [12, 16, 14, 15, 16, 16, 12, 15, 25]
+        for col, width in enumerate(rec_column_widths, 1):
+            ws2.column_dimensions[get_column_letter(col)].width = width
+        
+        # Figer les en-têtes
+        ws2.freeze_panes = 'A2'
         
         # Sauvegarder dans un buffer
         output = BytesIO()
         wb.save(output)
         output.seek(0)
         
-        # Nom de fichier intelligent
+        # Nom de fichier
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"Livraisons_Depot_{timestamp}.xlsx"
+        filename = f"Export_Depots_Recommandations_{timestamp}.xlsx"
         
         return StreamingResponse(
             BytesIO(output.read()),
