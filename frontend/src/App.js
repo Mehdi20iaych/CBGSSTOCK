@@ -756,39 +756,38 @@ function App() {
                 </div>
               </div>
 
-              {/* Sourcing Summary */}
-              {calculations.sourcing_summary && (
-                <div className="border-t pt-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Analyse Sourcing</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <div className="text-lg font-semibold text-slate-700">{calculations.sourcing_summary.local_items}</div>
-                      <div className="text-xs text-slate-600">Production Locale</div>
-                      <div className="text-xs text-slate-500">({calculations.sourcing_summary.local_percentage}%)</div>
-                    </div>
-                    <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-200">
-                      <div className="text-lg font-semibold text-amber-700">{calculations.sourcing_summary.external_items}</div>
-                      <div className="text-xs text-amber-600">Sourcing Externe</div>
-                      <div className="text-xs text-amber-500">({calculations.sourcing_summary.external_percentage}%)</div>
-                    </div>
-                  </div>
-                  {calculations.sourcing_summary.external_items > 0 && (
-                    <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                      <p className="text-sm text-amber-700">
-                        ⚠️ {calculations.sourcing_summary.external_items} produit(s) nécessitent un sourcing externe
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Depot Summary */}
-              {calculations.depot_summary && calculations.depot_summary.length > 0 && (
-                <div className="border-t pt-4 mt-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+              {/* Toggle sous-sections */}
+              <div className="border-t pt-4">
+                <div className="inline-flex rounded-md shadow-sm" role="group">
+                  <button
+                    type="button"
+                    onClick={() => setResultsSubTab('details')}
+                    className={`px-4 py-2 text-sm font-medium border ${
+                      resultsSubTab === 'details'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    } rounded-l-md`}
+                  >
+                    Détail des Calculs
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResultsSubTab('logistique')}
+                    className={`px-4 py-2 text-sm font-medium border -ml-px ${
+                      resultsSubTab === 'logistique'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    } rounded-r-md flex items-center`}
+                  >
                     <TruckIcon className="w-4 h-4 mr-2" />
                     Logistique par Dépôt
-                  </h3>
+                  </button>
+                </div>
+              </div>
+
+              {/* Logistique par Dépôt - visible si subtab = logistique */}
+              {resultsSubTab === 'logistique' && calculations.depot_summary && calculations.depot_summary.length > 0 && (
+                <div className="pt-4">
                   <div className="space-y-3">
                     {calculations.depot_summary.map((depot, index) => (
                       <div key={index}>
@@ -814,7 +813,6 @@ function App() {
                               }`}>
                                 {depot.delivery_efficiency}
                               </span>
-                              {/* Arrow icon for suggestions */}
                               {hasIncompletetrucks(depot) && (
                                 <button
                                   onClick={() => toggleSuggestions(depot.depot)}
@@ -855,7 +853,6 @@ function App() {
                           )}
                         </div>
 
-                        {/* Suggestions panel */}
                         {showSuggestions[depot.depot] && suggestions[depot.depot] && (
                           <div className="mt-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <div className="flex items-center mb-3">
@@ -924,109 +921,111 @@ function App() {
               )}
             </div>
 
-            {/* Tableau des résultats */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-900">Détail des Calculs</h3>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={handleSelectAll}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-                  >
-                    {selectedItems.length === calculations.calculations.length ? 'Tout désélectionner' : 'Tout sélectionner'}
-                  </button>
-                  <button
-                    onClick={handleExportExcel}
-                    disabled={selectedItems.length === 0 || loading}
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50"
-                  >
-                    Exporter Excel ({selectedItems.length})
-                  </button>
+            {/* Contenu sous-sections: Détail des Calculs (par défaut) */}
+            {resultsSubTab === 'details' && (
+              <div className="bg-white shadow rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-gray-900">Détail des Calculs</h3>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleSelectAll}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      {selectedItems.length === calculations.calculations.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                    </button>
+                    <button
+                      onClick={handleExportExcel}
+                      disabled={selectedItems.length === 0 || loading}
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Exporter Excel ({selectedItems.length})
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <input type="checkbox" className="rounded" />
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code Article</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code Dépôt</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type Emballage</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité Commandée</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Actuel</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité en Transit</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité à Envoyer</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Palettes</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Dispo M210</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sourcing</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {calculations.calculations.map((item, index) => {
+                        const isSelected = selectedItems.some(i => i.article === item.article && i.depot === item.depot && i.packaging === item.packaging);
+                        return (
+                          <tr key={index} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleItemSelection(item)}
+                                className="rounded"
+                              />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.article}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.depot}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                                item.packaging === 'verre' ? 'bg-blue-100 text-blue-800' :
+                                item.packaging === 'pet' ? 'bg-green-100 text-green-800' :
+                                item.packaging === 'ciel' ? 'bg-purple-100 text-purple-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {item.packaging}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.cqm}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_actuel}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_transit}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.quantite_a_envoyer}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {item.palettes_needed || 0}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_dispo_m210}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                item.is_locally_made 
+                                  ? 'bg-slate-100 text-slate-800 border border-slate-200' 
+                                  : 'bg-amber-100 text-amber-800 border border-amber-200'
+                              }`}>
+                                {item.sourcing_text || (item.is_locally_made ? 'Production Locale' : 'Sourcing Externe')}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                {getStatusIcon(item.statut)}
+                                <span className={`ml-2 text-sm font-medium ${
+                                  item.statut === 'OK' ? 'text-green-600' :
+                                  item.statut === 'À livrer' ? 'text-orange-600' : 'text-red-600'
+                                }`}>
+                                  {item.statut}
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input type="checkbox" className="rounded" />
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code Article</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code Dépôt</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type Emballage</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité Commandée</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Actuel</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité en Transit</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité à Envoyer</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Palettes</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Dispo M210</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sourcing</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {calculations.calculations.map((item, index) => {
-                      const isSelected = selectedItems.some(i => i.article === item.article && i.depot === item.depot && i.packaging === item.packaging);
-                      return (
-                        <tr key={index} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => handleItemSelection(item)}
-                              className="rounded"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.article}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.depot}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                              item.packaging === 'verre' ? 'bg-blue-100 text-blue-800' :
-                              item.packaging === 'pet' ? 'bg-green-100 text-green-800' :
-                              item.packaging === 'ciel' ? 'bg-purple-100 text-purple-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {item.packaging}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.cqm}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_actuel}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_transit}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.quantite_a_envoyer}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {item.palettes_needed || 0}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_dispo_m210}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              item.is_locally_made 
-                                ? 'bg-slate-100 text-slate-800 border border-slate-200' 
-                                : 'bg-amber-100 text-amber-800 border border-amber-200'
-                            }`}>
-                              {item.sourcing_text || (item.is_locally_made ? 'Production Locale' : 'Sourcing Externe')}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              {getStatusIcon(item.statut)}
-                              <span className={`ml-2 text-sm font-medium ${
-                                item.statut === 'OK' ? 'text-green-600' :
-                                item.statut === 'À livrer' ? 'text-orange-600' : 'text-red-600'
-                              }`}>
-                                {item.statut}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
