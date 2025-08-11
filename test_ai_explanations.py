@@ -9,7 +9,7 @@ import time
 
 def test_explanation_request():
     """Test that AI provides explanations when specifically requested"""
-    url = "https://4e8e5f83-a55c-4096-87d1-8b9333365f98.preview.emergentagent.com/api/chat"
+    url = "https://1471fe46-cff7-448e-b32d-2e138d2a26fd.preview.emergentagent.com/api/chat"
     
     # Test 1: Ask for explanation explicitly
     data = {
@@ -52,7 +52,7 @@ def test_explanation_request():
 
 def test_different_question_types():
     """Test different types of questions"""
-    url = "https://4e8e5f83-a55c-4096-87d1-8b9333365f98.preview.emergentagent.com/api/chat"
+    url = "https://1471fe46-cff7-448e-b32d-2e138d2a26fd.preview.emergentagent.com/api/chat"
     
     questions = [
         "How many items?",
