@@ -21,7 +21,7 @@ def json_serializable(obj):
         return [json_serializable(item) for item in obj]
     else:
         return obj
-import google.generativeai as genai
+# Lazy import for Google Generative AI is handled inside /api/chat endpoint to avoid startup failures
 from pymongo import MongoClient
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
@@ -32,9 +32,8 @@ from openpyxl.utils import get_column_letter
 import openpyxl.comments
 import openpyxl.styles
 
-# Configure Gemini API
+# Gemini API configuration - will be loaded lazily in chat endpoint
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', "AIzaSyB6DG8yocaGBjwfp7TatlDDHlKELYm56BU")
-genai.configure(api_key=GEMINI_API_KEY)
 
 app = FastAPI()
 
