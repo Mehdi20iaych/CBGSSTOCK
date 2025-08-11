@@ -613,6 +613,7 @@ function App() {
                   <li>Les fichiers <strong>Stock M210</strong> et <strong>Transit</strong> sont optionnels mais recommandés</li>
                   <li>Respectez exactement les colonnes spécifiées pour chaque fichier</li>
                   <li>Colonne I doit contenir le type d'emballage (verre, pet, ciel)</li>
+                  <li><strong>Colonne K doit contenir le nombre de produits par palette pour chaque article</strong></li>
                   <li>Seuls les dépôts différents de M210 seront approvisionnés</li>
                 </ul>
               </div>
