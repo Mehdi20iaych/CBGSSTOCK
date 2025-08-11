@@ -911,26 +911,30 @@ async def chat_with_ai(request: ChatRequest):
                 'sample_data': transit_info['data'][:3] if len(transit_info['data']) > 0 else []
             }
         
-        # Build context prompt - MINIMAL VERSION
-        system_prompt = """Assistant inventaire - RÉPONSES MINIMALES UNIQUEMENT.
+        # Build context prompt - MINIMAL BUT USEFUL
+        system_prompt = """Assistant inventaire - RÉPONSES COURTES EN BULLET POINTS.
 
-        DONNÉES:
+        DONNÉES DISPONIBLES:
         """
         
         if data_context:
             for data_type, info in data_context.items():
-                system_prompt += f"\n{data_type.upper()}: {info['total_records']} records"
+                system_prompt += f"\n{data_type.upper()}: {info['total_records']} enregistrements"
+                if info['sample_data']:
+                    # Provide sample data for analysis
+                    safe_sample_data = json_serializable(info['sample_data'][:2])
+                    system_prompt += f"\nExemples: {json.dumps(safe_sample_data, ensure_ascii=False)}"
         else:
-            system_prompt += "\nAucune donnée."
+            system_prompt += "\nAucune donnée uploadée."
         
         system_prompt += """
 
-        FORMAT OBLIGATOIRE:
-        • Uniquement info essentielle
-        • Format bullet points
-        • 3 points maximum
-        • Pas d'explication sauf si demandé
-        • Chiffres précis uniquement"""
+        INSTRUCTIONS:
+        • Format bullet points OBLIGATOIRE  
+        • Maximum 3 points par réponse
+        • Réponses précises avec chiffres exacts
+        • Analyse les données quand disponibles
+        • Réponds toujours même si données limitées"""
         
         # Create the chat
         model = genai.GenerativeModel('gemini-1.5-flash')
