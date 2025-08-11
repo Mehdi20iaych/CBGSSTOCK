@@ -236,8 +236,8 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Erreur lors de l\'export');
+        const errorData = await parseJSONSafe(response);
+        throw new Error((errorData && (errorData.detail || errorData.message)) || 'Erreur lors de l\'export');
       }
 
       const blob = await response.blob();
