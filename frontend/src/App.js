@@ -89,11 +89,11 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Erreur HTTP! statut: ${response.status}`);
+        const errorData = await parseJSONSafe(response);
+        throw new Error((errorData && (errorData.detail || errorData.message)) || `Erreur HTTP! statut: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await parseJSONSafe(response) || {};
       setCommandesData(data);
       
       // Mettre à jour les filtres d'emballage disponibles
