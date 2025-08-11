@@ -189,6 +189,12 @@ function App() {
 
       const data = await parseJSONSafe(response) || {};
       setStockData(data);
+      
+      // Extraire les articles disponibles pour le plan de production
+      if (data.filters && data.filters.articles) {
+        setAvailableArticles(data.filters.articles.sort());
+      }
+      
       setError(null);
     } catch (err) {
       setError(`Échec du téléchargement du stock: ${err.message}`);
