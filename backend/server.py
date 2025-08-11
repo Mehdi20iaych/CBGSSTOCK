@@ -787,7 +787,7 @@ async def get_depot_suggestions(request: dict):
             # Calculer avec la formule actuelle
             quantite_requise = cqm * current_days
             quantite_a_envoyer = max(0, quantite_requise - stock_actuel - stock_transit)
-            palettes_needed = quantite_a_envoyer / produits_par_palette if quantite_a_envoyer > 0 and produits_par_palette > 0 else 0
+            palettes_needed = math.ceil(quantite_a_envoyer / produits_par_palette) if quantite_a_envoyer > 0 and produits_par_palette > 0 else 0
             
             current_palettes += palettes_needed
             
