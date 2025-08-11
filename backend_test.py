@@ -2876,6 +2876,396 @@ class SimplifiedStockManagementTester:
         
         return chat_tests_passed == chat_tests_run
 
+    def test_ceiling_function_basic_verification(self):
+        """Test that math.ceil() is properly applied to palette calculations"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for ceiling function test")
+            return False
+        
+        # Create test data with specific quantities that will result in fractional palettes
+        test_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005'],
+            'Article': ['1011', '1016', '1021', '1033', '1040'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5'],
+            'Point d\'Expédition': ['M211', 'M212', 'M213', 'M211', 'M212'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Quantité Commandée': [8, 178, 304, 1, 299],  # Will create fractional palettes
+            'Stock Utilisation Libre': [0, 0, 0, 0, 0],  # No stock to simplify calculation
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet'],
+            'Dummy_J': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Produits par Palette': [30, 30, 30, 30, 30]  # Column K - 30 products per palette
+        }
+        
+        df = pd.DataFrame(test_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('ceiling_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        # Upload test data
+        success, upload_response = self.run_test(
+            "Upload Data for Ceiling Function Test",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if success:
+            # Test calculation with 1 day to get exact quantities
+            calculation_data = {"days": 1}
+            calc_success, calc_response = self.run_test(
+                "Ceiling Function Verification - 1 Day",
+                "POST",
+                "api/calculate",
+                200,
+                data=calculation_data
+            )
+            
+            if calc_success and 'calculations' in calc_response:
+                calculations = calc_response['calculations']
+                
+                # Expected results: quantities 8, 178, 304, 1, 299 with 30 products per palette
+                # Should result in palettes: ceil(8/30)=1, ceil(178/30)=6, ceil(304/30)=11, ceil(1/30)=1, ceil(299/30)=10
+                expected_results = [
+                    {'article': '1011', 'quantity': 8, 'expected_palettes': 1},
+                    {'article': '1016', 'quantity': 178, 'expected_palettes': 6},
+                    {'article': '1021', 'quantity': 304, 'expected_palettes': 11},
+                    {'article': '1033', 'quantity': 1, 'expected_palettes': 1},
+                    {'article': '1040', 'quantity': 299, 'expected_palettes': 10}
+                ]
+                
+                for expected in expected_results:
+                    # Find the calculation for this article
+                    calc = next((c for c in calculations if c['article'] == expected['article']), None)
+                    if not calc:
+                        print(f"❌ Missing calculation for article {expected['article']}")
+                        return False
+                    
+                    # Verify the quantity matches expected
+                    if calc['quantite_a_envoyer'] != expected['quantity']:
+                        print(f"❌ Article {expected['article']}: Expected quantity {expected['quantity']}, got {calc['quantite_a_envoyer']}")
+                        return False
+                    
+                    # Verify palettes are correctly calculated with ceiling function
+                    if calc['palettes_needed'] != expected['expected_palettes']:
+                        print(f"❌ Article {expected['article']}: Expected {expected['expected_palettes']} palettes for {expected['quantity']} products, got {calc['palettes_needed']}")
+                        print(f"   Mathematical check: ceil({expected['quantity']}/30) = {math.ceil(expected['quantity']/30)}")
+                        return False
+                    
+                    print(f"✅ Article {expected['article']}: {expected['quantity']} products → {calc['palettes_needed']} palettes (ceil({expected['quantity']}/30))")
+                
+                print("✅ Ceiling function correctly applied to all palette calculations")
+                return True
+        
+        return False
+
+    def test_ceiling_function_fractional_scenarios(self):
+        """Test ceiling function with specific fractional scenarios mentioned in review"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for fractional scenarios test")
+            return False
+        
+        # Create scenarios that would previously show 0.27, 5.93, 10.13 → now should show 1, 6, 11
+        test_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003'],
+            'Article': ['TEST001', 'TEST002', 'TEST003'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3'],
+            'Point d\'Expédition': ['M211', 'M212', 'M213'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3'],
+            'Quantité Commandée': [8, 178, 304],  # These will create the fractional scenarios
+            'Stock Utilisation Libre': [0, 0, 0],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3'],
+            'Type Emballage': ['verre', 'pet', 'ciel'],
+            'Dummy_J': ['Extra1', 'Extra2', 'Extra3'],
+            'Produits par Palette': [30, 30, 30]
+        }
+        
+        df = pd.DataFrame(test_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('fractional_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        # Upload test data
+        success, upload_response = self.run_test(
+            "Upload Fractional Scenarios Test Data",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if success:
+            calculation_data = {"days": 1}
+            calc_success, calc_response = self.run_test(
+                "Fractional Scenarios Ceiling Test",
+                "POST",
+                "api/calculate",
+                200,
+                data=calculation_data
+            )
+            
+            if calc_success and 'calculations' in calc_response:
+                calculations = calc_response['calculations']
+                
+                # Verify specific fractional scenarios
+                fractional_tests = [
+                    {'article': 'TEST001', 'quantity': 8, 'decimal_palettes': 8/30, 'expected_ceiling': 1},
+                    {'article': 'TEST002', 'quantity': 178, 'decimal_palettes': 178/30, 'expected_ceiling': 6},
+                    {'article': 'TEST003', 'quantity': 304, 'decimal_palettes': 304/30, 'expected_ceiling': 11}
+                ]
+                
+                for test in fractional_tests:
+                    calc = next((c for c in calculations if c['article'] == test['article']), None)
+                    if not calc:
+                        print(f"❌ Missing calculation for article {test['article']}")
+                        return False
+                    
+                    # Verify the decimal calculation would be fractional
+                    decimal_result = test['decimal_palettes']
+                    if decimal_result == int(decimal_result):
+                        print(f"⚠️ Article {test['article']}: {test['quantity']}/30 = {decimal_result} is not fractional")
+                    
+                    # Verify ceiling function is applied
+                    if calc['palettes_needed'] != test['expected_ceiling']:
+                        print(f"❌ Article {test['article']}: Expected ceiling of {decimal_result:.2f} = {test['expected_ceiling']}, got {calc['palettes_needed']}")
+                        return False
+                    
+                    print(f"✅ Article {test['article']}: {test['quantity']} products → {decimal_result:.2f} decimal palettes → {calc['palettes_needed']} ceiling palettes")
+                
+                print("✅ All fractional scenarios correctly rounded UP using ceiling function")
+                return True
+        
+        return False
+
+    def test_ceiling_function_edge_cases(self):
+        """Test ceiling function edge cases: 0 quantities, exactly divisible, very small fractions"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for edge cases test")
+            return False
+        
+        # Test edge cases
+        test_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005'],
+            'Article': ['EDGE001', 'EDGE002', 'EDGE003', 'EDGE004', 'EDGE005'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5'],
+            'Point d\'Expédition': ['M211', 'M212', 'M213', 'M211', 'M212'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Quantité Commandée': [0, 30, 60, 1, 29],  # 0, exactly divisible, very small fraction
+            'Stock Utilisation Libre': [0, 0, 0, 0, 0],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet'],
+            'Dummy_J': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Produits par Palette': [30, 30, 30, 30, 30]
+        }
+        
+        df = pd.DataFrame(test_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('edge_cases_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        # Upload test data
+        success, upload_response = self.run_test(
+            "Upload Edge Cases Test Data",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if success:
+            calculation_data = {"days": 1}
+            calc_success, calc_response = self.run_test(
+                "Edge Cases Ceiling Function Test",
+                "POST",
+                "api/calculate",
+                200,
+                data=calculation_data
+            )
+            
+            if calc_success and 'calculations' in calc_response:
+                calculations = calc_response['calculations']
+                
+                edge_cases = [
+                    {'article': 'EDGE001', 'quantity': 0, 'expected_palettes': 0, 'description': '0 quantities should remain 0'},
+                    {'article': 'EDGE002', 'quantity': 30, 'expected_palettes': 1, 'description': 'exactly divisible (30/30=1)'},
+                    {'article': 'EDGE003', 'quantity': 60, 'expected_palettes': 2, 'description': 'exactly divisible (60/30=2)'},
+                    {'article': 'EDGE004', 'quantity': 1, 'expected_palettes': 1, 'description': 'very small fraction (1/30=0.033→1)'},
+                    {'article': 'EDGE005', 'quantity': 29, 'expected_palettes': 1, 'description': 'almost 1 palette (29/30=0.967→1)'}
+                ]
+                
+                for case in edge_cases:
+                    calc = next((c for c in calculations if c['article'] == case['article']), None)
+                    if not calc:
+                        print(f"❌ Missing calculation for article {case['article']}")
+                        return False
+                    
+                    if calc['palettes_needed'] != case['expected_palettes']:
+                        print(f"❌ {case['description']}: Expected {case['expected_palettes']} palettes, got {calc['palettes_needed']}")
+                        return False
+                    
+                    print(f"✅ {case['description']}: {case['quantity']} → {calc['palettes_needed']} palettes")
+                
+                print("✅ All edge cases handled correctly by ceiling function")
+                return True
+        
+        return False
+
+    def test_ceiling_function_depot_suggestions(self):
+        """Test that ceiling function is also applied in depot suggestions endpoint"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for depot suggestions ceiling test")
+            return False
+        
+        # Test depot suggestions endpoint also uses ceiling function
+        depot_data = {
+            'depot_name': 'M211',
+            'days': 1
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions Ceiling Function Test",
+            "POST",
+            "api/depot-suggestions",
+            200,
+            data=depot_data
+        )
+        
+        if success:
+            # Verify current_palettes is an integer (result of ceiling function)
+            current_palettes = response.get('current_palettes', 0)
+            if not isinstance(current_palettes, int):
+                print(f"❌ current_palettes should be integer, got {type(current_palettes)}: {current_palettes}")
+                return False
+            
+            # Verify suggestions also use ceiling function
+            suggestions = response.get('suggestions', [])
+            for suggestion in suggestions:
+                if 'suggested_palettes' in suggestion:
+                    suggested_palettes = suggestion['suggested_palettes']
+                    if not isinstance(suggested_palettes, int):
+                        print(f"❌ suggested_palettes should be integer, got {type(suggested_palettes)}: {suggested_palettes}")
+                        return False
+            
+            print(f"✅ Depot suggestions endpoint uses ceiling function: {current_palettes} current palettes (integer)")
+            return True
+        
+        return False
+
+    def test_ceiling_function_data_consistency(self):
+        """Test that ceiling function results are consistent across all endpoints"""
+        if not self.commandes_session_id:
+            print("❌ No commandes session available for data consistency test")
+            return False
+        
+        # Get calculation results
+        calculation_data = {"days": 10}
+        calc_success, calc_response = self.run_test(
+            "Get Calculations for Consistency Test",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if calc_success and 'calculations' in calc_response:
+            calculations = calc_response['calculations']
+            
+            # Verify all palettes_needed are integers
+            for calc in calculations:
+                palettes_needed = calc.get('palettes_needed', 0)
+                if not isinstance(palettes_needed, int):
+                    print(f"❌ palettes_needed should be integer, got {type(palettes_needed)}: {palettes_needed}")
+                    return False
+                
+                # Verify mathematical consistency
+                quantite_a_envoyer = calc.get('quantite_a_envoyer', 0)
+                produits_par_palette = calc.get('produits_par_palette', 30)
+                
+                if quantite_a_envoyer > 0 and produits_par_palette > 0:
+                    expected_palettes = math.ceil(quantite_a_envoyer / produits_par_palette)
+                    if palettes_needed != expected_palettes:
+                        print(f"❌ Article {calc['article']}: Expected {expected_palettes} palettes, got {palettes_needed}")
+                        return False
+            
+            # Check depot_summary also uses integer palettes
+            depot_summary = calc_response.get('depot_summary', [])
+            for depot_info in depot_summary:
+                total_palettes = depot_info.get('total_palettes', 0)
+                if not isinstance(total_palettes, int):
+                    print(f"❌ depot total_palettes should be integer, got {type(total_palettes)}: {total_palettes}")
+                    return False
+                
+                trucks_needed = depot_info.get('trucks_needed', 0)
+                if not isinstance(trucks_needed, int):
+                    print(f"❌ trucks_needed should be integer, got {type(trucks_needed)}: {trucks_needed}")
+                    return False
+            
+            print("✅ All palette calculations consistently use ceiling function and return integers")
+            return True
+        
+        return False
+
+    def run_ceiling_function_tests(self):
+        """Run focused tests for the new ceiling function implementation"""
+        print("🚀 Starting Ceiling Function Implementation Testing...")
+        print("=" * 70)
+        
+        ceiling_tests = [
+            ("Health Check", self.test_health_check),
+            ("Upload Commandes Excel", self.test_upload_commandes_excel),
+            ("Upload Stock Excel", self.test_upload_stock_excel),
+            ("Upload Transit Excel", self.test_upload_transit_excel),
+            ("Ceiling Function Basic Verification", self.test_ceiling_function_basic_verification),
+            ("Ceiling Function Fractional Scenarios", self.test_ceiling_function_fractional_scenarios),
+            ("Ceiling Function Edge Cases", self.test_ceiling_function_edge_cases),
+            ("Ceiling Function Depot Suggestions", self.test_ceiling_function_depot_suggestions),
+            ("Ceiling Function Data Consistency", self.test_ceiling_function_data_consistency)
+        ]
+        
+        for test_name, test_func in ceiling_tests:
+            try:
+                print(f"\n{'='*20} {test_name} {'='*20}")
+                result = test_func()
+                if result:
+                    print(f"✅ {test_name} PASSED")
+                else:
+                    print(f"❌ {test_name} FAILED")
+                    break  # Stop on first failure for focused testing
+            except Exception as e:
+                print(f"❌ {test_name} ERROR: {str(e)}")
+                break
+        
+        # Print ceiling function test summary
+        print("\n" + "="*70)
+        print("📊 CEILING FUNCTION IMPLEMENTATION TEST SUMMARY")
+        print("="*70)
+        print(f"Total Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%" if self.tests_run > 0 else "0%")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 ALL CEILING FUNCTION TESTS PASSED! The new math.ceil() implementation is working correctly.")
+            print("✅ Fractional palette values are now properly rounded UP to whole numbers")
+            print("✅ Previously: 0.27, 5.93, 10.13 → Now: 1, 6, 11")
+        else:
+            print("⚠️ Some ceiling function tests failed. Please review the issues above.")
+        
+        return self.tests_passed == self.tests_run
+
     def run_all_tests(self):
         """Run all tests for the enhanced inventory management system with packaging"""
         print("🚀 Starting Enhanced Inventory Management System Tests with Packaging")
@@ -2915,7 +3305,13 @@ class SimplifiedStockManagementTester:
             ("Depot Suggestions - Feasibility Analysis", self.test_depot_suggestions_feasibility),
             ("Depot Suggestions - No Orders for Depot", self.test_depot_suggestions_no_orders),
             ("Depot Suggestions - High Palettes Depot", self.test_depot_suggestions_high_palettes),
-            ("Depot Suggestions - Mathematical Accuracy", self.test_depot_suggestions_mathematical_accuracy)
+            ("Depot Suggestions - Mathematical Accuracy", self.test_depot_suggestions_mathematical_accuracy),
+            # NEW CEILING FUNCTION TESTS
+            ("Ceiling Function Basic Verification", self.test_ceiling_function_basic_verification),
+            ("Ceiling Function Fractional Scenarios", self.test_ceiling_function_fractional_scenarios),
+            ("Ceiling Function Edge Cases", self.test_ceiling_function_edge_cases),
+            ("Ceiling Function Depot Suggestions", self.test_ceiling_function_depot_suggestions),
+            ("Ceiling Function Data Consistency", self.test_ceiling_function_data_consistency)
         ]
         
         for test_name, test_func in tests:
