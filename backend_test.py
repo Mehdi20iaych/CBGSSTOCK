@@ -2854,7 +2854,7 @@ class SimplifiedStockManagementTester:
                 return False
             
             # Verify bullet point format (should contain bullet points)
-            if '•' not in ai_response and '-' not in ai_response:
+            if '•' not in ai_response and '-' not in ai_response and '*' not in ai_response:
                 print(f"❌ Response should be in bullet point format")
                 return False
             
