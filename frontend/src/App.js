@@ -66,6 +66,14 @@ function App() {
   const [chatLoading, setChatLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
   
+  // États pour le plan de production
+  const [productionPlan, setProductionPlan] = useState([]);
+  const [newProductionItem, setNewProductionItem] = useState({
+    article: '',
+    quantity: ''
+  });
+  const [availableArticles, setAvailableArticles] = useState([]);
+  
   // Références pour les inputs de fichiers
   const commandesFileRef = useRef(null);
   const stockFileRef = useRef(null);
