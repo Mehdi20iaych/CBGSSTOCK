@@ -132,19 +132,20 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
         contents = await file.read()
         df = pd.read_excel(contents)
         
-        # Vérifier les colonnes requises selon les spécifications
-        required_columns = ['B', 'D', 'F', 'G', 'I']  # Article, Point d'Expédition, Quantité Commandée, Stock Utilisation Libre, Type Emballage
+        # Vérifier les colonnes requises selon les spécifications - AJOUT COLONNE K
+        required_columns = ['B', 'D', 'F', 'G', 'I', 'K']  # Article, Point d'Expédition, Quantité Commandée, Stock Utilisation Libre, Type Emballage, Produits par Palette
         
         # Si les colonnes sont nommées différemment, essayer de les identifier
         if 'B' not in df.columns:
             # Essayer avec les noms potentiels des colonnes
             column_mapping = {}
-            if len(df.columns) >= 9:  # Au moins 9 colonnes pour avoir A-I
+            if len(df.columns) >= 11:  # Au moins 11 colonnes pour avoir A-K
                 column_mapping['Article'] = df.columns[1]  # Colonne B (index 1)
                 column_mapping['Point d\'Expédition'] = df.columns[3]  # Colonne D (index 3) 
                 column_mapping['Quantité Commandée'] = df.columns[5]  # Colonne F (index 5)
                 column_mapping['Stock Utilisation Libre'] = df.columns[6]  # Colonne G (index 6)
                 column_mapping['Type Emballage'] = df.columns[8]  # Colonne I (index 8)
+                column_mapping['Produits par Palette'] = df.columns[10]  # Colonne K (index 10)
                 
                 # Renommer les colonnes pour standardiser
                 df = df.rename(columns={
@@ -152,16 +153,17 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
                     df.columns[3]: 'Point d\'Expédition', 
                     df.columns[5]: 'Quantité Commandée',
                     df.columns[6]: 'Stock Utilisation Libre',
-                    df.columns[8]: 'Type Emballage'
+                    df.columns[8]: 'Type Emballage',
+                    df.columns[10]: 'Produits par Palette'
                 })
         
         # Vérifier que nous avons les colonnes nécessaires après mapping
-        required_cols = ['Article', 'Point d\'Expédition', 'Quantité Commandée', 'Stock Utilisation Libre', 'Type Emballage']
+        required_cols = ['Article', 'Point d\'Expédition', 'Quantité Commandée', 'Stock Utilisation Libre', 'Type Emballage', 'Produits par Palette']
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
             raise HTTPException(
                 status_code=400, 
-                detail=f"Colonnes manquantes: {', '.join(missing_cols)}. Vérifiez que le fichier contient les colonnes B, D, F, G, I selon les spécifications."
+                detail=f"Colonnes manquantes: {', '.join(missing_cols)}. Vérifiez que le fichier contient les colonnes B, D, F, G, I, K selon les spécifications."
             )
         
         # Nettoyer et valider les données
