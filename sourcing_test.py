@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 class SourcingIntelligenceAPITester:
-    def __init__(self, base_url="https://26c0a26b-a6c0-48b9-82e9-52e8233e0e04.preview.emergentagent.com"):
+    def __init__(self, base_url="https://2d405bcb-1210-461d-9403-54f42d429656.preview.emergentagent.com"):
         self.base_url = base_url
         self.session_id = None
         self.tests_run = 0
