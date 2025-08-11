@@ -585,7 +585,7 @@ function App() {
                     {stockData && (
                       <div className="mt-3 text-sm">
                         <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          ✓ {stockData.summary.unique_articles} articles
+                          ✓ {stockData.summary?.unique_articles ?? 'chargé'} {stockData.summary?.unique_articles ? 'articles' : ''}
                         </div>
                       </div>
                     )}
