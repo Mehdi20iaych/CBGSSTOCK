@@ -911,44 +911,26 @@ async def chat_with_ai(request: ChatRequest):
                 'sample_data': transit_info['data'][:3] if len(transit_info['data']) > 0 else []
             }
         
-        # Build context prompt
-        system_prompt = """Tu es un assistant IA spécialisé dans l'analyse d'inventaire et la gestion des stocks. 
-        Tu aides les utilisateurs à comprendre et analyser leurs données d'inventaire.
+        # Build context prompt - MINIMAL VERSION
+        system_prompt = """Assistant inventaire - RÉPONSES MINIMALES UNIQUEMENT.
 
-        CONTEXTE DU SYSTÈME:
-        - Système de gestion des stocks pour distribution depuis dépôt central M210
-        - Trois types de fichiers: Commandes, Stock M210, Transit
-        - Formule de calcul: Quantité à Envoyer = max(0, (Quantité Commandée × Jours) - Stock Actuel - Transit)
-        - Articles locaux vs sourcing externe
-        - Logistique palettes (30 produits/palette) et camions (24 palettes/camion)
-
-        DONNÉES DISPONIBLES:
+        DONNÉES:
         """
         
         if data_context:
             for data_type, info in data_context.items():
-                system_prompt += f"\n{data_type.upper()}:"
-                system_prompt += f"\n- Total enregistrements: {info['total_records']}"
-                if 'summary' in info:
-                    # Use safe JSON serialization for datetime objects
-                    safe_summary = json_serializable(info['summary'])
-                    system_prompt += f"\n- Résumé: {json.dumps(safe_summary, ensure_ascii=False)}"
-                if info['sample_data']:
-                    # Use safe JSON serialization for datetime objects
-                    safe_sample_data = json_serializable(info['sample_data'][:2])
-                    system_prompt += f"\n- Exemple données: {json.dumps(safe_sample_data, ensure_ascii=False)}"
+                system_prompt += f"\n{data_type.upper()}: {info['total_records']} records"
         else:
-            system_prompt += "\nAucune donnée uploadée actuellement."
+            system_prompt += "\nAucune donnée."
         
         system_prompt += """
 
-        INSTRUCTIONS:
-        - Réponds en français
-        - Sois précis et factuel basé sur les données disponibles
-        - Si pas de données, explique ce que tu pourrais analyser avec des données
-        - Propose des analyses pertinentes selon le contexte
-        - Utilise les termes métier: dépôts, articles, palettes, camions, sourcing
-        """
+        FORMAT OBLIGATOIRE:
+        • Uniquement info essentielle
+        • Format bullet points
+        • 3 points maximum
+        • Pas d'explication sauf si demandé
+        • Chiffres précis uniquement"""
         
         # Create the chat
         model = genai.GenerativeModel('gemini-1.5-flash')
