@@ -169,6 +169,7 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
         # Nettoyer et valider les données
         df['Quantité Commandée'] = pd.to_numeric(df['Quantité Commandée'], errors='coerce')
         df['Stock Utilisation Libre'] = pd.to_numeric(df['Stock Utilisation Libre'], errors='coerce')
+        df['Produits par Palette'] = pd.to_numeric(df['Produits par Palette'], errors='coerce')
         
         # Nettoyer et standardiser le type d'emballage
         df['Type Emballage'] = df['Type Emballage'].astype(str).str.strip().str.lower()
@@ -184,10 +185,13 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
         df['Type Emballage'] = df['Type Emballage'].map(packaging_mapping).fillna(df['Type Emballage'])
         
         # Supprimer les lignes avec données manquantes essentielles
-        df = df.dropna(subset=['Article', 'Point d\'Expédition', 'Quantité Commandée', 'Type Emballage'])
+        df = df.dropna(subset=['Article', 'Point d\'Expédition', 'Quantité Commandée', 'Type Emballage', 'Produits par Palette'])
         
         # Remplir Stock Utilisation Libre manquant par 0
         df['Stock Utilisation Libre'] = df['Stock Utilisation Libre'].fillna(0)
+        
+        # Validation: Produits par Palette doit être > 0
+        df = df[df['Produits par Palette'] > 0]
         
         # Filtrer pour exclure M210 des dépôts destinataires (M210 ne doit jamais être approvisionné)
         df = df[df['Point d\'Expédition'] != 'M210']
