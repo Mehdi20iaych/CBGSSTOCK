@@ -2829,6 +2829,330 @@ class SimplifiedStockManagementTester:
             print("❌ Datetime-specific serialization test failed")
             return False
 
+    def test_chat_minimal_response_no_data(self):
+        """Test AI chat provides minimal responses when no data is uploaded"""
+        # Clear any existing data first by testing with fresh session
+        chat_data = {
+            "message": "What is the current inventory status?",
+            "conversation_id": None
+        }
+        
+        success, response = self.run_test(
+            "AI Chat Minimal Response - No Data",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success and 'response' in response:
+            ai_response = response['response']
+            
+            # Verify response is minimal (should be short)
+            if len(ai_response) > 500:  # Minimal responses should be under 500 chars
+                print(f"❌ Response too long for minimal format: {len(ai_response)} characters")
+                return False
+            
+            # Verify bullet point format (should contain bullet points)
+            if '•' not in ai_response and '-' not in ai_response:
+                print(f"❌ Response should be in bullet point format")
+                return False
+            
+            # Verify has_data is False when no data uploaded
+            if response.get('has_data', True):
+                print(f"❌ has_data should be False when no data is uploaded")
+                return False
+            
+            print(f"✅ Minimal response format verified - {len(ai_response)} characters with bullet points")
+            print(f"Response preview: {ai_response[:200]}...")
+            return True
+        
+        return False
+
+    def test_chat_minimal_response_with_data(self):
+        """Test AI chat provides minimal bullet-point responses with uploaded data"""
+        # Ensure we have uploaded data
+        if not all([self.commandes_session_id, self.stock_session_id, self.transit_session_id]):
+            print("⚠️ Skipping test - need uploaded data for context")
+            return True
+        
+        chat_data = {
+            "message": "Analyze the current stock situation",
+            "conversation_id": None
+        }
+        
+        success, response = self.run_test(
+            "AI Chat Minimal Response - With Data",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success and 'response' in response:
+            ai_response = response['response']
+            
+            # Verify response is minimal but informative
+            if len(ai_response) > 800:  # Should be concise even with data
+                print(f"❌ Response too verbose: {len(ai_response)} characters")
+                return False
+            
+            # Verify bullet point format
+            bullet_count = ai_response.count('•') + ai_response.count('-')
+            if bullet_count == 0:
+                print(f"❌ Response should contain bullet points")
+                return False
+            
+            # Verify max 3 bullet points (approximately)
+            if bullet_count > 5:  # Allow some flexibility
+                print(f"❌ Too many bullet points ({bullet_count}), should be max 3")
+                return False
+            
+            # Verify has_data is True when data is available
+            if not response.get('has_data', False):
+                print(f"❌ has_data should be True when data is available")
+                return False
+            
+            # Verify data_types are listed
+            data_types = response.get('data_types', [])
+            expected_types = ['commandes', 'stock', 'transit']
+            if not all(dt in data_types for dt in expected_types):
+                print(f"❌ Missing expected data types. Got: {data_types}")
+                return False
+            
+            print(f"✅ Minimal response with data verified - {len(ai_response)} chars, {bullet_count} bullets")
+            print(f"Response preview: {ai_response[:200]}...")
+            return True
+        
+        return False
+
+    def test_chat_explanation_when_requested(self):
+        """Test AI chat provides explanations only when specifically requested"""
+        # Test 1: Ask for explanation explicitly
+        chat_data = {
+            "message": "Explain how the inventory calculation formula works in detail",
+            "conversation_id": None
+        }
+        
+        success, response = self.run_test(
+            "AI Chat Explanation - When Requested",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success and 'response' in response:
+            ai_response = response['response']
+            
+            # When explanation is requested, response can be longer
+            if len(ai_response) < 200:
+                print(f"❌ Explanation should be more detailed when requested")
+                return False
+            
+            # Should contain explanation keywords
+            explanation_keywords = ['formule', 'calcul', 'explication', 'détail', 'comment']
+            if not any(keyword in ai_response.lower() for keyword in explanation_keywords):
+                print(f"❌ Response should contain explanation when requested")
+                return False
+            
+            print(f"✅ Detailed explanation provided when requested - {len(ai_response)} characters")
+            print(f"Response preview: {ai_response[:200]}...")
+            return True
+        
+        return False
+
+    def test_chat_bullet_format_verification(self):
+        """Test that responses are consistently in bullet format with max 3 points"""
+        test_questions = [
+            "What are the main inventory issues?",
+            "Show me the depot status",
+            "What products need attention?",
+            "Give me a stock summary"
+        ]
+        
+        for question in test_questions:
+            chat_data = {
+                "message": question,
+                "conversation_id": None
+            }
+            
+            success, response = self.run_test(
+                f"Bullet Format Test - '{question[:30]}...'",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success and 'response' in response:
+                ai_response = response['response']
+                
+                # Count bullet points
+                bullet_count = ai_response.count('•') + ai_response.count('-')
+                
+                # Verify bullet format exists
+                if bullet_count == 0:
+                    print(f"❌ No bullet points found in response to: {question}")
+                    return False
+                
+                # Verify max 3 bullet points (with some flexibility)
+                if bullet_count > 5:
+                    print(f"❌ Too many bullet points ({bullet_count}) for: {question}")
+                    return False
+                
+                # Verify response is concise
+                if len(ai_response) > 600:
+                    print(f"❌ Response too long ({len(ai_response)} chars) for: {question}")
+                    return False
+                
+                print(f"✅ Question '{question[:30]}...': {bullet_count} bullets, {len(ai_response)} chars")
+            else:
+                return False
+        
+        print("✅ All responses follow bullet format with appropriate length")
+        return True
+
+    def test_chat_different_question_types(self):
+        """Test different types of questions get appropriate minimal responses"""
+        test_cases = [
+            {
+                "question": "How many products do we have?",
+                "type": "general_inventory",
+                "expected_keywords": ["produit", "article", "total"]
+            },
+            {
+                "question": "Which depots need deliveries?",
+                "type": "specific_analysis", 
+                "expected_keywords": ["dépôt", "livraison", "M2"]
+            },
+            {
+                "question": "What is the palette situation?",
+                "type": "logistics",
+                "expected_keywords": ["palette", "camion", "efficac"]
+            }
+        ]
+        
+        for test_case in test_cases:
+            chat_data = {
+                "message": test_case["question"],
+                "conversation_id": None
+            }
+            
+            success, response = self.run_test(
+                f"Question Type Test - {test_case['type']}",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success and 'response' in response:
+                ai_response = response['response'].lower()
+                
+                # Verify response contains relevant keywords
+                keyword_found = any(keyword in ai_response for keyword in test_case["expected_keywords"])
+                if not keyword_found:
+                    print(f"❌ Response doesn't contain expected keywords {test_case['expected_keywords']}")
+                    print(f"Response: {ai_response[:200]}...")
+                    return False
+                
+                # Verify minimal format
+                if len(response['response']) > 500:
+                    print(f"❌ Response too long for {test_case['type']}: {len(response['response'])} chars")
+                    return False
+                
+                print(f"✅ {test_case['type']} question handled appropriately")
+            else:
+                return False
+        
+        return True
+
+    def test_chat_no_unnecessary_explanations(self):
+        """Test that responses don't include unnecessary explanations unless requested"""
+        simple_questions = [
+            "Stock status?",
+            "Depot summary?", 
+            "Critical items?",
+            "Palette count?"
+        ]
+        
+        for question in simple_questions:
+            chat_data = {
+                "message": question,
+                "conversation_id": None
+            }
+            
+            success, response = self.run_test(
+                f"No Explanations Test - '{question}'",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success and 'response' in response:
+                ai_response = response['response'].lower()
+                
+                # Check for unnecessary explanation words
+                explanation_words = [
+                    'parce que', 'car', 'en effet', 'cela signifie', 'autrement dit',
+                    'c\'est-à-dire', 'en d\'autres termes', 'pour expliquer'
+                ]
+                
+                unnecessary_explanations = [word for word in explanation_words if word in ai_response]
+                if unnecessary_explanations:
+                    print(f"❌ Found unnecessary explanations: {unnecessary_explanations}")
+                    print(f"Response: {ai_response[:200]}...")
+                    return False
+                
+                # Verify response is direct and to the point
+                if len(response['response']) > 400:
+                    print(f"❌ Response too detailed for simple question '{question}': {len(response['response'])} chars")
+                    return False
+                
+                print(f"✅ Simple question '{question}' got direct response")
+            else:
+                return False
+        
+        return True
+
+    def run_ai_chat_minimal_response_tests(self):
+        """Run all AI chat minimal response functionality tests"""
+        print("\n" + "="*80)
+        print("🤖 TESTING AI CHAT MINIMAL RESPONSE FUNCTIONALITY")
+        print("="*80)
+        
+        tests = [
+            self.test_chat_minimal_response_no_data,
+            self.test_chat_minimal_response_with_data,
+            self.test_chat_explanation_when_requested,
+            self.test_chat_bullet_format_verification,
+            self.test_chat_different_question_types,
+            self.test_chat_no_unnecessary_explanations
+        ]
+        
+        passed = 0
+        total = len(tests)
+        
+        for test in tests:
+            try:
+                if test():
+                    passed += 1
+                else:
+                    print(f"❌ {test.__name__} failed")
+            except Exception as e:
+                print(f"❌ {test.__name__} failed with exception: {str(e)}")
+        
+        print(f"\n📊 AI CHAT MINIMAL RESPONSE TESTS SUMMARY: {passed}/{total} passed ({passed/total*100:.1f}%)")
+        
+        if passed == total:
+            print("🎉 ALL AI CHAT MINIMAL RESPONSE TESTS PASSED! The modified AI chat provides minimal, bullet-point responses as requested.")
+        else:
+            print("⚠️ Some AI chat minimal response tests failed. Please review the implementation.")
+        
+        return passed == total
+
     def run_ai_chat_tests(self):
         """Run comprehensive AI chat functionality tests"""
         print("🚀 Starting AI Chat Functionality Testing...")
