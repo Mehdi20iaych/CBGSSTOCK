@@ -441,7 +441,17 @@
   test_all: false
   test_priority: "high_first"
 
-  - task: "Test new depot constraint functionality"
+  - task: "Implement ceiling function for palette calculations"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "CEILING FUNCTION IMPLEMENTED: Updated all palette calculations to use math.ceil() function instead of decimal division. This ensures that fractional palettes (e.g., 0.27, 5.93, 10.13) are rounded UP to the next whole number (1, 6, 11). Changes applied to: (1) Main calculation endpoint /api/calculate - line 480: palettes_needed = math.ceil(quantite_a_envoyer / produits_par_palette), (2) Depot suggestions endpoint /api/depot-suggestions - line 790: same ceiling function applied. This affects all results display, depot summaries, logistics dashboard, and Excel exports to show integer palette values instead of decimals."
     implemented: true
     working: true
     file: "/app/backend/server.py"
