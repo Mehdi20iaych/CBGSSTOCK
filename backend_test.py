@@ -61,7 +61,7 @@ class SimplifiedStockManagementTester:
             return False, {}
 
     def create_sample_commandes_excel(self):
-        """Create sample commandes Excel file with columns B, D, F, G, I (including packaging)"""
+        """Create sample commandes Excel file with columns B, D, F, G, I, K (including packaging and products per palette)"""
         # Create sample data with proper column structure - using actual column names
         # Include both locally made and external articles for sourcing testing
         # Include mixed packaging types for packaging filtering tests
@@ -74,7 +74,9 @@ class SimplifiedStockManagementTester:
             'Quantité Commandée': [100, 150, 80, 120, 90, 200],  # Quantité Commandée (Column F)
             'Stock Utilisation Libre': [50, 75, 40, 60, 45, 100],  # Stock Utilisation Libre (Column G)
             'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],  # Dummy column H
-            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet', 'ciel']  # Type Emballage (Column I) - Mixed packaging types
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet', 'ciel'],  # Type Emballage (Column I) - Mixed packaging types
+            'Dummy_J': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],  # Dummy column J
+            'Produits par Palette': [30, 30, 30, 30, 30, 30]  # Produits par Palette (Column K) - 30 products per palette
         }
         
         df = pd.DataFrame(data)
