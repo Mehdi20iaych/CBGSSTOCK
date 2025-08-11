@@ -330,11 +330,11 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Erreur lors de la récupération des suggestions');
+        const errorData = await parseJSONSafe(response);
+        throw new Error((errorData && (errorData.detail || errorData.message)) || 'Erreur lors de la récupération des suggestions');
       }
 
-      const data = await response.json();
+      const data = await parseJSONSafe(response) || {};
       setSuggestions(prev => ({ ...prev, [depotName]: data }));
       setShowSuggestions(prev => ({ ...prev, [depotName]: true }));
     } catch (err) {
