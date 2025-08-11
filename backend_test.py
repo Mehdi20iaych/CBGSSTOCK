@@ -2997,7 +2997,470 @@ class SimplifiedStockManagementTester:
         print("="*70)
         return self.tests_passed == self.tests_run
 
+    def create_mixed_depot_commandes_excel(self):
+        """Create commandes Excel with mixed depot codes including M210 and non-allowed depots"""
+        data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006', 'CMD007', 'CMD008', 'CMD009', 'CMD010'],
+            'Article': ['1011', '1016', '1021', '1033', '1040', '1051', '1059', '1069', '1071', '1515'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6', 'Desc7', 'Desc8', 'Desc9', 'Desc10'],
+            'Point d\'Expédition': ['M115', 'M120', 'M130', 'M170', 'M171', 'M212', 'M250', 'M280', 'M210', 'M300'],  # Mix of allowed, M210, and non-allowed
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7', 'Extra8', 'Extra9', 'Extra10'],
+            'Quantité Commandée': [100, 150, 80, 120, 90, 200, 110, 130, 140, 160],
+            'Stock Utilisation Libre': [50, 75, 40, 60, 45, 100, 55, 65, 70, 80],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7', 'Extra8', 'Extra9', 'Extra10'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet', 'ciel', 'verre', 'pet', 'ciel', 'verre']
+        }
+        
+        df = pd.DataFrame(data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        return excel_buffer
+
+    def create_invalid_depot_commandes_excel(self):
+        """Create commandes Excel with only invalid depot codes"""
+        data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004'],
+            'Article': ['1011', '1016', '1021', '1033'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4'],
+            'Point d\'Expédition': ['M210', 'M300', 'M400', 'X115'],  # All invalid depots
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4'],
+            'Quantité Commandée': [100, 150, 80, 120],
+            'Stock Utilisation Libre': [50, 75, 40, 60],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre']
+        }
+        
+        df = pd.DataFrame(data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        return excel_buffer
+
+    def create_mixed_depot_transit_excel(self):
+        """Create transit Excel with mixed destination depot codes"""
+        data = {
+            'Article': ['1011', '1016', '1021', '1033', '1040', '1051', '1059'],
+            'Dummy_B': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6', 'Desc7'],
+            'Division': ['M115', 'M120', 'M210', 'M300', 'M212', 'M280', 'M400'],  # Mix of allowed, M210, and non-allowed destinations
+            'Dummy_D': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7'],
+            'Dummy_F': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7'],
+            'Division cédante': ['M210', 'M210', 'M210', 'M210', 'M210', 'M210', 'M210'],  # All from M210
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7'],
+            'Quantité': [30, 20, 25, 15, 40, 35, 50]
+        }
+        
+        df = pd.DataFrame(data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        return excel_buffer
+
+    def test_depot_filtering_comprehensive(self):
+        """Comprehensive test of depot filtering functionality"""
+        print("\n🔍 Testing Comprehensive Depot Filtering Functionality...")
+        
+        # Test 1: Upload commandes with mixed depot codes
+        mixed_depot_file = self.create_mixed_depot_commandes_excel()
+        files = {
+            'file': ('mixed_depots.xlsx', mixed_depot_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Upload Mixed Depot Codes (M115, M120, M130, M170, M171, M212, M250, M280, M210, M300)",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if not success:
+            return False
+        
+        # Verify filtering results
+        allowed_depots = response['filters']['depots']
+        expected_allowed = ['M115', 'M120', 'M130', 'M170', 'M171', 'M212', 'M250', 'M280']
+        excluded_depots = ['M210', 'M300']
+        
+        # Check that only allowed depots are present
+        for depot in allowed_depots:
+            if depot not in expected_allowed:
+                print(f"❌ Unexpected depot '{depot}' found in allowed list")
+                return False
+        
+        # Check that excluded depots are not present
+        for depot in excluded_depots:
+            if depot in allowed_depots:
+                print(f"❌ Excluded depot '{depot}' found in allowed list: {allowed_depots}")
+                return False
+        
+        print(f"✅ Depot filtering working correctly. Allowed depots: {sorted(allowed_depots)}")
+        print(f"✅ M210 and M300 correctly excluded from destinations")
+        
+        # Store session for calculation tests
+        mixed_depot_session_id = response['session_id']
+        
+        # Test 2: Upload with only invalid depot codes (should return error)
+        invalid_depot_file = self.create_invalid_depot_commandes_excel()
+        files = {
+            'file': ('invalid_depots.xlsx', invalid_depot_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Upload Only Invalid Depot Codes (Should Return Error)",
+            "POST",
+            "api/upload-commandes-excel",
+            400,  # Should return error
+            files=files
+        )
+        
+        if not success:
+            return False
+        
+        print("✅ Correctly rejected upload with only invalid depot codes")
+        
+        # Test 3: Test transit filtering with mixed destinations
+        mixed_transit_file = self.create_mixed_depot_transit_excel()
+        files = {
+            'file': ('mixed_transit_depots.xlsx', mixed_transit_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Upload Transit with Mixed Destination Depots",
+            "POST",
+            "api/upload-transit-excel",
+            200,
+            files=files
+        )
+        
+        if not success:
+            return False
+        
+        # Verify transit filtering - should only keep allowed destination depots
+        transit_records = response['summary']['total_records']
+        expected_transit_records = 4  # M115, M120, M212, M280 should be kept (M210, M300, M400 filtered out)
+        
+        if transit_records != expected_transit_records:
+            print(f"❌ Expected {expected_transit_records} transit records after filtering, got {transit_records}")
+            return False
+        
+        print(f"✅ Transit depot filtering working - {transit_records} records kept from allowed destinations")
+        
+        # Test 4: Verify calculation results only contain allowed depots
+        # Use the mixed depot session for calculation
+        self.commandes_session_id = mixed_depot_session_id
+        
+        calculation_data = {
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Calculate with Filtered Depot Data",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if not success:
+            return False
+        
+        # Verify all calculation results only contain allowed depots
+        calculations = response['calculations']
+        result_depots = set(calc['depot'] for calc in calculations)
+        
+        for depot in result_depots:
+            if depot not in expected_allowed:
+                print(f"❌ Calculation result contains non-allowed depot: {depot}")
+                return False
+        
+        # Verify M210 is not in results
+        if 'M210' in result_depots:
+            print(f"❌ M210 found in calculation results: {result_depots}")
+            return False
+        
+        print(f"✅ Calculation results only contain allowed depots: {sorted(result_depots)}")
+        print(f"✅ M210 correctly excluded from calculation results")
+        
+        # Test 5: Test depot suggestions with allowed/non-allowed depots
+        # Test with allowed depot
+        suggestion_data = {
+            "depot_name": "M115",
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions for Allowed Depot (M115)",
+            "POST",
+            "api/depot-suggestions",
+            200,
+            data=suggestion_data
+        )
+        
+        if not success:
+            return False
+        
+        print("✅ Depot suggestions work for allowed depot M115")
+        
+        # Test with non-allowed depot
+        suggestion_data = {
+            "depot_name": "M300",
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions for Non-Allowed Depot (Should Return Error)",
+            "POST",
+            "api/depot-suggestions",
+            400,  # Should return error
+            data=suggestion_data
+        )
+        
+        if not success:
+            return False
+        
+        print("✅ Depot suggestions correctly reject non-allowed depot M300")
+        
+        # Test 6: Test with M210 as depot (should be rejected)
+        suggestion_data = {
+            "depot_name": "M210",
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions for M210 (Should Return Error)",
+            "POST",
+            "api/depot-suggestions",
+            400,  # Should return error
+            data=suggestion_data
+        )
+        
+        if not success:
+            return False
+        
+        print("✅ Depot suggestions correctly reject M210")
+        
+        return True
+
+    def test_depot_range_boundaries(self):
+        """Test depot range boundaries (M212-M280)"""
+        print("\n🔍 Testing Depot Range Boundaries (M212-M280)...")
+        
+        # Test boundary values and edge cases
+        boundary_test_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006'],
+            'Article': ['1011', '1016', '1021', '1033', '1040', '1051'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6'],
+            'Point d\'Expédition': ['M211', 'M212', 'M280', 'M281', 'M199', 'M350'],  # Test boundaries
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Quantité Commandée': [100, 150, 80, 120, 90, 200],
+            'Stock Utilisation Libre': [50, 75, 40, 60, 45, 100],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet', 'ciel']
+        }
+        
+        df = pd.DataFrame(boundary_test_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('boundary_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Upload Boundary Test Depots (M211, M212, M280, M281, M199, M350)",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if not success:
+            return False
+        
+        # Verify only M212 and M280 are kept (boundary inclusive)
+        allowed_depots = response['filters']['depots']
+        expected_boundary_allowed = ['M212', 'M280']
+        
+        if set(allowed_depots) != set(expected_boundary_allowed):
+            print(f"❌ Boundary test failed. Expected {expected_boundary_allowed}, got {allowed_depots}")
+            return False
+        
+        # Verify correct number of records (should be 2)
+        if response['summary']['total_records'] != 2:
+            print(f"❌ Expected 2 records after boundary filtering, got {response['summary']['total_records']}")
+            return False
+        
+        print("✅ Boundary test passed: M212 and M280 allowed, M211 and M281 excluded")
+        print("✅ Range M212-M280 is inclusive on both ends")
+        
+        return True
+
+    def test_depot_case_sensitivity_and_whitespace(self):
+        """Test depot filtering with case sensitivity and whitespace handling"""
+        print("\n🔍 Testing Depot Case Sensitivity and Whitespace Handling...")
+        
+        # Test with various case and whitespace combinations
+        case_test_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005'],
+            'Article': ['1011', '1016', '1021', '1033', '1040'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5'],
+            'Point d\'Expédition': ['m115', ' M120 ', 'M130  ', '  M170', 'M171'],  # Mixed case and whitespace
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Quantité Commandée': [100, 150, 80, 120, 90],
+            'Stock Utilisation Libre': [50, 75, 40, 60, 45],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet']
+        }
+        
+        df = pd.DataFrame(case_test_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('case_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Upload Case and Whitespace Test Depots",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if not success:
+            return False
+        
+        # All should be accepted (case-insensitive, whitespace-tolerant)
+        allowed_depots = response['filters']['depots']
+        
+        if len(allowed_depots) != 5:
+            print(f"❌ Expected 5 depots after case/whitespace handling, got {len(allowed_depots)}")
+            return False
+        
+        # Verify all records were kept
+        if response['summary']['total_records'] != 5:
+            print(f"❌ Expected 5 records after case/whitespace handling, got {response['summary']['total_records']}")
+            return False
+        
+        print("✅ Case sensitivity and whitespace handling working correctly")
+        print(f"✅ All 5 depot variations accepted: {allowed_depots}")
+        
+        # Test depot suggestions with lowercase
+        suggestion_data = {
+            "depot_name": "m115",  # lowercase
+            "days": 10
+        }
+        
+        success, response = self.run_test(
+            "Depot Suggestions with Lowercase Depot Name",
+            "POST",
+            "api/depot-suggestions",
+            200,
+            data=suggestion_data
+        )
+        
+        if not success:
+            return False
+        
+        print("✅ Depot suggestions work with lowercase depot names")
+        
+        return True
+
+    def test_depot_filtering_edge_cases(self):
+        """Test edge cases for depot filtering"""
+        print("\n🔍 Testing Depot Filtering Edge Cases...")
+        
+        # Test with various invalid formats
+        edge_case_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006'],
+            'Article': ['1011', '1016', '1021', '1033', '1040', '1051'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6'],
+            'Point d\'Expédition': ['X115', 'M12A', '115', 'MABC', '', 'M115'],  # Various invalid formats + one valid
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Quantité Commandée': [100, 150, 80, 120, 90, 200],
+            'Stock Utilisation Libre': [50, 75, 40, 60, 45, 100],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet', 'ciel']
+        }
+        
+        df = pd.DataFrame(edge_case_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('edge_case_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, response = self.run_test(
+            "Upload Edge Case Depot Formats",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if not success:
+            return False
+        
+        # Only M115 should be kept
+        allowed_depots = response['filters']['depots']
+        
+        if allowed_depots != ['M115']:
+            print(f"❌ Expected only ['M115'], got {allowed_depots}")
+            return False
+        
+        # Verify only 1 record kept
+        if response['summary']['total_records'] != 1:
+            print(f"❌ Expected 1 record after edge case filtering, got {response['summary']['total_records']}")
+            return False
+        
+        print("✅ Edge case filtering working correctly")
+        print("✅ Invalid formats (X115, M12A, 115, MABC, empty) correctly filtered out")
+        print("✅ Only valid M115 kept")
+        
+        return True
+
+    def run_depot_filtering_tests(self):
+        """Run focused depot filtering tests as requested in review"""
+        print("🚀 Starting Focused Depot Filtering Tests...")
+        print(f"Base URL: {self.base_url}")
+        print("📋 Review Request: Test depot filtering functionality to ensure results table only shows allowed destination depots")
+        
+        # Depot filtering specific tests
+        depot_tests = [
+            self.test_health_check,
+            self.test_depot_filtering_comprehensive,
+            self.test_depot_range_boundaries,
+            self.test_depot_case_sensitivity_and_whitespace,
+            self.test_depot_filtering_edge_cases
+        ]
+        
+        for test in depot_tests:
+            try:
+                if not test():
+                    print(f"❌ Test failed: {test.__name__}")
+                    break
+            except Exception as e:
+                print(f"❌ Test error in {test.__name__}: {str(e)}")
+                break
+        
+        print(f"\n📊 Depot Filtering Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 All depot filtering tests passed!")
+            return True
+        else:
+            print("❌ Some depot filtering tests failed")
+            return False
+
 if __name__ == "__main__":
     tester = SimplifiedStockManagementTester()
-    # Run focused depot suggestions tests
-    tester.run_depot_suggestions_tests()
+    # Run focused depot filtering tests as requested in review
+    tester.run_depot_filtering_tests()
