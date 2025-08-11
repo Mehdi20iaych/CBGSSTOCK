@@ -476,8 +476,8 @@ async def calculate_requirements(request: CalculationRequest):
                 statut = "Non couvert"
                 statut_color = "red"
             
-            # NOUVEAU CALCUL DES PALETTES: utiliser la valeur de colonne K pour cet article
-            palettes_needed = quantite_a_envoyer / produits_par_palette if quantite_a_envoyer > 0 and produits_par_palette > 0 else 0
+            # NOUVEAU CALCUL DES PALETTES: utiliser la valeur de colonne K pour cet article (arrondi au supérieur)
+            palettes_needed = math.ceil(quantite_a_envoyer / produits_par_palette) if quantite_a_envoyer > 0 and produits_par_palette > 0 else 0
             
             results.append({
                 'article': article,
