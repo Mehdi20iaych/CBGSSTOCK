@@ -1101,7 +1101,7 @@ function App() {
                     {stockData ? '✓' : '○'} Stock M210 {stockData && `(${stockData.summary?.unique_articles ?? 'chargé'}${stockData.summary?.unique_articles ? ' articles' : ''})`}
                   </span>
                   <span className={`inline-flex items-center ${transitData ? 'text-green-600' : 'text-gray-500'}`}>
-                    {transitData ? '✓' : '○'} Transit {transitData && `(${transitData.summary.total_records} enreg.)`}
+                    {transitData ? '✓' : '○'} Transit {transitData && `(${transitData.summary?.total_records ?? 'chargé'}${transitData.summary?.total_records ? ' enreg.' : ''})`}
                   </span>
                 </div>
               </div>
