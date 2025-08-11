@@ -389,11 +389,11 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Erreur lors de la communication avec l\'IA');
+        const errorData = await parseJSONSafe(response);
+        throw new Error((errorData && (errorData.detail || errorData.message)) || 'Erreur lors de la communication avec l\'IA');
       }
 
-      const data = await response.json();
+      const data = await parseJSONSafe(response) || {};
 
       // Mettre à jour l'ID de conversation
       if (!conversationId && data.conversation_id) {
