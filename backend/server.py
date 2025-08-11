@@ -434,7 +434,8 @@ async def calculate_requirements(request: CalculationRequest):
         # Grouper les commandes par (Article, Point d'Expédition, Type Emballage)
         grouped = commandes_df.groupby(['Article', 'Point d\'Expédition', 'Type Emballage']).agg({
             'Quantité Commandée': 'sum',  # CQM (Consommation Quotidienne Moyenne)
-            'Stock Utilisation Libre': 'first'  # Stock actuel dans le dépôt
+            'Stock Utilisation Libre': 'first',  # Stock actuel dans le dépôt
+            'Produits par Palette': 'first'  # Produits par palette pour cet article
         }).reset_index()
         
         # Calculer pour chaque ligne
@@ -445,6 +446,7 @@ async def calculate_requirements(request: CalculationRequest):
             packaging = str(row['Type Emballage'])
             cqm = float(row['Quantité Commandée'])
             stock_actuel = float(row['Stock Utilisation Libre'])
+            produits_par_palette = float(row['Produits par Palette'])
             
             # Obtenir le stock en transit pour cet article vers ce dépôt
             transit_key = (article, depot)
@@ -474,8 +476,8 @@ async def calculate_requirements(request: CalculationRequest):
                 statut = "Non couvert"
                 statut_color = "red"
             
-            # Calcul des palettes (30 produits par palette)
-            palettes_needed = math.ceil(quantite_a_envoyer / 30) if quantite_a_envoyer > 0 else 0
+            # NOUVEAU CALCUL DES PALETTES: utiliser la valeur de colonne K pour cet article
+            palettes_needed = quantite_a_envoyer / produits_par_palette if quantite_a_envoyer > 0 and produits_par_palette > 0 else 0
             
             results.append({
                 'article': article,
@@ -487,6 +489,7 @@ async def calculate_requirements(request: CalculationRequest):
                 'quantite_requise': quantite_requise,
                 'quantite_a_envoyer': quantite_a_envoyer,
                 'stock_dispo_m210': stock_dispo_m210,
+                'produits_par_palette': produits_par_palette,  # Ajouter cette info dans les résultats
                 'palettes_needed': palettes_needed,
                 'statut': statut,
                 'statut_color': statut_color,
