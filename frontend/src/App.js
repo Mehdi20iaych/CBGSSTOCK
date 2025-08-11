@@ -79,6 +79,49 @@ function App() {
   const stockFileRef = useRef(null);
   const transitFileRef = useRef(null);
 
+  // Fonctions pour le plan de production
+  const addProductionItem = () => {
+    if (!newProductionItem.article || !newProductionItem.quantity) {
+      setError('Veuillez sélectionner un article et saisir une quantité');
+      return;
+    }
+
+    const quantity = parseInt(newProductionItem.quantity);
+    if (quantity <= 0) {
+      setError('La quantité doit être supérieure à 0');
+      return;
+    }
+
+    // Vérifier si l'article existe déjà dans le plan
+    const existingItemIndex = productionPlan.findIndex(item => item.article === newProductionItem.article);
+    
+    if (existingItemIndex >= 0) {
+      // Mettre à jour la quantité existante
+      const updatedPlan = [...productionPlan];
+      updatedPlan[existingItemIndex].quantity += quantity;
+      setProductionPlan(updatedPlan);
+    } else {
+      // Ajouter un nouvel item
+      setProductionPlan([...productionPlan, {
+        article: newProductionItem.article,
+        quantity: quantity
+      }]);
+    }
+
+    // Réinitialiser le formulaire
+    setNewProductionItem({ article: '', quantity: '' });
+    setError(null);
+  };
+
+  const removeProductionItem = (index) => {
+    const updatedPlan = productionPlan.filter((_, i) => i !== index);
+    setProductionPlan(updatedPlan);
+  };
+
+  const clearProductionPlan = () => {
+    setProductionPlan([]);
+  };
+
   // Upload fichier commandes
   const handleCommandesFileUpload = async (event) => {
     const file = event.target.files[0];
