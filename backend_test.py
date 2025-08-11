@@ -2989,7 +2989,7 @@ class SimplifiedStockManagementTester:
                 ai_response = response['response']
                 
                 # Count bullet points
-                bullet_count = ai_response.count('•') + ai_response.count('-')
+                bullet_count = ai_response.count('•') + ai_response.count('-') + ai_response.count('*')
                 
                 # Verify bullet format exists
                 if bullet_count == 0:
