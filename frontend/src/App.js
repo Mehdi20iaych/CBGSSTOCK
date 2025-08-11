@@ -32,6 +32,8 @@ function App() {
   const [days, setDays] = useState(10);
   const [activeTab, setActiveTab] = useState('upload');
   const [selectedItems, setSelectedItems] = useState([]);
+  const [resultsSubTab, setResultsSubTab] = useState('details');
+
   
   // États pour les filtres
   const [availablePackaging, setAvailablePackaging] = useState([]);
