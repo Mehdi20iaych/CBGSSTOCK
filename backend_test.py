@@ -4184,5 +4184,40 @@ class SimplifiedStockManagementTester:
 
 if __name__ == "__main__":
     tester = SimplifiedStockManagementTester()
-    # Run focused depot filtering tests as requested in review
-    tester.run_depot_filtering_tests()
+    
+    print("🚀 STARTING AI CHAT MINIMAL RESPONSE TESTING")
+    print("="*80)
+    
+    # First upload sample data to test with data context
+    print("\n📤 Uploading sample data for testing...")
+    tester.test_upload_commandes_excel()
+    tester.test_upload_stock_excel()
+    tester.test_upload_transit_excel()
+    
+    # Run the new AI chat minimal response tests
+    print("\n🤖 Running AI Chat Minimal Response Tests...")
+    minimal_response_success = tester.run_ai_chat_minimal_response_tests()
+    
+    # Also run existing AI chat tests for comparison
+    print("\n🔄 Running Existing AI Chat Tests for Comparison...")
+    existing_chat_success = tester.run_ai_chat_tests()
+    
+    # Final summary
+    print("\n" + "="*80)
+    print("🎯 FINAL TEST SUMMARY")
+    print("="*80)
+    print(f"✅ AI Chat Minimal Response Tests: {'PASSED' if minimal_response_success else 'FAILED'}")
+    print(f"✅ Existing AI Chat Tests: {'PASSED' if existing_chat_success else 'FAILED'}")
+    
+    if minimal_response_success:
+        print("\n🎉 SUCCESS: AI Chat now provides minimal, bullet-point responses as requested!")
+        print("Key features verified:")
+        print("• Minimal responses (under 500-800 characters)")
+        print("• Bullet point format with max 3 points")
+        print("• No unnecessary explanations unless requested")
+        print("• Appropriate responses for different question types")
+        print("• Works both with and without uploaded data")
+    else:
+        print("\n⚠️ Some AI chat minimal response tests failed. Please review the implementation.")
+    
+    sys.exit(0 if minimal_response_success else 1)
