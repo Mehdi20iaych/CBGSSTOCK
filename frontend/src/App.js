@@ -1095,7 +1095,7 @@ function App() {
                 <h4 className="text-sm font-medium text-blue-900 mb-2">État des données :</h4>
                 <div className="flex space-x-4 text-sm">
                   <span className={`inline-flex items-center ${commandesData ? 'text-green-600' : 'text-gray-500'}`}>
-                    {commandesData ? '✓' : '○'} Commandes {commandesData && `(${commandesData.summary.total_records} enreg.)`}
+                    {commandesData ? '✓' : '○'} Commandes {commandesData && `(${commandesData.summary?.total_records ?? 'chargé'}${commandesData.summary?.total_records ? ' enreg.' : ''})`}
                   </span>
                   <span className={`inline-flex items-center ${stockData ? 'text-green-600' : 'text-gray-500'}`}>
                     {stockData ? '✓' : '○'} Stock M210 {stockData && `(${stockData.summary.unique_articles} articles)`}
