@@ -756,6 +756,32 @@ function App() {
                 </div>
               </div>
 
+              {/* Sourcing Summary */}
+              {calculations.sourcing_summary && (
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Analyse Sourcing</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="text-lg font-semibold text-slate-700">{calculations.sourcing_summary.local_items}</div>
+                      <div className="text-xs text-slate-600">Production Locale</div>
+                      <div className="text-xs text-slate-500">({calculations.sourcing_summary.local_percentage}%)</div>
+                    </div>
+                    <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-200">
+                      <div className="text-lg font-semibold text-amber-700">{calculations.sourcing_summary.external_items}</div>
+                      <div className="text-xs text-amber-600">Sourcing Externe</div>
+                      <div className="text-xs text-amber-500">({calculations.sourcing_summary.external_percentage}%)</div>
+                    </div>
+                  </div>
+                  {calculations.sourcing_summary.external_items > 0 && (
+                    <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-sm text-amber-700">
+                        ⚠️ {calculations.sourcing_summary.external_items} produit(s) nécessitent un sourcing externe
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Toggle sous-sections */}
               <div className="border-t pt-4">
                 <div className="inline-flex rounded-md shadow-sm" role="group">
