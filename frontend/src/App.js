@@ -1290,7 +1290,13 @@ function App() {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.cqm}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_actuel}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_transit}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.quantite_a_envoyer}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {(() => {
+                                const palettes = getPalettesValue(item);
+                                const produits_par_palette = item.produits_par_palette || 30;
+                                return palettes * produits_par_palette;
+                              })()}
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center space-x-2">
                                 <input
