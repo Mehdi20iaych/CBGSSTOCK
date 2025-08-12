@@ -1321,13 +1321,38 @@ function App() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
-                                {getStatusIcon(item.statut)}
-                                <span className={`ml-2 text-sm font-medium ${
-                                  item.statut === 'OK' ? 'text-green-600' :
-                                  item.statut === 'À livrer' ? 'text-orange-600' : 'text-red-600'
-                                }`}>
-                                  {item.statut}
-                                </span>
+                                {(() => {
+                                  const palettes = getPalettesValue(item);
+                                  const produits_par_palette = item.produits_par_palette || 30;
+                                  const quantite_a_envoyer = palettes * produits_par_palette;
+                                  
+                                  let statut = 'OK';
+                                  let statusColor = 'text-green-600';
+                                  let statusIcon = item.statut;
+                                  
+                                  if (quantite_a_envoyer === 0) {
+                                    statut = 'OK';
+                                    statusColor = 'text-green-600';
+                                    statusIcon = 'OK';
+                                  } else if (quantite_a_envoyer <= item.stock_dispo_m210) {
+                                    statut = 'À livrer';
+                                    statusColor = 'text-orange-600';
+                                    statusIcon = 'À livrer';
+                                  } else {
+                                    statut = 'Non couvert';
+                                    statusColor = 'text-red-600';
+                                    statusIcon = 'Non couvert';
+                                  }
+                                  
+                                  return (
+                                    <>
+                                      {getStatusIcon(statusIcon)}
+                                      <span className={`ml-2 text-sm font-medium ${statusColor}`}>
+                                        {statut}
+                                      </span>
+                                    </>
+                                  );
+                                })()}
                               </div>
                             </td>
                           </tr>
