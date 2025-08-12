@@ -549,6 +549,41 @@ function App() {
     return Object.values(depotSummary).sort((a, b) => a.depot.localeCompare(b.depot));
   };
 
+  // Calculer dynamiquement les statistiques de statut avec les valeurs actuelles
+  const getDynamicStatusSummary = () => {
+    if (!calculations || !calculations.calculations) return {
+      total_items: 0,
+      items_ok: 0,
+      items_a_livrer: 0,
+      items_non_couverts: 0
+    };
+
+    let items_ok = 0;
+    let items_a_livrer = 0;
+    let items_non_couverts = 0;
+
+    calculations.calculations.forEach(calc => {
+      const currentPalettes = getPalettesValue(calc);
+      const produits_par_palette = calc.produits_par_palette || 30;
+      const quantite_a_envoyer = currentPalettes * produits_par_palette;
+
+      if (quantite_a_envoyer === 0) {
+        items_ok++;
+      } else if (quantite_a_envoyer <= calc.stock_dispo_m210) {
+        items_a_livrer++;
+      } else {
+        items_non_couverts++;
+      }
+    });
+
+    return {
+      total_items: calculations.calculations.length,
+      items_ok,
+      items_a_livrer,
+      items_non_couverts
+    };
+  };
+
   // Fonctions pour le chat IA
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || chatLoading) return;
