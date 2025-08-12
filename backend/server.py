@@ -987,7 +987,7 @@ async def get_depot_suggestions(request: dict):
                     if not article_already_ordered and stock_quantity > 0:
                         # Utiliser la taille de palette depuis les commandes ou 30 par défaut si l'article n'est pas dans les commandes
                         # (30 est conservé comme fallback pour les articles en stock M210 qui ne sont pas dans les commandes actuelles)
-                        produits_par_palette = produits_par_palette_lookup.get(article, 30)
+                        produits_par_palette = produits_par_palette_lookup_all.get(article, 30)
                         all_stock_products.append({
                             'article': article,
                             'stock_m210': stock_quantity,
