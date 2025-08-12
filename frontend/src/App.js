@@ -268,6 +268,7 @@ function App() {
 
       const data = await parseJSONSafe(response) || {};
       setCalculations(data);
+      setEditedPalettes({}); // Clear any edited palettes when new calculations are loaded
       setActiveTab('results');
     } catch (err) {
       setError(`Erreur de calcul: ${err.message}`);
