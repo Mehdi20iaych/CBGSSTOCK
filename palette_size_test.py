@@ -67,7 +67,7 @@ class PaletteSizeTester:
             'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006', 'CMD007', 'CMD008'],
             'Article': ['ART001', 'ART002', 'ART003', 'ART004', 'ART005', 'ART006', 'ART007', 'ART008'],  # Different articles
             'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6', 'Desc7', 'Desc8'],
-            'Point d\'Expédition': ['M211', 'M212', 'M213', 'M211', 'M212', 'M213', 'M211', 'M212'],  # Various depots
+            'Point d\'Expédition': ['M212', 'M213', 'M212', 'M213', 'M212', 'M213', 'M212', 'M213'],  # Only allowed depots
             'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7', 'Extra8'],
             'Quantité Commandée': [100, 150, 80, 120, 90, 200, 110, 130],  # Various quantities
             'Stock Utilisation Libre': [20, 30, 15, 25, 18, 40, 22, 28],  # Various stock levels
