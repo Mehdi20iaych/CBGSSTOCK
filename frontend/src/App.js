@@ -1081,19 +1081,19 @@ function App() {
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">{calculations.summary.total_items}</div>
+                  <div className="text-2xl font-bold text-gray-900">{getDynamicStatusSummary().total_items}</div>
                   <div className="text-sm text-gray-600">Total Items</div>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{calculations.summary.items_ok}</div>
+                  <div className="text-2xl font-bold text-green-600">{getDynamicStatusSummary().items_ok}</div>
                   <div className="text-sm text-green-600">OK</div>
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">{calculations.summary.items_a_livrer}</div>
+                  <div className="text-2xl font-bold text-orange-600">{getDynamicStatusSummary().items_a_livrer}</div>
                   <div className="text-sm text-orange-600">À Livrer</div>
                 </div>
                 <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">{calculations.summary.items_non_couverts}</div>
+                  <div className="text-2xl font-bold text-red-600">{getDynamicStatusSummary().items_non_couverts}</div>
                   <div className="text-sm text-red-600">Non Couvert</div>
                 </div>
               </div>
