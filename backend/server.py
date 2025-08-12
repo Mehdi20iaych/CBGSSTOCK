@@ -701,6 +701,12 @@ async def export_excel(request: ExportRequest):
                         transit_stocks[article][depot] = 0
                     transit_stocks[article][depot] += row['Quantité']
             
+            # Créer un dictionnaire de lookup pour les produits par palette depuis les commandes
+            produits_par_palette_lookup = {}
+            for _, row in commandes_df.iterrows():
+                article = str(row['Article'])
+                produits_par_palette_lookup[article] = float(row['Produits par Palette'])
+            
             # Pour chaque dépôt, générer les recommandations
             for depot in depot_list:
                 # Filtrer les commandes pour ce dépôt
