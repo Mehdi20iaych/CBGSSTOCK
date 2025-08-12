@@ -747,7 +747,7 @@ async def export_excel(request: ExportRequest):
                     palettes_needed = math.ceil(quantite_a_envoyer / produits_par_palette) if quantite_a_envoyer > 0 and produits_par_palette > 0 else 0
                     
                     current_palettes += palettes_needed
-                    depot_products.append({'article': article, 'packaging': packaging})
+                    depot_products.append({'article': article, 'packaging': packaging, 'produits_par_palette': produits_par_palette})
                 
                 # Calculer les palettes cibles (multiples de 24)
                 current_trucks = math.ceil(current_palettes / 24) if current_palettes > 0 else 1
