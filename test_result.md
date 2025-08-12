@@ -551,6 +551,8 @@
 
 ## agent_communication:
     - agent: "main"
+      message: "AI CHAT ROBUST FALLBACK IMPLEMENTED: /api/chat no longer throws 500 when google-generativeai is missing. It now gracefully returns a 3-bullet minimal response with data counts. When GEMINI_API_KEY and library are available, it uses Gemini 1.5-flash; otherwise it degrades without errors."
+    - agent: "main"
       message: "FIX: Quantité Suggérée now strictly uses each article's specific 'Produits par Palette' (column K) from Fichier Commandes across BOTH API and Excel export recommendations. Implemented a GLOBAL lookup of column K values and replaced depot-only lookup + 30 fallback. Now: Quantité Suggérée = Palettes Suggérées × ProduitsParPalette[Article]."
     - agent: "testing"
       message: "✅ EDITABLE PALETTES FEATURE VERIFICATION COMPLETED: All functionality tested with 100% success rate. Real-time recalculation, status updates, and logistics integration work perfectly. Feature is production-ready and provides users with full interactive control over palette quantities."
