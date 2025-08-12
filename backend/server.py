@@ -707,6 +707,16 @@ async def export_excel(request: ExportRequest):
                 article = str(row['Article'])
                 produits_par_palette_lookup[article] = float(row['Produits par Palette'])
             
+            # Créer un lookup GLOBAL pour 'Produits par Palette' à partir du fichier commandes
+            # Ceci permet d'utiliser la valeur de la colonne K pour chaque article, même s'il n'est pas commandé par ce dépôt spécifique
+            produits_par_palette_lookup_all = {}
+            try:
+                for _, row in commandes_df.iterrows():
+                    produits_par_palette_lookup_all[str(row['Article'])] = float(row['Produits par Palette'])
+            except Exception:
+                # En cas de données manquantes/impropres, laisser vide pour retomber sur le fallback 30 plus bas
+                produits_par_palette_lookup_all = {}
+            
             # Pour chaque dépôt, générer les recommandations
             for depot in depot_list:
                 # Filtrer les commandes pour ce dépôt
