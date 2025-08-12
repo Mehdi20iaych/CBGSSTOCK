@@ -752,8 +752,11 @@ async def export_excel(request: ExportRequest):
                         article_already_ordered = any(p['article'] == article for p in depot_products)
                         
                         if not article_already_ordered and stock_quantity > 0:
-                            # Obtenir la taille de palette pour cet article (utilisé dans les commandes ou 30 par défaut si pas de données commandes)
-                            produits_par_palette = produits_par_palette_lookup.get(article, 30)
+                            # Obtenir la taille de palette pour cet article depuis les données de commandes
+                            produits_par_palette = produits_par_palette_lookup.get(article)
+                            if produits_par_palette is None:
+                                # Si l'article n'a pas de données de palette dans les commandes, ignorer cette suggestion
+                                continue
                             all_stock_products.append({
                                 'article': article,
                                 'stock_m210': stock_quantity,
