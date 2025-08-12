@@ -1119,10 +1119,10 @@ function App() {
               </div>
 
               {/* Logistique par Dépôt - visible si subtab = logistique */}
-              {resultsSubTab === 'logistique' && calculations.depot_summary && calculations.depot_summary.length > 0 && (
+              {resultsSubTab === 'logistique' && calculations && (
                 <div className="pt-4">
                   <div className="space-y-3">
-                    {calculations.depot_summary.map((depot, index) => (
+                    {getDynamicDepotSummary().map((depot, index) => (
                       <div key={index}>
                         <div className={`p-3 rounded-lg border ${
                           depot.delivery_efficiency === 'Efficace' 
