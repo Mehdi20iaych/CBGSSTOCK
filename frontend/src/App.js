@@ -421,6 +421,100 @@ function App() {
     return depot.total_palettes > 0 && depot.total_palettes % 24 !== 0;
   };
 
+  // Fonction pour créer une clé unique pour chaque item
+  const getItemKey = (item) => {
+    return `${item.article}_${item.depot}`;
+  };
+
+  // Fonction pour recalculer les valeurs dépendantes quand les palettes changent
+  const recalculateItem = (item, newPalettes) => {
+    const produits_par_palette = item.produits_par_palette || 30;
+    const new_quantite_a_envoyer = newPalettes * produits_par_palette;
+    
+    // Recalculer le statut basé sur la nouvelle quantité
+    let new_statut = 'OK';
+    let new_statut_color = 'green';
+    
+    if (new_quantite_a_envoyer === 0) {
+      new_statut = 'OK';
+      new_statut_color = 'green';
+    } else if (new_quantite_a_envoyer <= item.stock_dispo_m210) {
+      new_statut = 'À livrer';
+      new_statut_color = 'orange';
+    } else {
+      new_statut = 'Non couvert';
+      new_statut_color = 'red';
+    }
+    
+    return {
+      ...item,
+      palettes_needed: newPalettes,
+      quantite_a_envoyer: new_quantite_a_envoyer,
+      statut: new_statut,
+      statut_color: new_statut_color
+    };
+  };
+
+  // Gestionnaire pour les changements de palettes
+  const handlePalettesChange = (item, newPalettes) => {
+    const palettes = Math.max(0, parseInt(newPalettes) || 0);
+    const itemKey = getItemKey(item);
+    
+    setEditedPalettes(prev => ({
+      ...prev,
+      [itemKey]: palettes
+    }));
+
+    // Recalculer et mettre à jour les calculations
+    setCalculations(prev => {
+      if (!prev) return prev;
+      
+      const updatedCalculations = prev.calculations.map(calc => {
+        if (calc.article === item.article && calc.depot === item.depot) {
+          return recalculateItem(calc, palettes);
+        }
+        return calc;
+      });
+
+      // Recalculer les statistiques de dépôt
+      const depotSummary = {};
+      updatedCalculations.forEach(calc => {
+        if (!depotSummary[calc.depot]) {
+          depotSummary[calc.depot] = {
+            depot: calc.depot,
+            total_palettes: 0,
+            total_items: 0,
+            trucks_needed: 0,
+            delivery_efficiency: 'Inefficace'
+          };
+        }
+        depotSummary[calc.depot].total_palettes += calc.palettes_needed || 0;
+        depotSummary[calc.depot].total_items += 1;
+      });
+
+      // Calculer les camions nécessaires et l'efficacité
+      Object.values(depotSummary).forEach(depot => {
+        depot.trucks_needed = Math.ceil(depot.total_palettes / 24);
+        depot.delivery_efficiency = depot.total_palettes >= 24 ? 'Efficace' : 'Inefficace';
+      });
+
+      return {
+        ...prev,
+        calculations: updatedCalculations,
+        summary: {
+          ...prev.summary,
+          depot_summary: Object.values(depotSummary)
+        }
+      };
+    });
+  };
+
+  // Obtenir la valeur des palettes (éditée ou originale)
+  const getPalettesValue = (item) => {
+    const itemKey = getItemKey(item);
+    return editedPalettes[itemKey] !== undefined ? editedPalettes[itemKey] : (item.palettes_needed || 0);
+  };
+
   // Fonctions pour le chat IA
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || chatLoading) return;
