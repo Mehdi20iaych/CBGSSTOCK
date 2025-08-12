@@ -963,53 +963,38 @@ async def get_depot_suggestions(request: dict):
         
         suggestions = []
         if palettes_to_add > 0:
-            # NOUVELLE LOGIQUE: Suggérer des produits basés sur les plus faibles quantités de stock
-            # Obtenir tous les produits du stock M210 et les trier par quantité de stock (ascendant)
             if not stock_m210:
                 suggestions.append({
                     'message': 'Aucune donnée de stock M210 disponible pour générer des suggestions'
                 })
             else:
-                # Créer un dictionnaire de lookup pour les produits par palette depuis les commandes du dépôt
-                produits_par_palette_lookup = {}
-                for product_info in depot_products:
-                    produits_par_palette_lookup[product_info['article']] = product_info['produits_par_palette']
-                
-                # Créer une liste de tous les produits avec leurs stocks M210, triés par stock croissant
-                all_stock_products = []
-                for article, stock_quantity in stock_m210.items():
-                    # Vérifier si ce produit n'est pas déjà dans les commandes actuelles du dépôt
-                    article_already_ordered = any(p['article'] == article for p in depot_products)
-                    
-                    if not article_already_ordered and stock_quantity > 0:
-                        # Utiliser la taille de palette depuis les commandes ou 30 par défaut si l'article n'est pas dans les commandes
-                        # (30 est conservé comme fallback pour les articles en stock M210 qui ne sont pas dans les commandes actuelles)
-                        produits_par_palette = produits_par_palette_lookup_all.get(article, 30)
-                        all_stock_products.append({
+                # Suggérer UNIQUEMENT les articles déjà envoyés à ce dépôt et classer par plus grand stock M210
+                # Construire la liste des candidats depuis depot_products
+                candidate_products = []
+                for product in depot_products:
+                    article = product['article']
+                    stock_quantity = stock_m210.get(article, 0)
+                    if stock_quantity > 0:
+                        candidate_products.append({
                             'article': article,
+                            'packaging': product.get('packaging', 'verre'),
                             'stock_m210': stock_quantity,
-                            'packaging': 'verre',  # Valeur par défaut, pourrait être améliorée avec plus de données
-                            'produits_par_palette': produits_par_palette
+                            'produits_par_palette': product.get('produits_par_palette') or produits_par_palette_lookup_all.get(article, 30)
                         })
                 
-                # Trier par stock M210 (ascendant) - les plus faibles quantités en premier
-                all_stock_products.sort(key=lambda x: x['stock_m210'])
+                # Trier par stock M210 décroissant (plus grand d'abord)
+                candidate_products.sort(key=lambda x: x['stock_m210'], reverse=True)
                 
                 remaining_palettes = palettes_to_add
                 
-                for product in all_stock_products:
+                for product in candidate_products:
                     if remaining_palettes <= 0:
                         break
                     
-                    # Calculer combien de palettes on peut suggérer avec ce produit
-                    # On va suggérer de 1 à 3 palettes selon les besoins restants
                     suggested_palettes = min(3, remaining_palettes)
-                    # Utiliser la taille de palette spécifique pour cet article
-                    products_needed_per_palette = product['produits_par_palette']
-                    suggested_quantity = suggested_palettes * products_needed_per_palette
-                    
-                    # Vérifier si on a assez de stock M210 pour cette suggestion
-                    stock_available = product['stock_m210']
+                    products_needed_per_palette = float(product['produits_par_palette'])
+                    suggested_quantity = int(suggested_palettes * products_needed_per_palette)
+                    stock_available = float(product['stock_m210'])
                     can_fulfill = suggested_quantity <= stock_available
                     
                     suggestions.append({
@@ -1020,7 +1005,7 @@ async def get_depot_suggestions(request: dict):
                         'suggested_palettes': suggested_palettes,
                         'can_fulfill': can_fulfill,
                         'feasibility': 'Réalisable' if can_fulfill else 'Stock insuffisant',
-                        'reason': f'Stock faible ({stock_available} unités) - Priorité pour reconstitution'
+                        'reason': f'Stock élevé ({int(stock_available)} unités) - Priorité à l\'envoi'
                     })
                     
                     remaining_palettes -= suggested_palettes
