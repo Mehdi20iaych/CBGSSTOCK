@@ -8,7 +8,7 @@ import os
 import uuid
 import json
 import math
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 # JSON serialization helper for datetime objects
 def json_serializable(obj):
