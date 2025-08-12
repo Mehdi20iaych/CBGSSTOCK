@@ -368,7 +368,7 @@ class PaletteSizeTester:
         
         # Test depot suggestions which should include articles from stock M210 not in commandes
         suggestion_data = {
-            "depot_name": "M212",  # Different depot to get different suggestions
+            "depot_name": "M213",  # Different allowed depot to get different suggestions
             "days": 10
         }
         
