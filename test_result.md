@@ -533,7 +533,7 @@
 
 ## agent_communication:
     - agent: "main"
-      message: "EDITABLE PALETTES FEATURE SUCCESSFULLY IMPLEMENTED: Added comprehensive real-time editable palettes functionality to the results table. Users can now directly edit palette quantities and see immediate updates across all dependent calculations including Quantité à Envoyer, Status, and Logistics summaries."
+      message: "FIX: Quantité Suggérée now strictly uses each article's specific 'Produits par Palette' (column K) from Fichier Commandes across BOTH API and Excel export recommendations. Implemented a GLOBAL lookup of column K values and replaced depot-only lookup + 30 fallback. Now: Quantité Suggérée = Palettes Suggérées × ProduitsParPalette[Article]."
     - agent: "testing"
       message: "✅ EDITABLE PALETTES FEATURE VERIFICATION COMPLETED: All functionality tested with 100% success rate. Real-time recalculation, status updates, and logistics integration work perfectly. Feature is production-ready and provides users with full interactive control over palette quantities."
     - agent: "main"
