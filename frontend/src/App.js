@@ -74,6 +74,9 @@ function App() {
   });
   const [availableArticles, setAvailableArticles] = useState([]);
   
+  // État pour les palettes éditables
+  const [editedPalettes, setEditedPalettes] = useState({});
+  
   // Références pour les inputs de fichiers
   const commandesFileRef = useRef(null);
   const stockFileRef = useRef(null);
