@@ -274,7 +274,7 @@ class PaletteSizeTester:
             current_palettes = response.get('current_palettes', 0)
             suggestions = response.get('suggestions', [])
             
-            print(f"📊 Depot M211 suggestions analysis:")
+            print(f"📊 Depot M212 suggestions analysis:")
             print(f"   Current palettes: {current_palettes}")
             print(f"   Number of suggestions: {len(suggestions)}")
             
