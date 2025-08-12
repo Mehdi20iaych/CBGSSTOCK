@@ -952,6 +952,11 @@ async def get_depot_suggestions(request: dict):
                     'message': 'Aucune donnée de stock M210 disponible pour générer des suggestions'
                 })
             else:
+                # Créer un dictionnaire de lookup pour les produits par palette depuis les commandes du dépôt
+                produits_par_palette_lookup = {}
+                for product_info in depot_products:
+                    produits_par_palette_lookup[product_info['article']] = product_info['produits_par_palette']
+                
                 # Créer une liste de tous les produits avec leurs stocks M210, triés par stock croissant
                 all_stock_products = []
                 for article, stock_quantity in stock_m210.items():
@@ -959,17 +964,19 @@ async def get_depot_suggestions(request: dict):
                     article_already_ordered = any(p['article'] == article for p in depot_products)
                     
                     if not article_already_ordered and stock_quantity > 0:
+                        # Utiliser la taille de palette depuis les commandes ou 30 par défaut si l'article n'est pas dans les commandes
+                        produits_par_palette = produits_par_palette_lookup.get(article, 30)
                         all_stock_products.append({
                             'article': article,
                             'stock_m210': stock_quantity,
                             'packaging': 'verre',  # Valeur par défaut, pourrait être améliorée avec plus de données
+                            'produits_par_palette': produits_par_palette
                         })
                 
                 # Trier par stock M210 (ascendant) - les plus faibles quantités en premier
                 all_stock_products.sort(key=lambda x: x['stock_m210'])
                 
                 remaining_palettes = palettes_to_add
-                products_needed_per_palette = 30
                 
                 for product in all_stock_products:
                     if remaining_palettes <= 0:
@@ -978,6 +985,8 @@ async def get_depot_suggestions(request: dict):
                     # Calculer combien de palettes on peut suggérer avec ce produit
                     # On va suggérer de 1 à 3 palettes selon les besoins restants
                     suggested_palettes = min(3, remaining_palettes)
+                    # Utiliser la taille de palette spécifique pour cet article
+                    products_needed_per_palette = product['produits_par_palette']
                     suggested_quantity = suggested_palettes * products_needed_per_palette
                     
                     # Vérifier si on a assez de stock M210 pour cette suggestion
