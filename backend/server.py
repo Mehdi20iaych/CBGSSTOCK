@@ -61,6 +61,7 @@ class CalculationRequest(BaseModel):
     days: int
     product_filter: Optional[List[str]] = None
     packaging_filter: Optional[List[str]] = None
+    production_plan: Optional[List[Dict[str, Any]]] = None
 
 class GeminiQueryRequest(BaseModel):
     query: str
