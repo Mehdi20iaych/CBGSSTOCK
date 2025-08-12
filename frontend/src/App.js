@@ -253,7 +253,8 @@ function App() {
         },
         body: JSON.stringify({
           days: days,
-          packaging_filter: selectedPackaging.length > 0 ? selectedPackaging : null
+          packaging_filter: selectedPackaging.length > 0 ? selectedPackaging : null,
+          production_plan: productionPlan.length > 0 ? productionPlan : null
         }),
       });
 
