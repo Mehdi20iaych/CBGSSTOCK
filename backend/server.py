@@ -421,6 +421,14 @@ async def calculate_requirements(request: CalculationRequest):
             for _, row in stock_df.iterrows():
                 stock_m210[str(row['Article'])] = float(row['STOCK A DATE'])
         
+        # Ajouter les quantités du plan de production au stock M210
+        if request.production_plan:
+            for production_item in request.production_plan:
+                article = str(production_item['article'])
+                quantity = float(production_item['quantity'])
+                current_stock = stock_m210.get(article, 0)
+                stock_m210[article] = current_stock + quantity
+        
         # Obtenir les données de transit si disponibles
         transit_stocks = {}
         if transit_data:
