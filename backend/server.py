@@ -754,39 +754,36 @@ async def export_excel(request: ExportRequest):
                 target_palettes = current_trucks * 24
                 palettes_to_add = target_palettes - current_palettes
                 
-                # Générer les suggestions basées sur les plus faibles stocks M210
+                # Nouvelle logique de recommandations: suggérer UNIQUEMENT les articles déjà envoyés à ce dépôt
+                # et privilégier ceux avec le PLUS GRAND stock disponible à M210
                 if palettes_to_add > 0 and stock_m210:
-                    # Produits avec les plus faibles stocks, non déjà commandés
-                    all_stock_products = []
-                    for article, stock_quantity in stock_m210.items():
-                        article_already_ordered = any(p['article'] == article for p in depot_products)
-                        
-                        if not article_already_ordered and stock_quantity > 0:
-                            # Obtenir la taille de palette pour cet article depuis TOUTES les commandes (colonne K)
-                            # (30 est conservé comme fallback uniquement si aucune valeur n'existe dans le fichier commandes)
-                            produits_par_palette = produits_par_palette_lookup_all.get(article, 30)
-                            all_stock_products.append({
+                    # Créer la liste des candidats à partir des produits déjà commandés pour ce dépôt
+                    candidate_products = []
+                    for product in depot_products:
+                        article = product['article']
+                        stock_quantity = stock_m210.get(article, 0)
+                        if stock_quantity > 0:
+                            candidate_products.append({
                                 'article': article,
                                 'stock_m210': stock_quantity,
-                                'packaging': 'verre',
-                                'produits_par_palette': produits_par_palette
+                                'packaging': product.get('packaging', 'verre'),
+                                'produits_par_palette': product.get('produits_par_palette') or produits_par_palette_lookup_all.get(article, 30)
                             })
                     
-                    # Trier par stock croissant (plus faibles en premier)
-                    all_stock_products.sort(key=lambda x: x['stock_m210'])
+                    # Trier par stock décroissant (plus grand en premier)
+                    candidate_products.sort(key=lambda x: x['stock_m210'], reverse=True)
                     
                     remaining_palettes = palettes_to_add
                     suggestions_count = 0
                     
-                    for product in all_stock_products:
+                    for product in candidate_products:
                         if remaining_palettes <= 0 or suggestions_count >= 5:
                             break
                         
                         suggested_palettes = min(3, remaining_palettes)
-                        # Utiliser la taille de palette spécifique pour cet article
-                        products_needed_per_palette = product['produits_par_palette']
-                        suggested_quantity = suggested_palettes * products_needed_per_palette
-                        stock_available = product['stock_m210']
+                        products_needed_per_palette = float(product['produits_par_palette'])
+                        suggested_quantity = int(suggested_palettes * products_needed_per_palette)
+                        stock_available = float(product['stock_m210'])
                         can_fulfill = suggested_quantity <= stock_available
                         
                         # Ajouter une ligne de recommandation
@@ -804,7 +801,7 @@ async def export_excel(request: ExportRequest):
                         ws2.cell(row=current_row, column=6, value=suggested_palettes)
                         ws2.cell(row=current_row, column=7, value=stock_available)
                         ws2.cell(row=current_row, column=8, value='Réalisable' if can_fulfill else 'Stock insuffisant')
-                        ws2.cell(row=current_row, column=9, value=f'Stock faible ({stock_available} unités)')
+                        ws2.cell(row=current_row, column=9, value=f'Stock élevé ({int(stock_available)} unités)')
                         
                         # Style selon la faisabilité
                         if can_fulfill:
