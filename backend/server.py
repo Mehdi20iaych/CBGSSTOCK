@@ -752,17 +752,19 @@ async def export_excel(request: ExportRequest):
                         article_already_ordered = any(p['article'] == article for p in depot_products)
                         
                         if not article_already_ordered and stock_quantity > 0:
+                            # Obtenir la taille de palette pour cet article (utilisé dans les commandes ou 30 par défaut si pas de données commandes)
+                            produits_par_palette = produits_par_palette_lookup.get(article, 30)
                             all_stock_products.append({
                                 'article': article,
                                 'stock_m210': stock_quantity,
-                                'packaging': 'verre'
+                                'packaging': 'verre',
+                                'produits_par_palette': produits_par_palette
                             })
                     
                     # Trier par stock croissant (plus faibles en premier)
                     all_stock_products.sort(key=lambda x: x['stock_m210'])
                     
                     remaining_palettes = palettes_to_add
-                    products_needed_per_palette = 30
                     suggestions_count = 0
                     
                     for product in all_stock_products:
@@ -770,6 +772,8 @@ async def export_excel(request: ExportRequest):
                             break
                         
                         suggested_palettes = min(3, remaining_palettes)
+                        # Utiliser la taille de palette spécifique pour cet article
+                        products_needed_per_palette = product['produits_par_palette']
                         suggested_quantity = suggested_palettes * products_needed_per_palette
                         stock_available = product['stock_m210']
                         can_fulfill = suggested_quantity <= stock_available
