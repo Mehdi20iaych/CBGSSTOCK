@@ -370,7 +370,7 @@ class AIChatRobustnessTester:
         
         # Test /api/depot-suggestions endpoint
         depot_data = {
-            "depot_name": "M211",
+            "depot_name": "M212",
             "days": 10
         }
         
