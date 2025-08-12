@@ -256,9 +256,9 @@ class PaletteSizeTester:
             print("❌ Missing session data for depot suggestions test")
             return False
         
-        # Test suggestions for M211 depot
+        # Test suggestions for M212 depot (allowed depot)
         suggestion_data = {
-            "depot_name": "M211",
+            "depot_name": "M212",
             "days": 10
         }
         
