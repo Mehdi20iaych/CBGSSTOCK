@@ -1027,6 +1027,13 @@ async def get_depot_suggestions(request: dict):
 async def chat_with_ai(request: ChatRequest):
     """Chat with AI about uploaded files and inventory data"""
     try:
+        # Helper: minimal fallback response (no external API)
+        def minimal_bullets(context: dict) -> str:
+            cmd = context.get('commandes', {}).get('total_records', 0)
+            stk = context.get('stock', {}).get('total_records', 0)
+            trn = context.get('transit', {}).get('total_records', 0)
+            return f"* Commandes: {cmd}\n* Stock: {stk}\n* Transit: {trn}"
+        
         # Get available data context
         data_context = {}
         
@@ -1084,38 +1091,25 @@ async def chat_with_ai(request: ChatRequest):
         • Analyse les données quand disponibles
         • Réponds toujours même si données limitées"""
         
-        # Lazy import and configure Google Generative AI
+        # Try Gemini; on any failure return minimal bullets instead of 500
         try:
             import google.generativeai as genai
-            genai.configure(api_key=GEMINI_API_KEY)
-        except ImportError:
-            raise HTTPException(
-                status_code=500, 
-                detail="Google Generative AI library not available. Please install google-generativeai package."
-            )
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, 
-                detail=f"Failed to configure Gemini API: {str(e)}"
-            )
+            if not GEMINI_API_KEY:
+                # No key → fallback
+                response_text = minimal_bullets(data_context)
+            else:
+                genai.configure(api_key=GEMINI_API_KEY)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                full_prompt = f"{system_prompt}\n\nQUESTION UTILISATEUR: {request.message}"
+                resp = model.generate_content(full_prompt)
+                response_text = resp.text if getattr(resp, 'text', None) else minimal_bullets(data_context)
+        except Exception:
+            # ImportError or API error → fallback
+            response_text = minimal_bullets(data_context)
         
-        # Create the chat
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        # Prepare the full prompt
-        full_prompt = f"{system_prompt}\n\nQUESTION UTILISATEUR: {request.message}"
-        
-        # Generate response
-        response = model.generate_content(full_prompt)
-        
-        if not response.text:
-            raise HTTPException(status_code=500, detail="Aucune réponse générée par l'IA")
-        
-        # Generate conversation ID if not provided
         conversation_id = request.conversation_id or str(uuid.uuid4())
-        
         return {
-            "response": response.text,
+            "response": response_text,
             "conversation_id": conversation_id,
             "has_data": len(data_context) > 0,
             "data_types": list(data_context.keys()),
@@ -1123,7 +1117,14 @@ async def chat_with_ai(request: ChatRequest):
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la génération de réponse: {str(e)}")
+        # As last resort, still avoid hard 500 but give a minimal response
+        return {
+            "response": "* Commandes: 0\n* Stock: 0\n* Transit: 0",
+            "conversation_id": request.conversation_id or str(uuid.uuid4()),
+            "has_data": False,
+            "data_types": [],
+            "message": str(e)
+        }
 
 if __name__ == "__main__":
     import uvicorn
