@@ -317,6 +317,9 @@ async def upload_stock_excel(file: UploadFile = File(...)):
                 "total_records": len(df),
                 "unique_articles": len(unique_articles),
                 "total_stock_m210": float(df['STOCK A DATE'].sum())
+            },
+            "filters": {
+                "articles": sorted(unique_articles)
             }
         }
         
