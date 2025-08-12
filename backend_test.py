@@ -7,7 +7,7 @@ import math
 from datetime import datetime, timedelta
 
 class SimplifiedStockManagementTester:
-    def __init__(self, base_url="https://shipment-planner-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://order-calc-helper.preview.emergentagent.com"):
         self.base_url = base_url
         self.commandes_session_id = None
         self.stock_session_id = None

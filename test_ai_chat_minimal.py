@@ -10,7 +10,7 @@ import sys
 import time
 
 class AIMinimalResponseTester:
-    def __init__(self, base_url="https://shipment-planner-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://order-calc-helper.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_passed = 0
         self.tests_run = 0
