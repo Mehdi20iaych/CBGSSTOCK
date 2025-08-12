@@ -103,7 +103,7 @@ class PaletteSizeTester:
         data = {
             'Article': ['ART001', 'ART002', 'ART003', 'ART004', 'ART005'],
             'Dummy_B': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5'],
-            'Division': ['M211', 'M212', 'M213', 'M211', 'M212'],  # Destination depots
+            'Division': ['M212', 'M213', 'M212', 'M213', 'M212'],  # Allowed destination depots
             'Dummy_D': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
             'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
             'Dummy_F': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
