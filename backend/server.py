@@ -764,7 +764,7 @@ async def export_excel(request: ExportRequest):
                         if not article_already_ordered and stock_quantity > 0:
                             # Obtenir la taille de palette pour cet article depuis TOUTES les commandes (colonne K)
                             # (30 est conservé comme fallback uniquement si aucune valeur n'existe dans le fichier commandes)
-                            produits_par_palette = produits_par_palette_lookup.get(article, 30)
+                            produits_par_palette = produits_par_palette_lookup_all.get(article, 30)
                             all_stock_products.append({
                                 'article': article,
                                 'stock_m210': stock_quantity,
