@@ -874,6 +874,16 @@ async def get_depot_suggestions(request: dict):
         commandes_session_id = list(commandes_data.keys())[-1]
         commandes_df = pd.DataFrame(commandes_data[commandes_session_id]['data'])
         
+        # Construire un lookup GLOBAL pour 'Produits par Palette' à partir du fichier commandes
+        # Ceci permet d'utiliser la valeur de la colonne K pour chaque article, même s'il n'est pas commandé par ce dépôt spécifique
+        produits_par_palette_lookup_all = {}
+        try:
+            for _, row in commandes_df.iterrows():
+                produits_par_palette_lookup_all[str(row['Article'])] = float(row['Produits par Palette'])
+        except Exception:
+            # En cas de données manquantes/impropres, laisser vide pour retomber sur le fallback 30 plus bas
+            produits_par_palette_lookup_all = {}
+        
         # Obtenir les données de stock et transit actuelles
         stock_m210 = {}
         if stock_data and len(stock_data) > 0:
