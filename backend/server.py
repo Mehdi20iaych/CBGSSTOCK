@@ -722,7 +722,7 @@ async def export_excel(request: ExportRequest):
                     packaging = row.get('Type Emballage', 'verre')
                     cqm = row['Quantité Commandée']
                     stock_actuel = row['Stock Utilisation Libre']
-                    produits_par_palette = float(row.get('Produits par Palette', 30))
+                    produits_par_palette = float(row['Produits par Palette'])  # Removed fallback to 30, use actual value from column K
                     stock_transit = transit_stocks.get(article, {}).get(depot, 0)
                     
                     # Calculer avec la formule
