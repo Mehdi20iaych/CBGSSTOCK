@@ -516,6 +516,39 @@ function App() {
     return editedPalettes[itemKey] !== undefined ? editedPalettes[itemKey] : (item.palettes_needed || 0);
   };
 
+  // Calculer dynamiquement le résumé des dépôts avec les valeurs de palettes actuelles (éditées)
+  const getDynamicDepotSummary = () => {
+    if (!calculations || !calculations.calculations) return [];
+
+    const depotSummary = {};
+    
+    // Recalculer en utilisant les valeurs actuelles (éditées ou originales)
+    calculations.calculations.forEach(calc => {
+      const currentPalettes = getPalettesValue(calc);
+      
+      if (!depotSummary[calc.depot]) {
+        depotSummary[calc.depot] = {
+          depot: calc.depot,
+          total_palettes: 0,
+          total_items: 0,
+          trucks_needed: 0,
+          delivery_efficiency: 'Inefficace'
+        };
+      }
+      
+      depotSummary[calc.depot].total_palettes += currentPalettes;
+      depotSummary[calc.depot].total_items += 1;
+    });
+
+    // Calculer les camions nécessaires et l'efficacité pour chaque dépôt
+    Object.values(depotSummary).forEach(depot => {
+      depot.trucks_needed = Math.ceil(depot.total_palettes / 24);
+      depot.delivery_efficiency = depot.total_palettes >= 24 ? 'Efficace' : 'Inefficace';
+    });
+
+    return Object.values(depotSummary).sort((a, b) => a.depot.localeCompare(b.depot));
+  };
+
   // Fonctions pour le chat IA
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || chatLoading) return;
