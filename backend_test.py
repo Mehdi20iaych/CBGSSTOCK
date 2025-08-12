@@ -3637,7 +3637,17 @@ class SimplifiedStockManagementTester:
             ("Ceiling Function Fractional Scenarios", self.test_ceiling_function_fractional_scenarios),
             ("Ceiling Function Edge Cases", self.test_ceiling_function_edge_cases),
             ("Ceiling Function Depot Suggestions", self.test_ceiling_function_depot_suggestions),
-            ("Ceiling Function Data Consistency", self.test_ceiling_function_data_consistency)
+            ("Ceiling Function Data Consistency", self.test_ceiling_function_data_consistency),
+            # PRODUCTION PLANNING FEATURE TESTS
+            ("Production Plan - Stock Upload Articles Filter", self.test_production_plan_stock_upload_articles_filter),
+            ("Production Plan - Basic Calculation Without Plan", self.test_basic_calculation_without_production_plan),
+            ("Production Plan - Calculation With Plan", self.test_calculation_with_production_plan),
+            ("Production Plan - Stock Enhancement Verification", self.test_production_plan_stock_enhancement_verification),
+            ("Production Plan - Multiple Articles", self.test_multiple_articles_production_plan),
+            ("Production Plan - Impact Comparison", self.test_production_plan_impact_comparison),
+            ("Production Plan - Data Validation", self.test_production_plan_data_validation),
+            ("Production Plan - Edge Cases", self.test_production_plan_edge_cases),
+            ("Production Plan - Mathematical Verification", self.test_production_plan_mathematical_verification)
         ]
         
         for test_name, test_func in tests:
