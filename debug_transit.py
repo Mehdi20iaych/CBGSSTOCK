@@ -2,7 +2,7 @@ import requests
 import json
 
 # Test the business logic more thoroughly
-base_url = "https://1471fe46-cff7-448e-b32d-2e138d2a26fd.preview.emergentagent.com"
+base_url = "https://shipment-planner-1.preview.emergentagent.com"
 
 # Use the session IDs from the previous test
 order_session_id = "60821168-4ae9-45ca-8f67-c754118f0270"
