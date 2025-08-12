@@ -768,6 +768,108 @@ function App() {
                 </div>
               )}
 
+              {/* Plan de Production */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                  <ArrowTrendingUpIcon className="w-5 h-5 mr-2 text-green-600" />
+                  Plan de Production
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Ajoutez les quantités en production qui seront bientôt disponibles en stock M210
+                </p>
+
+                {/* Formulaire d'ajout */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Code Article
+                    </label>
+                    <select
+                      value={newProductionItem.article}
+                      onChange={(e) => setNewProductionItem({...newProductionItem, article: e.target.value})}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                      disabled={availableArticles.length === 0}
+                    >
+                      <option value="">Sélectionner un article</option>
+                      {availableArticles.map((article) => (
+                        <option key={article} value={article}>{article}</option>
+                      ))}
+                    </select>
+                    {availableArticles.length === 0 && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        Uploadez d'abord le fichier stock M210 pour voir les articles disponibles
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Quantité en Production
+                    </label>
+                    <input
+                      type="number"
+                      value={newProductionItem.quantity}
+                      onChange={(e) => setNewProductionItem({...newProductionItem, quantity: e.target.value})}
+                      min="1"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                      placeholder="Quantité"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      onClick={addProductionItem}
+                      disabled={!newProductionItem.article || !newProductionItem.quantity}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CheckCircleIcon className="w-4 h-4 mr-2" />
+                      Ajouter
+                    </button>
+                  </div>
+                </div>
+
+                {/* Liste des items en production */}
+                {productionPlan.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-medium text-gray-700">
+                        Articles en Production ({productionPlan.length})
+                      </h4>
+                      <button
+                        onClick={clearProductionPlan}
+                        className="text-sm text-red-600 hover:text-red-800"
+                      >
+                        Tout effacer
+                      </button>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-2">
+                      {productionPlan.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center bg-green-50 border border-green-200 rounded-lg p-3"
+                        >
+                          <div>
+                            <span className="font-medium text-green-900">{item.article}</span>
+                            <span className="ml-2 text-sm text-green-700">
+                              {item.quantity.toLocaleString()} unités
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => removeProductionItem(index)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <XCircleIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-800">
+                        <strong>Note:</strong> Ces quantités seront ajoutées au stock M210 actuel lors des calculs
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="pt-4">
                 <button
                   onClick={handleCalculate}
