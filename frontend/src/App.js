@@ -91,6 +91,68 @@ function App() {
   const stockFileRef = useRef(null);
   const transitFileRef = useRef(null);
 
+  // Fonction pour obtenir les résultats filtrés
+  const getFilteredResults = () => {
+    if (!calculations || !calculations.calculations) return [];
+    
+    return calculations.calculations.filter(item => {
+      // Filtre sourcing
+      if (resultsFilters.sourcing !== 'all') {
+        const isLocal = item.is_locally_made;
+        if (resultsFilters.sourcing === 'local' && !isLocal) return false;
+        if (resultsFilters.sourcing === 'external' && isLocal) return false;
+      }
+      
+      // Filtre status
+      if (resultsFilters.status !== 'all') {
+        const palettes = getPalettesValue(item);
+        const produits_par_palette = item.produits_par_palette || 30;
+        const quantite_a_envoyer = palettes * produits_par_palette;
+        
+        let currentStatus = 'ok';
+        if (quantite_a_envoyer === 0) {
+          currentStatus = 'ok';
+        } else if (quantite_a_envoyer <= item.stock_dispo_m210) {
+          currentStatus = 'a_livrer';
+        } else {
+          currentStatus = 'non_couvert';
+        }
+        
+        if (resultsFilters.status !== currentStatus) return false;
+      }
+      
+      // Filtre packaging
+      if (resultsFilters.packaging !== 'all' && item.packaging !== resultsFilters.packaging) {
+        return false;
+      }
+      
+      // Filtre depot
+      if (resultsFilters.depot !== 'all' && item.depot !== resultsFilters.depot) {
+        return false;
+      }
+      
+      // Filtre article (recherche textuelle)
+      if (resultsFilters.article && resultsFilters.article.trim() !== '') {
+        const searchText = resultsFilters.article.toLowerCase();
+        if (!item.article.toLowerCase().includes(searchText)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  };
+
+  // Fonction pour obtenir les valeurs uniques pour les filtres
+  const getUniqueFilterValues = () => {
+    if (!calculations || !calculations.calculations) return { depots: [], packagings: [] };
+    
+    const depots = [...new Set(calculations.calculations.map(item => item.depot))].sort();
+    const packagings = [...new Set(calculations.calculations.map(item => item.packaging))].sort();
+    
+    return { depots, packagings };
+  };
+
   // Fonctions pour le plan de production
   const addProductionItem = () => {
     if (!newProductionItem.article || !newProductionItem.quantity) {
