@@ -623,7 +623,8 @@ function App() {
 
   // Calculer dynamiquement les statistiques de statut avec les valeurs actuelles
   const getDynamicStatusSummary = () => {
-    if (!calculations || !calculations.calculations) return {
+    const filteredResults = getFilteredResults();
+    if (!filteredResults || filteredResults.length === 0) return {
       total_items: 0,
       items_ok: 0,
       items_a_livrer: 0,
@@ -634,7 +635,7 @@ function App() {
     let items_a_livrer = 0;
     let items_non_couverts = 0;
 
-    calculations.calculations.forEach(calc => {
+    filteredResults.forEach(calc => {
       const currentPalettes = getPalettesValue(calc);
       const produits_par_palette = calc.produits_par_palette || 30;
       const quantite_a_envoyer = currentPalettes * produits_par_palette;
@@ -649,7 +650,7 @@ function App() {
     });
 
     return {
-      total_items: calculations.calculations.length,
+      total_items: filteredResults.length,
       items_ok,
       items_a_livrer,
       items_non_couverts
