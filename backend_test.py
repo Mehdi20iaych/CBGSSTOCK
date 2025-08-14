@@ -3994,7 +3994,12 @@ class SimplifiedStockManagementTester:
             ("Production Plan - Impact Comparison", self.test_production_plan_impact_comparison),
             ("Production Plan - Data Validation", self.test_production_plan_data_validation),
             ("Production Plan - Edge Cases", self.test_production_plan_edge_cases),
-            ("Production Plan - Mathematical Verification", self.test_production_plan_mathematical_verification)
+            ("Production Plan - Mathematical Verification", self.test_production_plan_mathematical_verification),
+            # NEW JOURS DE RECOUVREMENT TESTS
+            ("Jours de Recouvrement Calculation", self.test_jours_recouvrement_calculation),
+            ("Jours de Recouvrement Edge Cases", self.test_jours_recouvrement_edge_cases),
+            ("Jours de Recouvrement Field Presence", self.test_jours_recouvrement_field_presence),
+            ("Jours de Recouvrement Mathematical Accuracy", self.test_jours_recouvrement_mathematical_accuracy)
         ]
         
         for test_name, test_func in tests:
