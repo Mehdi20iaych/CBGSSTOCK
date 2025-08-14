@@ -55,6 +55,15 @@ function App() {
   const [availablePackaging, setAvailablePackaging] = useState([]);
   const [selectedPackaging, setSelectedPackaging] = useState([]);
   
+  // États pour les filtres de résultats
+  const [resultsFilters, setResultsFilters] = useState({
+    sourcing: 'all', // 'all', 'local', 'external'
+    status: 'all',   // 'all', 'ok', 'a_livrer', 'non_couvert'
+    packaging: 'all', // 'all', 'verre', 'pet', 'ciel'
+    depot: 'all',    // 'all' or specific depot code
+    article: ''      // empty string or search text
+  });
+  
   // États pour les suggestions de palettes
   const [suggestions, setSuggestions] = useState({});
   const [loadingSuggestions, setLoadingSuggestions] = useState({});
