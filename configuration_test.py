@@ -416,7 +416,7 @@ class ConfigurationSystemTester:
         return False
 
     def test_empty_depot_article_mapping(self):
-        """Test with empty depot_article_mapping"""
+        """Test with empty depot_article_mapping - should work normally when empty"""
         config_data = {
             "depot_article_mapping": {},
             "enabled": True
@@ -433,7 +433,7 @@ class ConfigurationSystemTester:
         if not success:
             return False
         
-        # Test calculation with empty mapping
+        # Test calculation with empty mapping - should work normally (not apply filtering)
         calculation_data = {
             "days": 10
         }
@@ -442,12 +442,29 @@ class ConfigurationSystemTester:
             "Calculation with Empty Mapping",
             "POST",
             "api/calculate",
-            400,  # Should return error
+            200,  # Should return 200 and work normally
             data=calculation_data
         )
         
-        if success:
-            print("✅ Empty depot-article mapping correctly returns error")
+        if success and 'calculations' in response:
+            calculations = response['calculations']
+            
+            # Should have all combinations (8 total) since empty mapping means no filtering
+            expected_combinations = {
+                ('A1', 'M212'), ('A2', 'M212'), ('A3', 'M212'), ('A4', 'M212'),
+                ('A1', 'M213'), ('A2', 'M213'), ('A3', 'M213'), ('A4', 'M213')
+            }
+            
+            found_combinations = set()
+            for calc in calculations:
+                combination = (calc['article'], calc['depot'])
+                found_combinations.add(combination)
+            
+            if found_combinations != expected_combinations:
+                print(f"❌ Expected all combinations {expected_combinations}, got {found_combinations}")
+                return False
+            
+            print("✅ Empty depot-article mapping works normally (no filtering applied)")
             return True
         return False
 
