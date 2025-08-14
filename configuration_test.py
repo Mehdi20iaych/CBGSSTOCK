@@ -659,8 +659,8 @@ class ConfigurationSystemTester:
         # Set configuration for comprehensive testing
         config_data = {
             "depot_article_mapping": {
-                "M211": ["A1", "A2"],
-                "M212": ["A3"]
+                "M212": ["A1", "A2"],
+                "M213": ["A3"]
             },
             "enabled": True
         }
