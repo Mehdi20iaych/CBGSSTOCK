@@ -328,15 +328,15 @@ class ConfigurationSystemTester:
             calculations = response['calculations']
             
             # Verify only configured combinations appear
-            # M211 should only have A1, A2
-            # M212 should only have A3
+            # M212 should only have A1, A2
+            # M213 should only have A3
             # A4 should not appear anywhere
-            # M211→A3, M212→A1, M212→A2 should be filtered out
+            # M212→A3, M213→A1, M213→A2 should be filtered out
             
             allowed_combinations = {
-                ('A1', 'M211'),
-                ('A2', 'M211'),
-                ('A3', 'M212')
+                ('A1', 'M212'),
+                ('A2', 'M212'),
+                ('A3', 'M213')
             }
             
             found_combinations = set()
