@@ -691,7 +691,7 @@ class JoursRecouvrementTester:
             self.test_jours_recouvrement_formula_accuracy,
             self.test_specific_calculation_scenarios,
             self.test_edge_cases,
-            self.test_higher_values_than_before,
+            self.test_new_formula_implementation,
             self.test_consistency_across_different_days
         ]
         
