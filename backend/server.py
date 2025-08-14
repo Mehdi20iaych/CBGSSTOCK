@@ -491,12 +491,14 @@ async def calculate_requirements(request: CalculationRequest):
             palettes_needed = math.ceil(quantite_a_envoyer / produits_par_palette) if quantite_a_envoyer > 0 and produits_par_palette > 0 else 0
             
             # NOUVEAU: Calcul des jours de recouvrement
-            # Jours de recouvrement = Stock Actuel / Consommation Quotidienne Moyenne
+            # Jours de recouvrement = (Stock Actuel + Quantité en Transit) / Consommation Quotidienne Moyenne
             jours_recouvrement = 0
             if cqm > 0:  # Éviter la division par zéro
                 cqm_daily = cqm / request.days  # Consommation quotidienne
                 if cqm_daily > 0:
-                    jours_recouvrement = round(stock_actuel / cqm_daily, 1)
+                    # Inclure le stock en transit dans le calcul
+                    stock_total_disponible = stock_actuel + stock_transit
+                    jours_recouvrement = round(stock_total_disponible / cqm_daily, 1)
             
             results.append({
                 'article': article,
