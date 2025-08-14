@@ -403,11 +403,12 @@ function App() {
 
   // Sélectionner tous les items
   const handleSelectAll = () => {
-    if (calculations && calculations.calculations) {
-      if (selectedItems.length === calculations.calculations.length) {
+    const filteredResults = getFilteredResults();
+    if (filteredResults && filteredResults.length > 0) {
+      if (selectedItems.length === filteredResults.length) {
         setSelectedItems([]);
       } else {
-        setSelectedItems([...calculations.calculations]);
+        setSelectedItems([...filteredResults]);
       }
     }
   };
