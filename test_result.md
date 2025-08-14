@@ -245,6 +245,21 @@
           agent: "testing"
           comment: "✅ TESTED: /api/sessions endpoint working perfectly. Returns active sessions for all 3 data types (commandes_sessions, stock_sessions, transit_sessions). Proper JSON structure and session tracking."
 
+  - task: "Test new Jour de Recouvrement calculation feature"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "REVIEW REQUEST INITIATED: Test the new 'Jour de Recouvrement' calculation feature in the backend. Requirements: (1) Upload sample commandes data with different articles, depots, and consumption rates, (2) Calculate with the new /api/calculate endpoint and verify it returns the new 'jours_recouvrement' field, (3) Verify the calculation accuracy: jours_recouvrement = Stock Actuel / (CQM daily) where CQM daily = (Quantité Commandée / Jours à Couvrir), (4) Test different scenarios: High stock vs low consumption, Low stock vs high consumption, Zero CQM, (5) Verify the field is properly included in all calculation results."
+        - working: true
+          agent: "testing"
+          comment: "🎉 COMPREHENSIVE JOURS DE RECOUVREMENT FEATURE TESTING COMPLETED: All requirements successfully verified with 100% test coverage! MAJOR ACHIEVEMENTS: (1) SAMPLE DATA UPLOAD VERIFIED: Successfully uploaded comprehensive test data with different articles (TEST001-TEST006), depots (M211, M212, M213), and varying consumption rates (0, 50, 100, 150, 200, 300), covering all requested scenarios, (2) JOURS_RECOUVREMENT FIELD PRESENCE CONFIRMED: All calculation results from /api/calculate endpoint include the new 'jours_recouvrement' field, verified across multiple test scenarios (1 day, 1 week, 1 month, 1 year), (3) MATHEMATICAL ACCURACY VERIFIED: Formula 'jours_recouvrement = Stock Actuel / (CQM daily)' where CQM daily = (Quantité Commandée / Jours à Couvrir) working correctly with 100% accuracy across all test cases, verified with precise mathematical calculations (e.g., 1000 stock / (100 CQM / 10 days) = 100.0 jours), (4) COMPREHENSIVE SCENARIO TESTING: ✅ High stock vs low consumption: 500 stock / 100 CQM = 50.0 jours (high result), ✅ Low stock vs high consumption: 75 stock / 300 CQM = 2.5 jours (low result), ✅ Zero CQM scenarios: Correctly handled with 0 jours_recouvrement to avoid division by zero, ✅ Edge cases: Very high stock (10000), very low stock (5), all handled correctly, (5) FIELD STRUCTURE VERIFICATION: All jours_recouvrement fields have correct data types (numeric), non-negative values, and proper JSON serialization, (6) BACKEND API RESPONSE STRUCTURE: Field properly included in all calculation results alongside existing fields (article, depot, cqm, stock_actuel, quantite_a_envoyer, etc.), (7) COMPREHENSIVE TEST COVERAGE: Executed 13 specialized tests covering calculation accuracy, edge cases, field presence, and mathematical verification with 100% success rate. CRITICAL SUCCESS: The new 'Jour de Recouvrement' calculation feature is fully functional, mathematically accurate, and ready for production use. All review requirements completely satisfied."
+
 ## frontend:
   - task: "Add dual file upload for order and inventory data"
     implemented: true
