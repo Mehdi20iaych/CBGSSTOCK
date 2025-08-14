@@ -429,7 +429,7 @@ class JoursRecouvrementTester:
             'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004'],
             'Article': ['EDGE001', 'EDGE002', 'EDGE003', 'EDGE004'],
             'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4'],
-            'Point d\'Expédition': ['M211', 'M212', 'M213', 'M211'],
+            'Point d\'Expédition': ['M212', 'M213', 'M212', 'M213'],
             'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4'],
             'Quantité Commandée': [0, 1, 1000, 0.5],  # Zero, very low, very high, decimal
             'Stock Utilisation Libre': [0, 0, 5000, 100],  # Zero stock, normal stock
