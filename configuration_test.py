@@ -546,8 +546,8 @@ class ConfigurationSystemTester:
         """Test configuration where only some combinations exist in data"""
         config_data = {
             "depot_article_mapping": {
-                "M211": ["A1", "X999"],  # A1 exists, X999 doesn't
-                "M212": ["A3"]
+                "M212": ["A1", "X999"],  # A1 exists, X999 doesn't
+                "M213": ["A3"]
             },
             "enabled": True
         }
