@@ -3592,6 +3592,353 @@ class SimplifiedStockManagementTester:
         
         return self.tests_passed == self.tests_run
 
+    def create_jours_recouvrement_test_excel(self):
+        """Create sample Excel file specifically for testing jours_recouvrement calculations"""
+        # Create test data with different scenarios for jours_recouvrement testing
+        data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006'],
+            'Article': ['JR001', 'JR002', 'JR003', 'JR004', 'JR005', 'JR006'],  # Jours Recouvrement test articles
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6'],
+            'Point d\'Expédition': ['M211', 'M212', 'M213', 'M211', 'M212', 'M213'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            # Different consumption rates for testing
+            'Quantité Commandée': [100, 200, 50, 0, 150, 300],  # CQM values - including 0 for division by zero test
+            # Different stock levels for testing
+            'Stock Utilisation Libre': [500, 100, 200, 1000, 75, 600],  # Stock Actuel values
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet', 'ciel'],
+            'Dummy_J': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6'],
+            'Produits par Palette': [30, 30, 30, 30, 30, 30]
+        }
+        
+        df = pd.DataFrame(data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        return excel_buffer
+
+    def test_jours_recouvrement_calculation(self):
+        """Test the new jours_recouvrement calculation feature"""
+        print("\n🔍 Testing Jours de Recouvrement calculation feature...")
+        
+        # Upload test data specifically designed for jours_recouvrement testing
+        excel_file = self.create_jours_recouvrement_test_excel()
+        files = {
+            'file': ('jours_recouvrement_test.xlsx', excel_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, upload_response = self.run_test(
+            "Upload Jours Recouvrement Test Data",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if not success:
+            return False
+        
+        # Test with different days values to verify calculation accuracy
+        test_scenarios = [
+            {"days": 10, "description": "10 days scenario"},
+            {"days": 5, "description": "5 days scenario"},
+            {"days": 20, "description": "20 days scenario"}
+        ]
+        
+        for scenario in test_scenarios:
+            days = scenario["days"]
+            description = scenario["description"]
+            
+            calculation_data = {"days": days}
+            
+            success, response = self.run_test(
+                f"Jours Recouvrement Calculation - {description}",
+                "POST",
+                "api/calculate",
+                200,
+                data=calculation_data
+            )
+            
+            if not success:
+                return False
+            
+            if 'calculations' not in response:
+                print("❌ Missing calculations in response")
+                return False
+            
+            calculations = response['calculations']
+            
+            # Verify each calculation has jours_recouvrement field
+            for calc in calculations:
+                if 'jours_recouvrement' not in calc:
+                    print(f"❌ Missing jours_recouvrement field in calculation for article {calc.get('article', 'unknown')}")
+                    return False
+                
+                # Verify calculation accuracy
+                article = calc['article']
+                cqm = calc['cqm']
+                stock_actuel = calc['stock_actuel']
+                jours_recouvrement = calc['jours_recouvrement']
+                
+                # Calculate expected jours_recouvrement
+                # Formula: jours_recouvrement = Stock Actuel / (CQM daily) where CQM daily = (Quantité Commandée / Jours à Couvrir)
+                expected_jours_recouvrement = 0
+                if cqm > 0:
+                    cqm_daily = cqm / days
+                    if cqm_daily > 0:
+                        expected_jours_recouvrement = round(stock_actuel / cqm_daily, 1)
+                
+                # Verify calculation accuracy (allow small floating point differences)
+                if abs(jours_recouvrement - expected_jours_recouvrement) > 0.1:
+                    print(f"❌ Article {article}: Expected jours_recouvrement {expected_jours_recouvrement}, got {jours_recouvrement}")
+                    print(f"   Stock Actuel: {stock_actuel}, CQM: {cqm}, Days: {days}, CQM Daily: {cqm/days if cqm > 0 else 0}")
+                    return False
+                
+                print(f"✅ Article {article}: Stock {stock_actuel} / CQM Daily {cqm/days if cqm > 0 else 0} = {jours_recouvrement} jours")
+        
+        return True
+
+    def test_jours_recouvrement_edge_cases(self):
+        """Test jours_recouvrement calculation edge cases"""
+        print("\n🔍 Testing Jours de Recouvrement edge cases...")
+        
+        # Create edge case test data
+        edge_case_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004'],
+            'Article': ['EDGE001', 'EDGE002', 'EDGE003', 'EDGE004'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4'],
+            'Point d\'Expédition': ['M211', 'M212', 'M213', 'M211'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4'],
+            # Edge cases: zero CQM, very high stock, very low stock, very high CQM
+            'Quantité Commandée': [0, 10, 1000, 1],  # Zero CQM, low CQM, high CQM, minimal CQM
+            'Stock Utilisation Libre': [1000, 10000, 5, 100],  # High stock, very high stock, very low stock, normal stock
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre'],
+            'Dummy_J': ['Extra1', 'Extra2', 'Extra3', 'Extra4'],
+            'Produits par Palette': [30, 30, 30, 30]
+        }
+        
+        df = pd.DataFrame(edge_case_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('edge_cases.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, upload_response = self.run_test(
+            "Upload Edge Cases Test Data",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if not success:
+            return False
+        
+        calculation_data = {"days": 10}
+        
+        success, response = self.run_test(
+            "Jours Recouvrement Edge Cases Calculation",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if not success:
+            return False
+        
+        calculations = response['calculations']
+        
+        for calc in calculations:
+            article = calc['article']
+            cqm = calc['cqm']
+            stock_actuel = calc['stock_actuel']
+            jours_recouvrement = calc['jours_recouvrement']
+            
+            # Test specific edge cases
+            if article == 'EDGE001':  # Zero CQM case
+                if jours_recouvrement != 0:
+                    print(f"❌ Article {article}: Zero CQM should result in 0 jours_recouvrement, got {jours_recouvrement}")
+                    return False
+                print(f"✅ Article {article}: Zero CQM correctly handled (jours_recouvrement = 0)")
+            
+            elif article == 'EDGE002':  # High stock vs low consumption
+                # Should result in high jours_recouvrement
+                if jours_recouvrement < 1000:  # 10000 stock / (10/10) = 10000 days
+                    print(f"❌ Article {article}: High stock vs low consumption should result in high jours_recouvrement, got {jours_recouvrement}")
+                    return False
+                print(f"✅ Article {article}: High stock vs low consumption correctly calculated (jours_recouvrement = {jours_recouvrement})")
+            
+            elif article == 'EDGE003':  # Low stock vs high consumption
+                # Should result in low jours_recouvrement
+                if jours_recouvrement > 1:  # 5 stock / (1000/10) = 0.05 days
+                    print(f"❌ Article {article}: Low stock vs high consumption should result in low jours_recouvrement, got {jours_recouvrement}")
+                    return False
+                print(f"✅ Article {article}: Low stock vs high consumption correctly calculated (jours_recouvrement = {jours_recouvrement})")
+            
+            elif article == 'EDGE004':  # Normal case
+                # Should result in reasonable jours_recouvrement
+                expected = round(100 / (1/10), 1)  # 100 stock / (1/10) = 1000 days
+                if abs(jours_recouvrement - expected) > 0.1:
+                    print(f"❌ Article {article}: Expected {expected} jours_recouvrement, got {jours_recouvrement}")
+                    return False
+                print(f"✅ Article {article}: Normal case correctly calculated (jours_recouvrement = {jours_recouvrement})")
+        
+        return True
+
+    def test_jours_recouvrement_field_presence(self):
+        """Test that jours_recouvrement field is present in all calculation results"""
+        print("\n🔍 Testing Jours de Recouvrement field presence...")
+        
+        # Use existing commandes data if available
+        if not self.commandes_session_id:
+            # Upload basic test data
+            excel_file = self.create_sample_commandes_excel()
+            files = {
+                'file': ('field_presence_test.xlsx', excel_file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            }
+            
+            success, upload_response = self.run_test(
+                "Upload Data for Field Presence Test",
+                "POST",
+                "api/upload-commandes-excel",
+                200,
+                files=files
+            )
+            
+            if not success:
+                return False
+        
+        # Test multiple calculation scenarios
+        test_scenarios = [
+            {"days": 1, "description": "1 day"},
+            {"days": 7, "description": "1 week"},
+            {"days": 30, "description": "1 month"},
+            {"days": 365, "description": "1 year"}
+        ]
+        
+        for scenario in test_scenarios:
+            calculation_data = {"days": scenario["days"]}
+            
+            success, response = self.run_test(
+                f"Field Presence Test - {scenario['description']}",
+                "POST",
+                "api/calculate",
+                200,
+                data=calculation_data
+            )
+            
+            if not success:
+                return False
+            
+            calculations = response['calculations']
+            
+            # Verify every calculation result has jours_recouvrement field
+            for i, calc in enumerate(calculations):
+                if 'jours_recouvrement' not in calc:
+                    print(f"❌ Calculation result {i} missing jours_recouvrement field")
+                    return False
+                
+                # Verify field is numeric
+                jours_recouvrement = calc['jours_recouvrement']
+                if not isinstance(jours_recouvrement, (int, float)):
+                    print(f"❌ jours_recouvrement field should be numeric, got {type(jours_recouvrement)}")
+                    return False
+                
+                # Verify field is non-negative
+                if jours_recouvrement < 0:
+                    print(f"❌ jours_recouvrement should be non-negative, got {jours_recouvrement}")
+                    return False
+            
+            print(f"✅ All {len(calculations)} results have valid jours_recouvrement field for {scenario['description']}")
+        
+        return True
+
+    def test_jours_recouvrement_mathematical_accuracy(self):
+        """Test mathematical accuracy of jours_recouvrement calculations with known values"""
+        print("\n🔍 Testing Jours de Recouvrement mathematical accuracy...")
+        
+        # Create test data with known values for precise mathematical verification
+        precise_test_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005'],
+            'Article': ['MATH001', 'MATH002', 'MATH003', 'MATH004', 'MATH005'],
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5'],
+            'Point d\'Expédition': ['M211', 'M212', 'M213', 'M211', 'M212'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            # Precise values for mathematical verification
+            'Quantité Commandée': [100, 50, 200, 25, 300],  # CQM values
+            'Stock Utilisation Libre': [1000, 250, 400, 125, 150],  # Stock Actuel values
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Type Emballage': ['verre', 'pet', 'ciel', 'verre', 'pet'],
+            'Dummy_J': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5'],
+            'Produits par Palette': [30, 30, 30, 30, 30]
+        }
+        
+        df = pd.DataFrame(precise_test_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('math_accuracy_test.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, upload_response = self.run_test(
+            "Upload Mathematical Accuracy Test Data",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if not success:
+            return False
+        
+        # Test with 10 days
+        calculation_data = {"days": 10}
+        
+        success, response = self.run_test(
+            "Mathematical Accuracy Calculation",
+            "POST",
+            "api/calculate",
+            200,
+            data=calculation_data
+        )
+        
+        if not success:
+            return False
+        
+        calculations = response['calculations']
+        
+        # Expected calculations for verification
+        expected_results = {
+            'MATH001': {'stock': 1000, 'cqm': 100, 'days': 10, 'expected_jours': 100.0},  # 1000 / (100/10) = 100
+            'MATH002': {'stock': 250, 'cqm': 50, 'days': 10, 'expected_jours': 50.0},    # 250 / (50/10) = 50
+            'MATH003': {'stock': 400, 'cqm': 200, 'days': 10, 'expected_jours': 20.0},   # 400 / (200/10) = 20
+            'MATH004': {'stock': 125, 'cqm': 25, 'days': 10, 'expected_jours': 50.0},    # 125 / (25/10) = 50
+            'MATH005': {'stock': 150, 'cqm': 300, 'days': 10, 'expected_jours': 5.0}     # 150 / (300/10) = 5
+        }
+        
+        for calc in calculations:
+            article = calc['article']
+            if article in expected_results:
+                expected = expected_results[article]
+                actual_jours = calc['jours_recouvrement']
+                expected_jours = expected['expected_jours']
+                
+                if abs(actual_jours - expected_jours) > 0.1:
+                    print(f"❌ Article {article}: Expected {expected_jours} jours_recouvrement, got {actual_jours}")
+                    print(f"   Stock: {expected['stock']}, CQM: {expected['cqm']}, Days: {expected['days']}")
+                    return False
+                
+                print(f"✅ Article {article}: Mathematical accuracy verified ({actual_jours} jours)")
+        
+        return True
+
     def run_all_tests(self):
         """Run all tests for the enhanced inventory management system with packaging"""
         print("🚀 Starting Enhanced Inventory Management System Tests with Packaging")
