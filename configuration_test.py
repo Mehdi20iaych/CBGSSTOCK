@@ -227,7 +227,7 @@ class ConfigurationSystemTester:
                     return False
             
             # Verify we have the expected depots and articles
-            expected_depots = ['M211', 'M212']
+            expected_depots = ['M212', 'M213']
             expected_articles = ['A1', 'A2', 'A3', 'A4']
             
             if set(response['depots']) != set(expected_depots):
