@@ -423,8 +423,28 @@ async def calculate_requirements(request: CalculationRequest):
         if request.packaging_filter and len(request.packaging_filter) > 0:
             commandes_df = commandes_df[commandes_df['Type Emballage'].isin(request.packaging_filter)]
             
+        # Appliquer la configuration depot-article si activée
+        if depot_configuration.get("enabled", False) and depot_configuration.get("depot_article_mapping"):
+            depot_article_mapping = depot_configuration["depot_article_mapping"]
+            
+            # Filtrer pour ne garder que les combinaisons depot-article configurées
+            filtered_rows = []
+            for _, row in commandes_df.iterrows():
+                depot = str(row['Point d\'Expédition'])
+                article = str(row['Article'])
+                
+                # Vérifier si ce dépôt est configuré et si cet article est autorisé pour ce dépôt
+                if depot in depot_article_mapping and article in depot_article_mapping[depot]:
+                    filtered_rows.append(row)
+            
+            if filtered_rows:
+                commandes_df = pd.DataFrame(filtered_rows)
+            else:
+                # Aucune combinaison depot-article configurée trouvée
+                raise HTTPException(status_code=400, detail="Aucune combinaison dépôt-article configurée trouvée dans les données")
+            
         if commandes_df.empty:
-            raise HTTPException(status_code=400, detail="Aucune donnée après application des filtres d'emballage")
+            raise HTTPException(status_code=400, detail="Aucune donnée après application des filtres d'emballage et de configuration")
         
         # Obtenir les données de stock M210 si disponibles
         stock_m210 = {}
