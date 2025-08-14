@@ -85,6 +85,17 @@ LOCALLY_MADE_ARTICLES = {
     '7521', '7532', '7620', '7630', '7640', '7659', '7949', '7953'
 }
 
+# Configuration storage for depot-article mapping
+depot_configuration = {}
+
+class DeliveryConfiguration(BaseModel):
+    depot_article_mapping: Dict[str, List[str]]  # depot -> list of articles
+    enabled: bool = True
+
+class ConfigurationRequest(BaseModel):
+    depot_article_mapping: Dict[str, List[str]]
+    enabled: bool = True
+
 # Allowed depots constraint
 def is_allowed_depot(depot_code):
     """Check if a depot code is allowed based on the specified constraints"""
