@@ -102,7 +102,7 @@ class ConfigurationSystemTester:
         data = {
             'Article': ['A1', 'A2', 'A3', 'A4'],
             'Dummy_B': ['Desc1', 'Desc2', 'Desc3', 'Desc4'],
-            'Division': ['M211', 'M212', 'M211', 'M212'],
+            'Division': ['M212', 'M213', 'M212', 'M213'],  # Use allowed depots
             'Dummy_D': ['Extra1', 'Extra2', 'Extra3', 'Extra4'],
             'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4'],
             'Dummy_F': ['Extra1', 'Extra2', 'Extra3', 'Extra4'],
