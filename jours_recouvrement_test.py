@@ -568,9 +568,9 @@ class JoursRecouvrementTester:
         
         return False
 
-    def test_higher_values_than_before(self):
-        """Test that jours_recouvrement values are higher than before (since we removed division by days)"""
-        print("\n📈 Testing that jours_recouvrement values are higher than before...")
+    def test_new_formula_implementation(self):
+        """Test that the new formula is correctly implemented (not divided by days)"""
+        print("\n📈 Testing new formula implementation...")
         
         if not self.commandes_session_id:
             print("❌ No commandes session available")
@@ -583,7 +583,7 @@ class JoursRecouvrementTester:
             calculation_data = {"days": days}
             
             success, response = self.run_test(
-                f"Jours Recouvrement Test - {days} days",
+                f"New Formula Test - {days} days",
                 "POST",
                 "api/calculate",
                 200,
@@ -600,25 +600,15 @@ class JoursRecouvrementTester:
                     cqm = calc['cqm']
                     jours_recouvrement = calc['jours_recouvrement']
                     
-                    # The new formula should NOT be divided by days
-                    # Old formula would have been: (stock_actuel + stock_transit) / (cqm / days)
-                    # New formula is: (stock_actuel + stock_transit) / cqm
+                    # The new formula: (stock_actuel + stock_transit) / cqm
+                    # Should NOT be affected by the days parameter
                     
                     if cqm > 0:
-                        # Calculate what the old formula would have given
-                        old_formula_result = (stock_actuel + stock_transit) / (cqm / days)
-                        new_formula_result = (stock_actuel + stock_transit) / cqm
-                        
-                        # The new formula should give the same result regardless of days
-                        # And it should be higher than the old formula when days > 1
-                        if days > 1:
-                            if new_formula_result <= old_formula_result:
-                                print(f"❌ Article {article} ({days} days): New formula ({new_formula_result}) should be higher than old formula ({old_formula_result})")
-                                return False
+                        expected_result = (stock_actuel + stock_transit) / cqm
                         
                         # Verify our calculation matches the API result
-                        if abs(jours_recouvrement - new_formula_result) > 0.1:
-                            print(f"❌ Article {article} ({days} days): Expected {new_formula_result}, got {jours_recouvrement}")
+                        if abs(jours_recouvrement - expected_result) > 0.1:
+                            print(f"❌ Article {article} ({days} days): Expected {expected_result}, got {jours_recouvrement}")
                             return False
                         
                         print(f"✅ Article {article} ({days} days): {jours_recouvrement} jours (new formula)")
