@@ -66,7 +66,7 @@ class ConfigurationSystemTester:
             'Dummy_A': ['CMD001', 'CMD002', 'CMD003', 'CMD004', 'CMD005', 'CMD006', 'CMD007', 'CMD008'],
             'Article': ['A1', 'A2', 'A3', 'A4', 'A1', 'A2', 'A3', 'A4'],  # Articles A1-A4
             'Dummy_C': ['Desc1', 'Desc2', 'Desc3', 'Desc4', 'Desc5', 'Desc6', 'Desc7', 'Desc8'],
-            'Point d\'Expédition': ['M211', 'M211', 'M211', 'M211', 'M212', 'M212', 'M212', 'M212'],  # M211 and M212 depots
+            'Point d\'Expédition': ['M212', 'M212', 'M212', 'M212', 'M213', 'M213', 'M213', 'M213'],  # M212 and M213 depots (both allowed)
             'Dummy_E': ['Extra1', 'Extra2', 'Extra3', 'Extra4', 'Extra5', 'Extra6', 'Extra7', 'Extra8'],
             'Quantité Commandée': [100, 150, 80, 120, 90, 200, 110, 130],
             'Stock Utilisation Libre': [50, 75, 40, 60, 45, 100, 55, 65],
