@@ -342,7 +342,7 @@ class JoursRecouvrementTester:
         transit_data = {
             'Article': ['SPECIFIC001'],
             'Dummy_B': ['Desc1'],
-            'Division': ['M211'],
+            'Division': ['M212'],
             'Dummy_D': ['Extra1'],
             'Dummy_E': ['Extra1'],
             'Dummy_F': ['Extra1'],
