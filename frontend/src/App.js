@@ -1371,7 +1371,7 @@ function App() {
                       onClick={handleSelectAll}
                       className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
                     >
-                      {selectedItems.length === calculations.calculations.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                      {selectedItems.length === getFilteredResults().length ? 'Tout désélectionner' : 'Tout sélectionner'}
                     </button>
                     <button
                       onClick={handleExportExcel}
