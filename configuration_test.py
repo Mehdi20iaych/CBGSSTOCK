@@ -620,8 +620,8 @@ class ConfigurationSystemTester:
         # Update configuration
         updated_config_data = {
             "depot_article_mapping": {
-                "M211": ["A1", "A2", "A3"],
-                "M212": ["A4"]
+                "M212": ["A1", "A2", "A3"],
+                "M213": ["A4"]
             },
             "enabled": True
         }
