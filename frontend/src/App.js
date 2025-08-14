@@ -740,6 +740,99 @@ function App() {
     setConversationId(null);
   };
 
+  // Fonctions pour la configuration
+  const loadConfiguration = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/configuration`);
+      if (response.ok) {
+        const config = await parseJSONSafe(response);
+        setConfiguration(config);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la configuration:', error);
+    }
+  };
+
+  const loadAvailableOptions = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/available-options`);
+      if (response.ok) {
+        const options = await parseJSONSafe(response);
+        setAvailableDepots(options.depots || []);
+        setAvailableArticles(options.articles || []);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des options disponibles:', error);
+    }
+  };
+
+  const saveConfiguration = async () => {
+    setConfigurationLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/configuration`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(configuration),
+      });
+
+      if (response.ok) {
+        alert('Configuration sauvegardée avec succès!');
+      } else {
+        const error = await parseJSONSafe(response);
+        alert(`Erreur lors de la sauvegarde: ${error?.detail || 'Erreur inconnue'}`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde de la configuration');
+    } finally {
+      setConfigurationLoading(false);
+    }
+  };
+
+  const toggleDepotInConfiguration = (depot) => {
+    setConfiguration(prev => {
+      const newMapping = { ...prev.depot_article_mapping };
+      
+      if (newMapping[depot]) {
+        // Supprimer le dépôt de la configuration
+        delete newMapping[depot];
+      } else {
+        // Ajouter le dépôt avec une liste d'articles vide
+        newMapping[depot] = [];
+      }
+      
+      return {
+        ...prev,
+        depot_article_mapping: newMapping
+      };
+    });
+  };
+
+  const toggleArticleForDepot = (depot, article) => {
+    setConfiguration(prev => {
+      const newMapping = { ...prev.depot_article_mapping };
+      
+      if (!newMapping[depot]) {
+        newMapping[depot] = [];
+      }
+      
+      if (newMapping[depot].includes(article)) {
+        // Supprimer l'article
+        newMapping[depot] = newMapping[depot].filter(a => a !== article);
+      } else {
+        // Ajouter l'article
+        newMapping[depot] = [...newMapping[depot], article];
+      }
+      
+      return {
+        ...prev,
+        depot_article_mapping: newMapping
+      };
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
