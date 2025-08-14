@@ -279,7 +279,7 @@ class JoursRecouvrementTester:
             'Dummy_A': ['CMD001'],
             'Article': ['SPECIFIC001'],
             'Dummy_C': ['Desc1'],
-            'Point d\'Expédition': ['M211'],
+            'Point d\'Expédition': ['M212'],
             'Dummy_E': ['Extra1'],
             'Quantité Commandée': [50],  # Daily consumption
             'Stock Utilisation Libre': [1000],  # Stock Actuel
