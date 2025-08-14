@@ -494,11 +494,11 @@ async def calculate_requirements(request: CalculationRequest):
             # Jours de recouvrement = (Stock Actuel + Quantité en Transit) / Consommation Quotidienne Moyenne
             jours_recouvrement = 0
             if cqm > 0:  # Éviter la division par zéro
-                cqm_daily = cqm / request.days  # Consommation quotidienne
-                if cqm_daily > 0:
-                    # Inclure le stock en transit dans le calcul
-                    stock_total_disponible = stock_actuel + stock_transit
-                    jours_recouvrement = round(stock_total_disponible / cqm_daily, 1)
+                # La Quantité Commandée représente déjà la consommation quotidienne
+                cqm_daily = cqm  # Consommation quotidienne directe
+                # Inclure le stock en transit dans le calcul
+                stock_total_disponible = stock_actuel + stock_transit
+                jours_recouvrement = round(stock_total_disponible / cqm_daily, 1)
             
             results.append({
                 'article': article,
