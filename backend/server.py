@@ -611,6 +611,45 @@ async def get_sessions():
         "transit_sessions": list(transit_data.keys())
     }
 
+# Configuration endpoints
+@app.get("/api/configuration")
+async def get_configuration():
+    """Get current depot-article configuration"""
+    return {
+        "depot_article_mapping": depot_configuration.get("depot_article_mapping", {}),
+        "enabled": depot_configuration.get("enabled", False)
+    }
+
+@app.post("/api/configuration")
+async def save_configuration(config: ConfigurationRequest):
+    """Save depot-article configuration"""
+    global depot_configuration
+    depot_configuration = {
+        "depot_article_mapping": config.depot_article_mapping,
+        "enabled": config.enabled
+    }
+    return {
+        "message": "Configuration sauvegardée avec succès",
+        "configuration": depot_configuration
+    }
+
+@app.get("/api/available-options")
+async def get_available_options():
+    """Get available depots and articles from uploaded data"""
+    available_depots = set()
+    available_articles = set()
+    
+    # Get depots and articles from commandes data
+    for session_id, session_data in commandes_data.items():
+        if 'filters' in session_data:
+            available_depots.update(session_data['filters'].get('depots', []))
+            available_articles.update(session_data['filters'].get('articles', []))
+    
+    return {
+        "depots": sorted(list(available_depots)),
+        "articles": sorted(list(available_articles))
+    }
+
 @app.post("/api/export-excel")
 async def export_excel(request: ExportRequest):
     """Export Excel avec table principale et recommandations par dépôt"""
