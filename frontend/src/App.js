@@ -1382,6 +1382,98 @@ function App() {
                   </div>
                 </div>
 
+                {/* Filtres pour les résultats */}
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                  <div className="flex flex-wrap gap-4 items-center">
+                    <h4 className="text-sm font-medium text-gray-700">Filtres:</h4>
+                    
+                    {/* Filtre Sourcing */}
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-600">Sourcing:</label>
+                      <select
+                        value={resultsFilters.sourcing}
+                        onChange={(e) => setResultsFilters({...resultsFilters, sourcing: e.target.value})}
+                        className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="all">Tous</option>
+                        <option value="local">Production Locale</option>
+                        <option value="external">Sourcing Externe</option>
+                      </select>
+                    </div>
+
+                    {/* Filtre Statut */}
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-600">Statut:</label>
+                      <select
+                        value={resultsFilters.status}
+                        onChange={(e) => setResultsFilters({...resultsFilters, status: e.target.value})}
+                        className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="all">Tous</option>
+                        <option value="ok">OK</option>
+                        <option value="a_livrer">À livrer</option>
+                        <option value="non_couvert">Non couvert</option>
+                      </select>
+                    </div>
+
+                    {/* Filtre Type d'emballage */}
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-600">Emballage:</label>
+                      <select
+                        value={resultsFilters.packaging}
+                        onChange={(e) => setResultsFilters({...resultsFilters, packaging: e.target.value})}
+                        className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="all">Tous</option>
+                        {getUniqueFilterValues().packagings.map(packaging => (
+                          <option key={packaging} value={packaging} className="capitalize">{packaging}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Filtre Dépôt */}
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-600">Dépôt:</label>
+                      <select
+                        value={resultsFilters.depot}
+                        onChange={(e) => setResultsFilters({...resultsFilters, depot: e.target.value})}
+                        className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="all">Tous</option>
+                        {getUniqueFilterValues().depots.map(depot => (
+                          <option key={depot} value={depot}>{depot}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Recherche Article */}
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-600">Article:</label>
+                      <input
+                        type="text"
+                        value={resultsFilters.article}
+                        onChange={(e) => setResultsFilters({...resultsFilters, article: e.target.value})}
+                        placeholder="Rechercher..."
+                        className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 w-32"
+                      />
+                    </div>
+
+                    {/* Bouton Reset */}
+                    <button
+                      onClick={() => setResultsFilters({
+                        sourcing: 'all',
+                        status: 'all',
+                        packaging: 'all',
+                        depot: 'all',
+                        article: ''
+                      })}
+                      className="text-sm text-gray-600 hover:text-gray-800 underline"
+                    >
+                      Réinitialiser
+                    </button>
+                  </div>
+                </div>
+
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
