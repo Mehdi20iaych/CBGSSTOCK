@@ -86,6 +86,15 @@ function App() {
   // État pour les palettes éditables
   const [editedPalettes, setEditedPalettes] = useState({});
   
+  // États pour la configuration
+  const [currentPage, setCurrentPage] = useState('main'); // 'main' ou 'configuration'
+  const [configuration, setConfiguration] = useState({
+    depot_article_mapping: {},
+    enabled: false
+  });
+  const [availableDepots, setAvailableDepots] = useState([]);
+  const [configurationLoading, setConfigurationLoading] = useState(false);
+  
   // Références pour les inputs de fichiers
   const commandesFileRef = useRef(null);
   const stockFileRef = useRef(null);
