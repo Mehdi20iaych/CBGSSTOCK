@@ -600,8 +600,8 @@ class ConfigurationSystemTester:
         # First set initial configuration
         config_data = {
             "depot_article_mapping": {
-                "M211": ["A1"],
-                "M212": ["A2"]
+                "M212": ["A1"],
+                "M213": ["A2"]
             },
             "enabled": True
         }
