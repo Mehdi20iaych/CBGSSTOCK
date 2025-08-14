@@ -490,6 +490,14 @@ async def calculate_requirements(request: CalculationRequest):
             # NOUVEAU CALCUL DES PALETTES: utiliser la valeur de colonne K pour cet article (arrondi au supérieur)
             palettes_needed = math.ceil(quantite_a_envoyer / produits_par_palette) if quantite_a_envoyer > 0 and produits_par_palette > 0 else 0
             
+            # NOUVEAU: Calcul des jours de recouvrement
+            # Jours de recouvrement = Stock Actuel / Consommation Quotidienne Moyenne
+            jours_recouvrement = 0
+            if cqm > 0:  # Éviter la division par zéro
+                cqm_daily = cqm / request.days  # Consommation quotidienne
+                if cqm_daily > 0:
+                    jours_recouvrement = round(stock_actuel / cqm_daily, 1)
+            
             results.append({
                 'article': article,
                 'depot': depot,
@@ -502,6 +510,7 @@ async def calculate_requirements(request: CalculationRequest):
                 'stock_dispo_m210': stock_dispo_m210,
                 'produits_par_palette': produits_par_palette,  # Ajouter cette info dans les résultats
                 'palettes_needed': palettes_needed,
+                'jours_recouvrement': jours_recouvrement,  # NOUVEAU: jours de recouvrement
                 'statut': statut,
                 'statut_color': statut_color,
                 'sourcing_status': sourcing_status,
