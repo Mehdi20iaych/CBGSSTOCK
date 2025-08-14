@@ -396,10 +396,10 @@ class ConfigurationSystemTester:
         if success and 'calculations' in response:
             calculations = response['calculations']
             
-            # Should have all combinations (8 total: M211→A1,A2,A3,A4 and M212→A1,A2,A3,A4)
+            # Should have all combinations (8 total: M212→A1,A2,A3,A4 and M213→A1,A2,A3,A4)
             expected_combinations = {
-                ('A1', 'M211'), ('A2', 'M211'), ('A3', 'M211'), ('A4', 'M211'),
-                ('A1', 'M212'), ('A2', 'M212'), ('A3', 'M212'), ('A4', 'M212')
+                ('A1', 'M212'), ('A2', 'M212'), ('A3', 'M212'), ('A4', 'M212'),
+                ('A1', 'M213'), ('A2', 'M213'), ('A3', 'M213'), ('A4', 'M213')
             }
             
             found_combinations = set()
