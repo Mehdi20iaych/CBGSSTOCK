@@ -1881,6 +1881,126 @@ function App() {
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {currentPage === 'configuration' && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Configuration des Livraisons</h2>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={configuration.enabled}
+                      onChange={(e) => setConfiguration(prev => ({...prev, enabled: e.target.checked}))}
+                      className="mr-2"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Activer la configuration personnalisée
+                    </span>
+                  </label>
+                  <button
+                    onClick={saveConfiguration}
+                    disabled={configurationLoading}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {configurationLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+                  </button>
+                </div>
+              </div>
+
+              {!configuration.enabled && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <p className="text-blue-800 text-sm">
+                    <strong>Mode par défaut :</strong> Le système livrera tous les produits disponibles vers tous les dépôts autorisés.
+                    Activez la configuration personnalisée pour contrôler précisément quels produits sont livrés vers quels dépôts.
+                  </p>
+                </div>
+              )}
+
+              {configuration.enabled && (
+                <div className="space-y-6">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-yellow-800 text-sm">
+                      <strong>Configuration active :</strong> Seules les combinaisons dépôt-produit sélectionnées ci-dessous seront considérées dans les calculs.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    <h3 className="text-lg font-medium text-gray-900">Sélection des Dépôts et Produits</h3>
+                    
+                    {availableDepots.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">
+                          Aucun dépôt disponible. Veuillez d'abord uploader un fichier de commandes.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {availableDepots.map(depot => (
+                          <div key={depot} className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <label className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={configuration.depot_article_mapping[depot] !== undefined}
+                                  onChange={() => toggleDepotInConfiguration(depot)}
+                                  className="mr-2"
+                                />
+                                <span className="font-medium text-gray-900">Dépôt {depot}</span>
+                              </label>
+                              {configuration.depot_article_mapping[depot] && (
+                                <span className="text-sm text-gray-500">
+                                  {configuration.depot_article_mapping[depot].length} produit(s) sélectionné(s)
+                                </span>
+                              )}
+                            </div>
+                            
+                            {configuration.depot_article_mapping[depot] && (
+                              <div className="ml-6 border-l-2 border-gray-200 pl-4">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2">Produits à livrer:</h4>
+                                <div className="grid grid-cols-4 gap-2">
+                                  {availableArticles.map(article => (
+                                    <label key={article} className="flex items-center text-sm">
+                                      <input
+                                        type="checkbox"
+                                        checked={configuration.depot_article_mapping[depot]?.includes(article) || false}
+                                        onChange={() => toggleArticleForDepot(depot, article)}
+                                        className="mr-1"
+                                      />
+                                      <span>{article}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {Object.keys(configuration.depot_article_mapping).length > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 mb-2">Résumé de la configuration:</h4>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        {Object.entries(configuration.depot_article_mapping).map(([depot, articles]) => (
+                          <div key={depot}>
+                            <strong>Dépôt {depot}:</strong> {articles.length > 0 ? articles.join(', ') : 'Aucun produit sélectionné'}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
