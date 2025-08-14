@@ -491,7 +491,7 @@ class JoursRecouvrementTester:
         transit_data = {
             'Article': ['EDGE001', 'EDGE002', 'EDGE003'],
             'Dummy_B': ['Desc1', 'Desc2', 'Desc3'],
-            'Division': ['M211', 'M212', 'M213'],
+            'Division': ['M212', 'M213', 'M212'],
             'Dummy_D': ['Extra1', 'Extra2', 'Extra3'],
             'Dummy_E': ['Extra1', 'Extra2', 'Extra3'],
             'Dummy_F': ['Extra1', 'Extra2', 'Extra3'],
