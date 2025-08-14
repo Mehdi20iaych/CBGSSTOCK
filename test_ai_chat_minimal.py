@@ -10,7 +10,7 @@ import sys
 import time
 
 class AIMinimalResponseTester:
-    def __init__(self, base_url="https://bookworm-app-2.preview.emergentagent.com"):
+    def __init__(self, base_url="https://upbeat-payne.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_passed = 0
         self.tests_run = 0
