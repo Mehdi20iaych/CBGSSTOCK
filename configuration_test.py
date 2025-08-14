@@ -694,7 +694,7 @@ class ConfigurationSystemTester:
                 calculations = response['calculations']
                 
                 # Verify filtering is consistent regardless of days
-                allowed_combinations = {('A1', 'M211'), ('A2', 'M211'), ('A3', 'M212')}
+                allowed_combinations = {('A1', 'M212'), ('A2', 'M212'), ('A3', 'M213')}
                 found_combinations = set()
                 for calc in calculations:
                     combination = (calc['article'], calc['depot'])
