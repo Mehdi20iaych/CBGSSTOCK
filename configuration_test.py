@@ -294,8 +294,8 @@ class ConfigurationSystemTester:
         if success:
             # Verify the configuration we saved is returned
             expected_mapping = {
-                "M211": ["A1", "A2"],
-                "M212": ["A3"]
+                "M212": ["A1", "A2"],
+                "M213": ["A3"]
             }
             
             if response['depot_article_mapping'] != expected_mapping:
