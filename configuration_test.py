@@ -455,8 +455,8 @@ class ConfigurationSystemTester:
         """Test with depot configured but no articles selected"""
         config_data = {
             "depot_article_mapping": {
-                "M211": [],
-                "M212": ["A3"]
+                "M212": [],
+                "M213": ["A3"]
             },
             "enabled": True
         }
