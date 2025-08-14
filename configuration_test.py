@@ -488,8 +488,8 @@ class ConfigurationSystemTester:
         if success and 'calculations' in response:
             calculations = response['calculations']
             
-            # Should only have M212→A3, no M211 combinations
-            expected_combinations = {('A3', 'M212')}
+            # Should only have M213→A3, no M212 combinations
+            expected_combinations = {('A3', 'M213')}
             
             found_combinations = set()
             for calc in calculations:
