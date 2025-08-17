@@ -1920,6 +1920,32 @@ function App() {
                   )}
                 </div>
 
+                {/* Quick suggestions - Always visible */}
+                {chatMessages.length > 0 && (
+                  <div className="px-4 pb-2 bg-gray-50">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs text-gray-600 font-medium mr-2">Questions rapides:</span>
+                      {[
+                        "Stock le plus faible M210 ?",
+                        "Dépôts critiques ?",
+                        "Ruptures actuelles ?",
+                        "Optimisations possibles ?"
+                      ].map((question, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setCurrentMessage(question);
+                            handleSendMessage();
+                          }}
+                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                        >
+                          {question}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Zone de saisie */}
                 <div className="border-t bg-white p-4">
                   <div className="flex space-x-2">
