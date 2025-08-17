@@ -801,8 +801,8 @@ function App() {
         // Supprimer le dépôt de la configuration
         delete newMapping[depot];
       } else {
-        // Ajouter le dépôt avec une liste d'articles vide
-        newMapping[depot] = [];
+        // Ajouter le dépôt avec TOUS les articles sélectionnés par défaut
+        newMapping[depot] = [...availableArticles];
       }
       
       return {
