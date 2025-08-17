@@ -96,31 +96,26 @@ class ConfigurationRequest(BaseModel):
     depot_article_mapping: Dict[str, List[str]]
     enabled: bool = True
 
+# Predefined list of allowed depots for configuration
+ALLOWED_DEPOTS = [
+    'M112', 'M113', 'M115', 'M120', 'M130', 'M140', 'M150', 'M161', 'M170', 'M171', 
+    'M212', 'M215', 'M220', 'M230', 'M240', 'M250', 'M260', 'M270', 'M280', 
+    'M320', 'M330', 'M340', 'M350', 'M360', 'M362', 'M363', 'M364', 
+    'M620', 'M622', 'M624', 'M626', 'M628', 'M630', 
+    'M660', 'M662', 'M664', 'M666', 'M668', 'M670', 'M672', 'M674', 'M676'
+]
+
 # Allowed depots constraint
 def is_allowed_depot(depot_code):
-    """Check if a depot code is allowed based on the specified constraints"""
+    """Check if a depot code is allowed based on the predefined list"""
     if not depot_code or not isinstance(depot_code, str):
         return False
     
     # Clean the depot code (remove whitespace, convert to uppercase)
     depot = depot_code.strip().upper()
     
-    # Check specific allowed depots
-    specific_depots = {'M115', 'M120', 'M130', 'M170', 'M171'}
-    if depot in specific_depots:
-        return True
-    
-    # Check range M212-M280
-    if depot.startswith('M') and len(depot) >= 4:
-        try:
-            depot_num = int(depot[1:])  # Extract number after 'M'
-            if 212 <= depot_num <= 280:
-                return True
-        except ValueError:
-            # If depot code doesn't have a valid number, it's not allowed
-            pass
-    
-    return False
+    # Check if depot is in the allowed list
+    return depot in ALLOWED_DEPOTS
 
 # Store uploaded data temporarily
 commandes_data = {}  # Fichier commandes
