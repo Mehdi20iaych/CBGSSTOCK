@@ -105,18 +105,6 @@ ALLOWED_DEPOTS = [
     'M660', 'M662', 'M664', 'M666', 'M668', 'M670', 'M672', 'M674', 'M676'
 ]
 
-# Allowed depots constraint
-def is_allowed_depot(depot_code):
-    """Check if a depot code is allowed based on the predefined list"""
-    if not depot_code or not isinstance(depot_code, str):
-        return False
-    
-    # Clean the depot code (remove whitespace, convert to uppercase)
-    depot = depot_code.strip().upper()
-    
-    # Check if depot is in the allowed list
-    return depot in ALLOWED_DEPOTS
-
 # Store uploaded data temporarily
 commandes_data = {}  # Fichier commandes
 stock_data = {}      # Fichier stock M210
