@@ -1655,44 +1655,49 @@ function App() {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          <input type="checkbox" className="rounded" />
+                        <th className="sticky left-0 z-10 bg-gray-50 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <input 
+                            type="checkbox" 
+                            checked={getFilteredResults().length > 0 && selectedItems.length === getFilteredResults().length}
+                            onChange={handleSelectAll}
+                            className="rounded" 
+                          />
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code Article</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code Dépôt</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type Emballage</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité Commandée</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Actuel</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jours de Recouvrement</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité en Transit</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité à Envoyer</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Palettes</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Dispo M210</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sourcing</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        <th className="sticky left-12 z-10 bg-gray-50 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 min-w-[100px]">Article</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">Dépôt</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[90px]">Emballage</th>
+                        <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[90px]">Qté Cmd</th>
+                        <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[90px]">Stock Actuel</th>
+                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">Jours Couv.</th>
+                        <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[90px]">Transit</th>
+                        <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">Qté à Envoyer</th>
+                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[90px]">Palettes</th>
+                        <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[90px]">Stock M210</th>
+                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">Sourcing</th>
+                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">Statut</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {getFilteredResults().map((item, index) => {
                         const isSelected = selectedItems.some(i => i.article === item.article && i.depot === item.depot && i.packaging === item.packaging);
                         return (
-                          <tr key={index} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                          <tr key={index} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''} ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                            <td className="sticky left-0 z-10 bg-inherit px-3 py-4 whitespace-nowrap border-r border-gray-200">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
                                 onChange={() => handleItemSelection(item)}
-                                className="rounded"
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                               />
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.article}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.depot}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                            <td className="sticky left-12 z-10 bg-inherit px-3 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 border-r border-gray-200">{item.article}</td>
+                            <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.depot}</td>
+                            <td className="px-3 py-4 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${
                                 item.packaging === 'verre' ? 'bg-blue-100 text-blue-800' :
                                 item.packaging === 'pet' ? 'bg-green-100 text-green-800' :
                                 item.packaging === 'ciel' ? 'bg-purple-100 text-purple-800' :
@@ -1701,81 +1706,80 @@ function App() {
                                 {item.packaging}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.cqm}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_actuel}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">{item.cqm?.toLocaleString()}</td>
+                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{item.stock_actuel?.toLocaleString()}</td>
+                            <td className="px-3 py-4 whitespace-nowrap text-center">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                 item.jours_recouvrement === 0 ? 'bg-gray-100 text-gray-800' :
                                 item.jours_recouvrement < 5 ? 'bg-red-100 text-red-800' :
                                 item.jours_recouvrement < 10 ? 'bg-orange-100 text-orange-800' :
                                 item.jours_recouvrement < 30 ? 'bg-yellow-100 text-yellow-800' :
                                 'bg-green-100 text-green-800'
                               }`}>
-                                {item.jours_recouvrement || 0} j
+                                {item.jours_recouvrement || 0}j
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_transit}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{item.stock_transit?.toLocaleString() || 0}</td>
+                            <td className="px-3 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 text-right">
                               {(() => {
                                 const palettes = getPalettesValue(item);
                                 const produits_par_palette = item.produits_par_palette || 30;
-                                return palettes * produits_par_palette;
+                                return (palettes * produits_par_palette).toLocaleString();
                               })()}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center space-x-2">
+                            <td className="px-3 py-4 whitespace-nowrap text-center">
+                              <div className="flex items-center justify-center space-x-1">
                                 <input
                                   type="number"
                                   min="0"
+                                  step="1"
                                   value={getPalettesValue(item)}
                                   onChange={(e) => handlePalettesChange(item, e.target.value)}
-                                  className="w-16 px-2 py-1 text-xs font-medium text-center border border-blue-300 rounded bg-blue-50 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  className="w-14 px-1 py-1 text-xs font-semibold text-center border border-blue-300 rounded bg-blue-50 text-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
-                                <span className="text-xs text-gray-500">palettes</span>
+                                <span className="text-xs text-gray-500 font-medium">pal</span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.stock_dispo_m210}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{item.stock_dispo_m210?.toLocaleString()}</td>
+                            <td className="px-3 py-4 whitespace-nowrap text-center">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                 item.is_locally_made 
                                   ? 'bg-slate-100 text-slate-800 border border-slate-200' 
                                   : 'bg-amber-100 text-amber-800 border border-amber-200'
                               }`}>
-                                {item.sourcing_text || (item.is_locally_made ? 'Production Locale' : 'Sourcing Externe')}
+                                {item.is_locally_made ? '🏭 Local' : '📦 Externe'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
+                            <td className="px-3 py-4 whitespace-nowrap text-center">
+                              <div className="flex items-center justify-center">
                                 {(() => {
                                   const palettes = getPalettesValue(item);
                                   const produits_par_palette = item.produits_par_palette || 30;
                                   const quantite_a_envoyer = palettes * produits_par_palette;
                                   
                                   let statut = 'OK';
-                                  let statusColor = 'text-green-600';
-                                  let statusIcon = item.statut;
+                                  let statusColor = 'bg-green-100 text-green-800 border-green-200';
+                                  let statusIcon = '✅';
                                   
                                   if (quantite_a_envoyer === 0) {
                                     statut = 'OK';
-                                    statusColor = 'text-green-600';
-                                    statusIcon = 'OK';
+                                    statusColor = 'bg-green-100 text-green-800 border-green-200';
+                                    statusIcon = '✅';
                                   } else if (quantite_a_envoyer <= item.stock_dispo_m210) {
                                     statut = 'À livrer';
-                                    statusColor = 'text-orange-600';
-                                    statusIcon = 'À livrer';
+                                    statusColor = 'bg-orange-100 text-orange-800 border-orange-200';
+                                    statusIcon = '📦';
                                   } else {
                                     statut = 'Non couvert';
-                                    statusColor = 'text-red-600';
-                                    statusIcon = 'Non couvert';
+                                    statusColor = 'bg-red-100 text-red-800 border-red-200';
+                                    statusIcon = '❌';
                                   }
                                   
                                   return (
-                                    <>
-                                      {getStatusIcon(statusIcon)}
-                                      <span className={`ml-2 text-sm font-medium ${statusColor}`}>
-                                        {statut}
-                                      </span>
-                                    </>
+                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${statusColor}`}>
+                                      <span className="mr-1">{statusIcon}</span>
+                                      {statut}
+                                    </span>
                                   );
                                 })()}
                               </div>
