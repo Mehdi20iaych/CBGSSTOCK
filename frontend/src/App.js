@@ -1942,7 +1942,7 @@ function App() {
                     <input
                       type="checkbox"
                       checked={configuration.enabled}
-                      onChange={(e) => setConfiguration(prev => ({...prev, enabled: e.target.checked}))}
+                      onChange={(e) => toggleConfiguration(e.target.checked)}
                       className="mr-2"
                     />
                     <span className="text-sm font-medium text-gray-700">
