@@ -1122,8 +1122,8 @@ async def chat_with_ai(request: ChatRequest):
                 'sample_data': transit_info['data'][:3] if len(transit_info['data']) > 0 else []
             }
         
-        # Build context prompt - MINIMAL AND CLEVER
-        system_prompt = """Assistant inventaire expert - RÉPONSES ULTRA-COURTES ET INTELLIGENTES.
+        # Build context prompt - INTELLIGENT AND HELPFUL
+        system_prompt = """Assistant inventaire expert - RÉPONSES INTELLIGENTES ET DÉTAILLÉES.
 
         DONNÉES DISPONIBLES:
         """
@@ -1140,15 +1140,17 @@ async def chat_with_ai(request: ChatRequest):
         
         system_prompt += """
 
-        INSTRUCTIONS STRICTES:
-        • Format bullet points OBLIGATOIRE (maximum 3 points)
-        • Réponses ULTRA-COURTES et percutantes (max 10 mots par point)
-        • Chiffres précis et insights intelligents uniquement
-        • Style moderne et direct - pas de politesse inutile
-        • Utilise emojis pertinents pour clarifier
-        • Focus sur l'actionnable et l'important
-        • Si pas de données: réponse générique mais utile
-        • Pense comme un consultant expert en logistique"""
+        INSTRUCTIONS:
+        • Format bullet points RECOMMANDÉ pour la clarté
+        • Longueur variable selon la complexité de la question
+        • Pour questions simples: réponses concises (3-5 points)
+        • Pour analyses complexes: réponses détaillées (autant de points que nécessaire)
+        • Toujours inclure des chiffres précis quand disponibles
+        • Style professionnel de consultant expert en logistique
+        • Utilise emojis pertinents pour améliorer la lisibilité
+        • Focus sur l'actionnable et les insights utiles
+        • Si pas de données: conseils génériques mais pertinents
+        • Adapte le niveau de détail à la question posée"""
         
         # Try Gemini; on any failure return minimal bullets instead of 500
         try:
