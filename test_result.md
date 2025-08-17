@@ -57,8 +57,8 @@
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
 ## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+    - agent: "main"
+      message: "GEMINI API KEY REPLACEMENT COMPLETED: Replaced old Gemini API key with new key 'AIzaSyA1Sx1oPOq1JOhzbTOxMvJ2PRooGA78fwg' in both server.py and .env files. Enhanced system prompt for MINIMAL and CLEVER responses: ultra-short bullet points (max 10 words per point), modern consultant style with emojis, focus on actionable insights. Backend restarted successfully. Ready for testing AI chat with new key and minimal response format."
 
 # Protocol Guidelines for Main agent
 #
