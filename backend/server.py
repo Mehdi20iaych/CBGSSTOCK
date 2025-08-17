@@ -650,14 +650,14 @@ async def save_configuration(config: ConfigurationRequest):
 
 @app.get("/api/available-options")
 async def get_available_options():
-    """Get available depots and articles from uploaded data"""
-    available_depots = set()
+    """Get available depots and articles from predefined depots and uploaded data"""
+    # Use predefined depots list
+    available_depots = set(ALLOWED_DEPOTS)
     available_articles = set()
     
-    # Get depots and articles from commandes data
+    # Get articles from commandes data if available
     for session_id, session_data in commandes_data.items():
         if 'filters' in session_data:
-            available_depots.update(session_data['filters'].get('depots', []))
             available_articles.update(session_data['filters'].get('articles', []))
     
     return {
