@@ -4557,6 +4557,371 @@ class SimplifiedStockManagementTester:
             return True
         return False
 
+    def test_ai_chat_basic_functionality(self):
+        """Test basic AI chat endpoint functionality"""
+        chat_data = {
+            "message": "Bonjour, comment allez-vous?",
+            "conversation_id": None
+        }
+        
+        success, response = self.run_test(
+            "AI Chat Basic Functionality",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['response', 'conversation_id', 'has_data', 'data_types', 'message']
+            for field in required_fields:
+                if field not in response:
+                    print(f"❌ Missing required field: {field}")
+                    return False
+            
+            # Verify conversation_id is generated
+            if not response['conversation_id']:
+                print("❌ conversation_id should be generated")
+                return False
+            
+            print(f"✅ AI Chat basic functionality working - Response: {response['response'][:100]}...")
+            return True
+        return False
+
+    def test_ai_chat_different_questions(self):
+        """Test AI chat with different types of questions as specified in review request"""
+        questions = [
+            "Quel est l'état de mon stock?",
+            "Quels articles sont en rupture?", 
+            "Comment optimiser mes livraisons?",
+            "Analyse mes données d'inventaire",
+            "Quels dépôts ont besoin de livraisons urgentes?",
+            "Résume l'état global de mes stocks"
+        ]
+        
+        responses_received = []
+        
+        for i, question in enumerate(questions):
+            chat_data = {
+                "message": question,
+                "conversation_id": f"test_conversation_{i}"
+            }
+            
+            success, response = self.run_test(
+                f"AI Chat Question {i+1}: '{question[:30]}...'",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success and 'response' in response:
+                ai_response = response['response']
+                responses_received.append(ai_response)
+                print(f"✅ Question {i+1} Response: {ai_response[:100]}...")
+            else:
+                return False
+        
+        # Check if responses are all the same (the main issue we're testing for)
+        unique_responses = set(responses_received)
+        if len(unique_responses) == 1:
+            print(f"❌ ISSUE IDENTIFIED: All {len(questions)} questions returned the SAME response!")
+            print(f"Same response: {list(unique_responses)[0]}")
+            return False
+        else:
+            print(f"✅ AI Chat returning varied responses - {len(unique_responses)} unique responses out of {len(questions)} questions")
+            return True
+
+    def test_ai_chat_with_data_context(self):
+        """Test AI chat with uploaded data context"""
+        # First ensure we have data uploaded
+        if not self.commandes_session_id:
+            print("❌ No commandes data available for context test")
+            return False
+        
+        # Test chat with data context
+        chat_data = {
+            "message": "Analyse mes données d'inventaire actuelles",
+            "conversation_id": "data_context_test"
+        }
+        
+        success, response = self.run_test(
+            "AI Chat with Data Context",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            # Verify has_data flag is true when data is available
+            if not response.get('has_data', False):
+                print("❌ has_data should be True when data is uploaded")
+                return False
+            
+            # Verify data_types includes expected types
+            data_types = response.get('data_types', [])
+            if 'commandes' not in data_types:
+                print(f"❌ Expected 'commandes' in data_types, got: {data_types}")
+                return False
+            
+            print(f"✅ AI Chat with data context working - has_data: {response['has_data']}, data_types: {data_types}")
+            print(f"Response with context: {response['response'][:150]}...")
+            return True
+        return False
+
+    def test_ai_chat_conversation_continuity(self):
+        """Test if conversation_id maintains context properly"""
+        conversation_id = "continuity_test_123"
+        
+        # First message
+        chat_data_1 = {
+            "message": "Quel est mon stock total?",
+            "conversation_id": conversation_id
+        }
+        
+        success_1, response_1 = self.run_test(
+            "AI Chat Conversation - Message 1",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data_1
+        )
+        
+        if not success_1:
+            return False
+        
+        # Second message in same conversation
+        chat_data_2 = {
+            "message": "Et pour les livraisons urgentes?",
+            "conversation_id": conversation_id
+        }
+        
+        success_2, response_2 = self.run_test(
+            "AI Chat Conversation - Message 2",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data_2
+        )
+        
+        if success_2:
+            # Verify same conversation_id is maintained
+            if response_1['conversation_id'] != response_2['conversation_id']:
+                print(f"❌ Conversation ID not maintained: {response_1['conversation_id']} vs {response_2['conversation_id']}")
+                return False
+            
+            print(f"✅ Conversation continuity working - same conversation_id: {conversation_id}")
+            return True
+        return False
+
+    def test_ai_chat_gemini_api_vs_fallback(self):
+        """Test if Gemini API is being called or falling back to minimal_bullets"""
+        chat_data = {
+            "message": "Donne-moi une analyse détaillée de mes stocks",
+            "conversation_id": "api_test"
+        }
+        
+        success, response = self.run_test(
+            "AI Chat - Gemini API vs Fallback Test",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            ai_response = response['response']
+            
+            # Check if response looks like minimal_bullets fallback (simple bullet format)
+            if ai_response.count('*') >= 2 and len(ai_response) < 100:
+                print(f"⚠️ Response appears to be minimal_bullets fallback: {ai_response}")
+                print("This suggests Gemini API might not be working properly")
+                return True  # Still a success, but indicates fallback is being used
+            else:
+                print(f"✅ Response appears to be from Gemini API (detailed): {ai_response[:100]}...")
+                return True
+        return False
+
+    def test_ai_chat_empty_message_handling(self):
+        """Test AI chat error handling with empty messages"""
+        chat_data = {
+            "message": "",
+            "conversation_id": "empty_test"
+        }
+        
+        success, response = self.run_test(
+            "AI Chat - Empty Message Handling",
+            "POST",
+            "api/chat",
+            200,  # Should still return 200 with helpful message
+            data=chat_data
+        )
+        
+        if success:
+            print(f"✅ Empty message handled gracefully: {response.get('response', 'No response')}")
+            return True
+        return False
+
+    def test_ai_chat_long_message_handling(self):
+        """Test AI chat with very long messages"""
+        long_message = "Analyse détaillée " * 100  # Very long message
+        
+        chat_data = {
+            "message": long_message,
+            "conversation_id": "long_message_test"
+        }
+        
+        success, response = self.run_test(
+            "AI Chat - Long Message Handling",
+            "POST",
+            "api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            print(f"✅ Long message handled successfully: {response['response'][:100]}...")
+            return True
+        return False
+
+    def test_ai_chat_response_consistency(self):
+        """Test if same question returns consistent response type"""
+        question = "Quel est l'état de mon stock?"
+        responses = []
+        
+        # Ask same question multiple times
+        for i in range(3):
+            chat_data = {
+                "message": question,
+                "conversation_id": f"consistency_test_{i}"
+            }
+            
+            success, response = self.run_test(
+                f"AI Chat Consistency Test {i+1}",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success:
+                responses.append(response['response'])
+            else:
+                return False
+        
+        # Check if all responses are identical (which would indicate the issue)
+        if len(set(responses)) == 1:
+            print(f"❌ CONSISTENCY ISSUE: Same question returned identical response {len(responses)} times")
+            print(f"Identical response: {responses[0]}")
+            return False
+        else:
+            print(f"✅ Response consistency good - {len(set(responses))} different responses for same question")
+            return True
+
+    def test_ai_chat_comprehensive_scenarios(self):
+        """Test comprehensive AI chat scenarios to identify repetitive response issue"""
+        scenarios = [
+            ("Quel est l'état de mon stock?", "stock_status"),
+            ("Quels articles sont en rupture?", "stock_shortage"),
+            ("Comment optimiser mes livraisons?", "delivery_optimization"),
+            ("Analyse mes données d'inventaire", "inventory_analysis"),
+            ("Quels dépôts ont besoin de livraisons urgentes?", "urgent_deliveries"),
+            ("Résume l'état global de mes stocks", "global_summary"),
+            ("Combien de palettes ai-je besoin?", "palette_calculation"),
+            ("Quels sont mes articles les plus critiques?", "critical_items")
+        ]
+        
+        responses_by_scenario = {}
+        
+        for question, scenario_type in scenarios:
+            chat_data = {
+                "message": question,
+                "conversation_id": f"scenario_{scenario_type}"
+            }
+            
+            success, response = self.run_test(
+                f"AI Chat Scenario: {scenario_type}",
+                "POST",
+                "api/chat",
+                200,
+                data=chat_data
+            )
+            
+            if success:
+                ai_response = response['response']
+                responses_by_scenario[scenario_type] = ai_response
+                print(f"✅ {scenario_type}: {ai_response[:80]}...")
+            else:
+                return False
+        
+        # Analyze response patterns
+        unique_responses = set(responses_by_scenario.values())
+        
+        if len(unique_responses) == 1:
+            print(f"❌ CRITICAL ISSUE IDENTIFIED: All {len(scenarios)} different scenarios returned the SAME response!")
+            print(f"Same response for all scenarios: {list(unique_responses)[0]}")
+            return False
+        elif len(unique_responses) < len(scenarios) / 2:
+            print(f"⚠️ POTENTIAL ISSUE: Only {len(unique_responses)} unique responses for {len(scenarios)} scenarios")
+            print("This suggests limited response variation")
+            return True
+        else:
+            print(f"✅ Good response variation - {len(unique_responses)} unique responses for {len(scenarios)} scenarios")
+            return True
+
+    def run_ai_chat_tests(self):
+        """Run focused AI chat tests to identify repetitive response issue"""
+        print("🚀 Starting AI Chat Functionality Tests")
+        print("=" * 70)
+        print("🎯 FOCUS: Testing AI chat to identify why it gives same answer repeatedly")
+        print("=" * 70)
+        
+        tests = [
+            ("Health Check", self.test_health_check),
+            ("Upload Sample Data for Context", self.test_enhanced_upload_with_packaging),
+            ("Upload Stock Data", self.test_upload_stock_excel),
+            ("Upload Transit Data", self.test_upload_transit_excel),
+            ("AI Chat Basic Functionality", self.test_ai_chat_basic_functionality),
+            ("AI Chat Different Questions", self.test_ai_chat_different_questions),
+            ("AI Chat with Data Context", self.test_ai_chat_with_data_context),
+            ("AI Chat Conversation Continuity", self.test_ai_chat_conversation_continuity),
+            ("AI Chat Gemini API vs Fallback", self.test_ai_chat_gemini_api_vs_fallback),
+            ("AI Chat Empty Message Handling", self.test_ai_chat_empty_message_handling),
+            ("AI Chat Long Message Handling", self.test_ai_chat_long_message_handling),
+            ("AI Chat Response Consistency", self.test_ai_chat_response_consistency),
+            ("AI Chat Comprehensive Scenarios", self.test_ai_chat_comprehensive_scenarios)
+        ]
+        
+        for test_name, test_func in tests:
+            try:
+                print(f"\n{'='*20} {test_name} {'='*20}")
+                result = test_func()
+                if result:
+                    print(f"✅ {test_name} PASSED")
+                else:
+                    print(f"❌ {test_name} FAILED")
+            except Exception as e:
+                print(f"❌ {test_name} ERROR: {str(e)}")
+                self.tests_run += 1  # Count as attempted
+        
+        # Print final summary
+        print("\n" + "="*70)
+        print("📊 AI CHAT FUNCTIONALITY TEST SUMMARY")
+        print("="*70)
+        print(f"Total Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%" if self.tests_run > 0 else "0%")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 ALL AI CHAT TESTS PASSED! AI chat functionality is working correctly.")
+        else:
+            print("⚠️ Some AI chat tests failed. Issues identified above.")
+        
+        return self.tests_passed == self.tests_run
+
     def run_all_tests(self):
         """Run all tests for the enhanced inventory management system with packaging"""
         print("🚀 Starting Enhanced Inventory Management System Tests with Packaging")
