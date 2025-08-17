@@ -7,7 +7,7 @@ import math
 from datetime import datetime, timedelta
 
 class ExcelExportVerificationTester:
-    def __init__(self, base_url="https://reader-hub-2.preview.emergentagent.com"):
+    def __init__(self, base_url="https://config-manager-2.preview.emergentagent.com"):
         self.base_url = base_url
         self.commandes_session_id = None
         self.stock_session_id = None
