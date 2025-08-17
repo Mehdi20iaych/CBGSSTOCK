@@ -2008,7 +2008,18 @@ function App() {
                             
                             {configuration.depot_article_mapping[depot] && (
                               <div className="ml-6 border-l-2 border-gray-200 pl-4">
-                                <h4 className="text-sm font-medium text-gray-700 mb-2">Produits à livrer:</h4>
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="text-sm font-medium text-gray-700">Produits à livrer:</h4>
+                                  <button
+                                    onClick={() => toggleAllArticlesForDepot(depot)}
+                                    className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                                  >
+                                    {configuration.depot_article_mapping[depot].length === availableArticles.length 
+                                      ? 'Tout désélectionner' 
+                                      : 'Tout sélectionner'
+                                    }
+                                  </button>
+                                </div>
                                 <div className="grid grid-cols-4 gap-2">
                                   {availableArticles.map(article => (
                                     <label key={article} className="flex items-center text-sm">
