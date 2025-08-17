@@ -2059,7 +2059,7 @@ function App() {
                     )}
                   </div>
 
-                  {Object.keys(configuration.depot_article_mapping).length > 0 && (
+                  {configuration?.depot_article_mapping && Object.keys(configuration.depot_article_mapping).length > 0 && (
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h4 className="font-medium text-gray-900 mb-2">Résumé de la configuration:</h4>
                       <div className="space-y-1 text-sm text-gray-600">
