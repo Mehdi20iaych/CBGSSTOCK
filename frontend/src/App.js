@@ -761,6 +761,7 @@ function App() {
         const options = await parseJSONSafe(response);
         setAvailableDepots(options.depots || []);
         setAvailableArticles(options.articles || []);
+        setDefaultConfigurationDepots(options.default_configuration_depots || []);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des options disponibles:', error);
