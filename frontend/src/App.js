@@ -101,6 +101,23 @@ function App() {
   const stockFileRef = useRef(null);
   const transitFileRef = useRef(null);
 
+  // Event listener for auto-send chat messages
+  useEffect(() => {
+    const handleAutoSend = (event) => {
+      const message = event.detail;
+      setCurrentMessage(message);
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        handleSendMessage();
+      }, 50);
+    };
+
+    document.addEventListener('autoSendMessage', handleAutoSend);
+    return () => {
+      document.removeEventListener('autoSendMessage', handleAutoSend);
+    };
+  }, []);
+
   // Fonction pour obtenir les résultats filtrés
   const getFilteredResults = () => {
     if (!calculations || !calculations.calculations) return [];
