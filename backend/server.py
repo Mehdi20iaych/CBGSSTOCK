@@ -946,7 +946,7 @@ async def get_depot_suggestions(request: dict):
         if not is_allowed_depot(depot_name):
             raise HTTPException(
                 status_code=400, 
-                detail=f"Dépôt '{depot_name}' non autorisé. Les dépôts autorisés sont: M115, M120, M130, M170, M171, et M212-M280"
+                detail=f"Dépôt '{depot_name}' non autorisé. Les dépôts autorisés sont: {', '.join(sorted(ALLOWED_DEPOTS))}"
             )
         
         # Vérifier qu'on a des données de commandes
