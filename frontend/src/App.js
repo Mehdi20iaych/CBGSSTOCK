@@ -835,6 +835,51 @@ function App() {
     });
   };
 
+  // Nouvelle fonction pour sélectionner/désélectionner tous les articles d'un dépôt
+  const toggleAllArticlesForDepot = (depot) => {
+    setConfiguration(prev => {
+      const newMapping = { ...prev.depot_article_mapping };
+      
+      if (!newMapping[depot]) {
+        newMapping[depot] = [];
+      }
+      
+      // Si tous les articles sont sélectionnés, les désélectionner tous
+      if (newMapping[depot].length === availableArticles.length) {
+        newMapping[depot] = [];
+      } else {
+        // Sinon, sélectionner tous les articles
+        newMapping[depot] = [...availableArticles];
+      }
+      
+      return {
+        ...prev,
+        depot_article_mapping: newMapping
+      };
+    });
+  };
+
+  // Fonction pour activer/désactiver la configuration avec auto-sélection des dépôts par défaut
+  const toggleConfiguration = (enabled) => {
+    setConfiguration(prev => {
+      const newConfig = { ...prev, enabled };
+      
+      if (enabled && Object.keys(prev.depot_article_mapping).length === 0) {
+        // Si on active la configuration et qu'elle est vide, 
+        // auto-sélectionner les dépôts par défaut avec tous leurs articles
+        const newMapping = {};
+        defaultConfigurationDepots.forEach(depot => {
+          if (availableDepots.includes(depot)) {
+            newMapping[depot] = [...availableArticles];
+          }
+        });
+        newConfig.depot_article_mapping = newMapping;
+      }
+      
+      return newConfig;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
