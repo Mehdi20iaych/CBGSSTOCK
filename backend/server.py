@@ -1122,8 +1122,8 @@ async def chat_with_ai(request: ChatRequest):
                 'sample_data': transit_info['data'][:3] if len(transit_info['data']) > 0 else []
             }
         
-        # Build context prompt - MINIMAL BUT USEFUL
-        system_prompt = """Assistant inventaire - RÉPONSES COURTES EN BULLET POINTS.
+        # Build context prompt - MINIMAL AND CLEVER
+        system_prompt = """Assistant inventaire expert - RÉPONSES ULTRA-COURTES ET INTELLIGENTES.
 
         DONNÉES DISPONIBLES:
         """
@@ -1140,12 +1140,15 @@ async def chat_with_ai(request: ChatRequest):
         
         system_prompt += """
 
-        INSTRUCTIONS:
-        • Format bullet points OBLIGATOIRE  
-        • Maximum 3 points par réponse
-        • Réponses précises avec chiffres exacts
-        • Analyse les données quand disponibles
-        • Réponds toujours même si données limitées"""
+        INSTRUCTIONS STRICTES:
+        • Format bullet points OBLIGATOIRE (maximum 3 points)
+        • Réponses ULTRA-COURTES et percutantes (max 10 mots par point)
+        • Chiffres précis et insights intelligents uniquement
+        • Style moderne et direct - pas de politesse inutile
+        • Utilise emojis pertinents pour clarifier
+        • Focus sur l'actionnable et l'important
+        • Si pas de données: réponse générique mais utile
+        • Pense comme un consultant expert en logistique"""
         
         # Try Gemini; on any failure return minimal bullets instead of 500
         try:
