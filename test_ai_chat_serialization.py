@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import datetime
 
 class AIChatSerializationTester:
-    def __init__(self, base_url="https://key-switcher.preview.emergentagent.com"):
+    def __init__(self, base_url="https://dynamic-ai-chat.preview.emergentagent.com"):
         self.base_url = base_url
         self.commandes_session_id = None
         self.stock_session_id = None
