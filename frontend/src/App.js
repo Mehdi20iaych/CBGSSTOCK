@@ -863,9 +863,11 @@ function App() {
   // Fonction pour activer/désactiver la configuration avec auto-sélection des dépôts par défaut
   const toggleConfiguration = (enabled) => {
     setConfiguration(prev => {
-      const newConfig = { ...prev, enabled };
+      // Add null check for prev
+      const safePrev = prev || { depot_article_mapping: {}, enabled: false };
+      const newConfig = { ...safePrev, enabled };
       
-      if (enabled && Object.keys(prev.depot_article_mapping).length === 0) {
+      if (enabled && Object.keys(safePrev.depot_article_mapping || {}).length === 0) {
         // Si on active la configuration et qu'elle est vide, 
         // auto-sélectionner les dépôts par défaut avec tous leurs articles
         const newMapping = {};
