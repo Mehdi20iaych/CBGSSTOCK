@@ -4313,6 +4313,250 @@ class SimplifiedStockManagementTester:
         
         return True
 
+    def test_available_options_endpoint_basic(self):
+        """Test /api/available-options endpoint basic functionality"""
+        success, response = self.run_test(
+            "Available Options Endpoint - Basic",
+            "GET",
+            "api/available-options",
+            200
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['depots', 'articles', 'default_configuration_depots']
+            for field in required_fields:
+                if field not in response:
+                    print(f"❌ Missing required field: {field}")
+                    return False
+            
+            print(f"✅ Available options endpoint working - {len(response['depots'])} depots, {len(response['articles'])} articles")
+            return True
+        return False
+
+    def test_available_article_codes_count(self):
+        """Test that AVAILABLE_ARTICLE_CODES contains exactly 122 article codes"""
+        success, response = self.run_test(
+            "Available Article Codes Count",
+            "GET",
+            "api/available-options",
+            200
+        )
+        
+        if success and 'articles' in response:
+            articles = response['articles']
+            
+            # Verify exactly 122 article codes (or more if uploaded data is added)
+            if len(articles) < 122:
+                print(f"❌ Expected at least 122 article codes, got {len(articles)}")
+                return False
+            
+            print(f"✅ Article codes count verified - {len(articles)} codes available (≥122 as expected)")
+            return True
+        return False
+
+    def test_specific_article_codes_presence(self):
+        """Test that specific article codes are present in the list"""
+        success, response = self.run_test(
+            "Specific Article Codes Presence",
+            "GET",
+            "api/available-options",
+            200
+        )
+        
+        if success and 'articles' in response:
+            articles = set(response['articles'])
+            
+            # Test specific article codes mentioned in the review request
+            required_codes = ['1011', '1012', '1021', '1022', '1028', '1032', '7999']
+            
+            missing_codes = []
+            for code in required_codes:
+                if code not in articles:
+                    missing_codes.append(code)
+            
+            if missing_codes:
+                print(f"❌ Missing required article codes: {missing_codes}")
+                return False
+            
+            print(f"✅ All required article codes present: {required_codes}")
+            return True
+        return False
+
+    def test_default_configuration_depots_count(self):
+        """Test that DEFAULT_CONFIGURATION_DEPOTS contains exactly 14 depots"""
+        success, response = self.run_test(
+            "Default Configuration Depots Count",
+            "GET",
+            "api/available-options",
+            200
+        )
+        
+        if success and 'default_configuration_depots' in response:
+            default_depots = response['default_configuration_depots']
+            
+            # Verify exactly 14 depots
+            if len(default_depots) != 14:
+                print(f"❌ Expected exactly 14 default configuration depots, got {len(default_depots)}")
+                return False
+            
+            print(f"✅ Default configuration depots count verified - {len(default_depots)} depots")
+            return True
+        return False
+
+    def test_default_configuration_depots_content(self):
+        """Test that DEFAULT_CONFIGURATION_DEPOTS contains the specified depots"""
+        success, response = self.run_test(
+            "Default Configuration Depots Content",
+            "GET",
+            "api/available-options",
+            200
+        )
+        
+        if success and 'default_configuration_depots' in response:
+            default_depots = set(response['default_configuration_depots'])
+            
+            # Expected depots from the review request
+            expected_depots = {
+                'M115', 'M120', 'M130', 'M170', 'M171', 'M212', 'M215', 'M220', 
+                'M230', 'M240', 'M250', 'M260', 'M270', 'M280'
+            }
+            
+            if default_depots != expected_depots:
+                missing = expected_depots - default_depots
+                extra = default_depots - expected_depots
+                if missing:
+                    print(f"❌ Missing expected depots: {missing}")
+                if extra:
+                    print(f"❌ Unexpected extra depots: {extra}")
+                return False
+            
+            print(f"✅ All expected default configuration depots present: {sorted(expected_depots)}")
+            return True
+        return False
+
+    def test_uploaded_data_integration(self):
+        """Test that uploaded commandes data articles are integrated with predefined articles"""
+        # First upload some commandes data with new articles
+        test_data = {
+            'Dummy_A': ['CMD001', 'CMD002', 'CMD003'],
+            'Article': ['NEW001', 'NEW002', 'NEW003'],  # New articles not in predefined list
+            'Dummy_C': ['Desc1', 'Desc2', 'Desc3'],
+            'Point d\'Expédition': ['M211', 'M212', 'M213'],
+            'Dummy_E': ['Extra1', 'Extra2', 'Extra3'],
+            'Quantité Commandée': [100, 150, 80],
+            'Stock Utilisation Libre': [50, 75, 40],
+            'Dummy_H': ['Extra1', 'Extra2', 'Extra3'],
+            'Type Emballage': ['verre', 'pet', 'ciel'],
+            'Dummy_J': ['Extra1', 'Extra2', 'Extra3'],
+            'Produits par Palette': [30, 30, 30]
+        }
+        
+        df = pd.DataFrame(test_data)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+        
+        files = {
+            'file': ('new_articles.xlsx', excel_buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        # Upload the data
+        upload_success, upload_response = self.run_test(
+            "Upload Data with New Articles",
+            "POST",
+            "api/upload-commandes-excel",
+            200,
+            files=files
+        )
+        
+        if upload_success:
+            # Now test available-options to see if new articles are included
+            success, response = self.run_test(
+                "Available Options After Upload",
+                "GET",
+                "api/available-options",
+                200
+            )
+            
+            if success and 'articles' in response:
+                articles = set(response['articles'])
+                
+                # Check that predefined articles are still there
+                predefined_samples = ['1011', '1012', '1021', '7999']
+                for code in predefined_samples:
+                    if code not in articles:
+                        print(f"❌ Predefined article {code} missing after upload")
+                        return False
+                
+                # Check that new articles are added
+                new_articles = ['NEW001', 'NEW002', 'NEW003']
+                for code in new_articles:
+                    if code not in articles:
+                        print(f"❌ New uploaded article {code} not found in available options")
+                        return False
+                
+                print(f"✅ Data integration working - predefined + uploaded articles combined ({len(articles)} total)")
+                return True
+        return False
+
+    def test_allowed_depots_still_present(self):
+        """Test that allowed depots are still present in the response"""
+        success, response = self.run_test(
+            "Allowed Depots Still Present",
+            "GET",
+            "api/available-options",
+            200
+        )
+        
+        if success and 'depots' in response:
+            depots = set(response['depots'])
+            
+            # Check some key allowed depots are present
+            key_allowed_depots = ['M115', 'M120', 'M130', 'M170', 'M171', 'M212', 'M215', 'M220']
+            
+            missing_depots = []
+            for depot in key_allowed_depots:
+                if depot not in depots:
+                    missing_depots.append(depot)
+            
+            if missing_depots:
+                print(f"❌ Missing key allowed depots: {missing_depots}")
+                return False
+            
+            print(f"✅ Key allowed depots present in response: {key_allowed_depots}")
+            return True
+        return False
+
+    def test_article_codes_range_verification(self):
+        """Test that article codes include the full range from 1011 to 7999"""
+        success, response = self.run_test(
+            "Article Codes Range Verification",
+            "GET",
+            "api/available-options",
+            200
+        )
+        
+        if success and 'articles' in response:
+            articles = set(response['articles'])
+            
+            # Test range boundaries and some intermediate values
+            range_samples = ['1011', '1012', '1021', '1022', '1028', '1032', '1033', '1040', 
+                           '2011', '3011', '4843', '5018', '6010', '7316', '7999']
+            
+            missing_codes = []
+            for code in range_samples:
+                if code not in articles:
+                    missing_codes.append(code)
+            
+            if missing_codes:
+                print(f"❌ Missing article codes from expected range: {missing_codes}")
+                return False
+            
+            print(f"✅ Article codes range verified - samples from 1011 to 7999 present")
+            return True
+        return False
+
     def run_all_tests(self):
         """Run all tests for the enhanced inventory management system with packaging"""
         print("🚀 Starting Enhanced Inventory Management System Tests with Packaging")
