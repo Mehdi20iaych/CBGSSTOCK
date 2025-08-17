@@ -747,7 +747,8 @@ function App() {
       const response = await fetch(`${API_BASE_URL}/api/configuration`);
       if (response.ok) {
         const config = await parseJSONSafe(response);
-        setConfiguration(config);
+        // Add fallback for null response
+        setConfiguration(config || { depot_article_mapping: {}, enabled: false });
       }
     } catch (error) {
       console.error('Erreur lors du chargement de la configuration:', error);
