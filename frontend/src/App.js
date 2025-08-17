@@ -1978,11 +1978,58 @@ function App() {
                       ].map((question, index) => (
                         <button
                           key={index}
-                          onClick={() => {
-                            setCurrentMessage(question);
-                            handleSendMessage();
+                          onClick={async () => {
+                            if (!question.trim() || chatLoading) return;
+                            
+                            setCurrentMessage('');
+                            setChatLoading(true);
+                            
+                            // Add user message
+                            const newUserMessage = {
+                              type: 'user',
+                              content: question,
+                              timestamp: new Date()
+                            };
+                            setChatMessages(prev => [...prev, newUserMessage]);
+                            
+                            try {
+                              const response = await fetch(`${API_BASE_URL}/api/chat`, {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  message: question,
+                                  conversation_id: conversationId
+                                }),
+                              });
+                              
+                              const data = await response.json();
+                              
+                              if (response.ok) {
+                                const aiMessage = {
+                                  type: 'ai',
+                                  content: data.response,
+                                  timestamp: new Date(),
+                                  hasData: data.has_data || false,
+                                  dataTypes: data.data_types || []
+                                };
+                                setChatMessages(prev => [...prev, aiMessage]);
+                                setConversationId(data.conversation_id);
+                              }
+                            } catch (error) {
+                              const errorMessage = {
+                                type: 'error',
+                                content: 'Erreur lors de la communication avec le serveur.',
+                                timestamp: new Date()
+                              };
+                              setChatMessages(prev => [...prev, errorMessage]);
+                            } finally {
+                              setChatLoading(false);
+                            }
                           }}
                           className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                          disabled={chatLoading}
                         >
                           {question}
                         </button>
