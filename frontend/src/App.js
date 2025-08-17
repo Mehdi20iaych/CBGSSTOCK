@@ -94,6 +94,7 @@ function App() {
   });
   const [availableDepots, setAvailableDepots] = useState([]);
   const [configurationLoading, setConfigurationLoading] = useState(false);
+  const [defaultConfigurationDepots, setDefaultConfigurationDepots] = useState([]);
   
   // Références pour les inputs de fichiers
   const commandesFileRef = useRef(null);
