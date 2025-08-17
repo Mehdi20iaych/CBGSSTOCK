@@ -4992,7 +4992,17 @@ class SimplifiedStockManagementTester:
             ("Jours de Recouvrement Calculation", self.test_jours_recouvrement_calculation),
             ("Jours de Recouvrement Edge Cases", self.test_jours_recouvrement_edge_cases),
             ("Jours de Recouvrement Field Presence", self.test_jours_recouvrement_field_presence),
-            ("Jours de Recouvrement Mathematical Accuracy", self.test_jours_recouvrement_mathematical_accuracy)
+            ("Jours de Recouvrement Mathematical Accuracy", self.test_jours_recouvrement_mathematical_accuracy),
+            # AI CHAT FUNCTIONALITY TESTS - REVIEW REQUEST
+            ("AI Chat - Simple Questions", self.test_ai_chat_simple_questions),
+            ("AI Chat - Medium Complexity Questions", self.test_ai_chat_medium_complexity_questions),
+            ("AI Chat - Complex Questions", self.test_ai_chat_complex_questions),
+            ("AI Chat - Response Variation", self.test_ai_chat_response_variation),
+            ("AI Chat - Conversation ID Functionality", self.test_ai_chat_conversation_id_functionality),
+            ("AI Chat - With Uploaded Data", self.test_ai_chat_with_uploaded_data),
+            ("AI Chat - Response Length Adaptation", self.test_ai_chat_response_length_adaptation),
+            ("AI Chat - Gemini Integration Status", self.test_ai_chat_gemini_integration_status),
+            ("AI Chat - Consistency Check", self.test_ai_chat_consistency_check)
         ]
         
         for test_name, test_func in tests:
