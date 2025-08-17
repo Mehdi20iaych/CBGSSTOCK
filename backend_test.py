@@ -4564,6 +4564,16 @@ class SimplifiedStockManagementTester:
         
         tests = [
             ("Health Check", self.test_health_check),
+            # NEW TESTS FOR REVIEW REQUEST - /api/available-options endpoint
+            ("Available Options Endpoint Basic", self.test_available_options_endpoint_basic),
+            ("Available Article Codes Count", self.test_available_article_codes_count),
+            ("Specific Article Codes Presence", self.test_specific_article_codes_presence),
+            ("Default Configuration Depots Count", self.test_default_configuration_depots_count),
+            ("Default Configuration Depots Content", self.test_default_configuration_depots_content),
+            ("Uploaded Data Integration", self.test_uploaded_data_integration),
+            ("Allowed Depots Still Present", self.test_allowed_depots_still_present),
+            ("Article Codes Range Verification", self.test_article_codes_range_verification),
+            # EXISTING TESTS
             ("Enhanced Upload with Packaging", self.test_enhanced_upload_with_packaging),
             ("Packaging Type Normalization", self.test_packaging_normalization),
             ("Missing Packaging Column Error", self.test_missing_packaging_column_error),
