@@ -1976,6 +1976,17 @@ function App() {
                     </p>
                   </div>
 
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="text-blue-800 text-sm space-y-1">
+                      <p><strong>💡 Nouveautés :</strong></p>
+                      <ul className="list-disc list-inside ml-4 space-y-1">
+                        <li><strong>Auto-sélection :</strong> Quand vous activez la configuration, les dépôts par défaut sont automatiquement sélectionnés</li>
+                        <li><strong>Tous les produits :</strong> Quand vous sélectionnez un dépôt, tous les produits sont automatiquement sélectionnés</li>
+                        <li><strong>Bouton pratique :</strong> Utilisez "Tout sélectionner/désélectionner" pour chaque dépôt</li>
+                      </ul>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 gap-6">
                     <h3 className="text-lg font-medium text-gray-900">Sélection des Dépôts et Produits</h3>
                     
