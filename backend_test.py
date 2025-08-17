@@ -4658,6 +4658,51 @@ class SimplifiedStockManagementTester:
         
         return self.tests_passed == self.tests_run
 
+    def run_available_options_tests(self):
+        """Run focused tests for the new /api/available-options endpoint functionality"""
+        print("🚀 Starting /api/available-options Endpoint Tests")
+        print("=" * 70)
+        
+        tests = [
+            ("Health Check", self.test_health_check),
+            ("Available Options Endpoint Basic", self.test_available_options_endpoint_basic),
+            ("Available Article Codes Count", self.test_available_article_codes_count),
+            ("Specific Article Codes Presence", self.test_specific_article_codes_presence),
+            ("Default Configuration Depots Count", self.test_default_configuration_depots_count),
+            ("Default Configuration Depots Content", self.test_default_configuration_depots_content),
+            ("Uploaded Data Integration", self.test_uploaded_data_integration),
+            ("Allowed Depots Still Present", self.test_allowed_depots_still_present),
+            ("Article Codes Range Verification", self.test_article_codes_range_verification),
+        ]
+        
+        for test_name, test_func in tests:
+            try:
+                print(f"\n{'='*20} {test_name} {'='*20}")
+                result = test_func()
+                if result:
+                    print(f"✅ {test_name} PASSED")
+                else:
+                    print(f"❌ {test_name} FAILED")
+            except Exception as e:
+                print(f"❌ {test_name} ERROR: {str(e)}")
+                self.tests_run += 1  # Count as attempted
+        
+        # Print final summary
+        print("\n" + "="*70)
+        print("📊 /API/AVAILABLE-OPTIONS ENDPOINT TEST SUMMARY")
+        print("="*70)
+        print(f"Total Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%" if self.tests_run > 0 else "0%")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 ALL AVAILABLE-OPTIONS TESTS PASSED! New endpoint functionality is working correctly.")
+        else:
+            print("⚠️ Some tests failed. Please review the issues above.")
+        
+        return self.tests_passed == self.tests_run
+
     def run_enhanced_excel_export_tests(self):
         """Run focused tests for enhanced Excel export functionality with depot organization"""
         print("🚀 Starting Enhanced Excel Export Tests with Depot Organization")
