@@ -1845,13 +1845,34 @@ function App() {
                         L'IA peut vous aider à analyser vos données d'inventaire et répondre à vos questions.
                       </p>
                       <div className="text-sm text-gray-500">
-                        <p className="mb-2"><strong>Exemples de questions :</strong></p>
-                        <ul className="list-disc list-inside space-y-1">
-                          <li>"Quels sont les produits qui nécessitent un réapprovisionnement urgent ?"</li>
-                          <li>"Analyse les problèmes de stock principaux"</li>
-                          <li>"Quel est l'impact des transits sur mes calculs ?"</li>
-                          <li>"Comment optimiser la logistique de mes palettes ?"</li>
-                        </ul>
+                        <p className="mb-4"><strong>Questions rapides - Cliquez pour utiliser :</strong></p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {[
+                            "Quel article a le moins de stock en M210 ?",
+                            "Quels dépôts ont besoin de livraisons urgentes ?",
+                            "Analyse mes problèmes de stock critiques",
+                            "Optimise ma logistique de palettes",
+                            "Quels sont mes articles en rupture ?",
+                            "Résume l'état global de mes stocks"
+                          ].map((question, index) => (
+                            <button
+                              key={index}
+                              onClick={() => {
+                                setCurrentMessage(question);
+                                // Auto-send the message
+                                setTimeout(() => {
+                                  const event = new CustomEvent('autoSendMessage', { detail: question });
+                                  document.dispatchEvent(event);
+                                }, 100);
+                              }}
+                              className="text-left p-3 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors group cursor-pointer"
+                            >
+                              <span className="text-blue-600 group-hover:text-blue-700 font-medium text-sm">
+                                💬 {question}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ) : (
