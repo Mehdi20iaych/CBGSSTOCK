@@ -5622,5 +5622,5 @@ if __name__ == "__main__":
     
 if __name__ == "__main__":
     tester = SimplifiedStockManagementTester()
-    # Run focused tests for the review request
-    tester.run_available_options_tests()
+    # Run focused AI chat tests for the review request
+    tester.run_ai_chat_tests()
