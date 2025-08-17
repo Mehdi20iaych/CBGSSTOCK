@@ -1876,10 +1876,55 @@ function App() {
                               key={index}
                               onClick={() => {
                                 setCurrentMessage(question);
-                                // Auto-send the message
-                                setTimeout(() => {
-                                  const event = new CustomEvent('autoSendMessage', { detail: question });
-                                  document.dispatchEvent(event);
+                                // Directly call handleSendMessage after setting the message
+                                setTimeout(async () => {
+                                  if (!question.trim()) return;
+                                  
+                                  setChatLoading(true);
+                                  
+                                  // Add user message
+                                  const newUserMessage = {
+                                    type: 'user',
+                                    content: question,
+                                    timestamp: new Date()
+                                  };
+                                  setChatMessages(prev => [...prev, newUserMessage]);
+                                  
+                                  try {
+                                    const response = await fetch(`${API_BASE_URL}/api/chat`, {
+                                      method: 'POST',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                      },
+                                      body: JSON.stringify({
+                                        message: question,
+                                        conversation_id: conversationId
+                                      }),
+                                    });
+                                    
+                                    const data = await response.json();
+                                    
+                                    if (response.ok) {
+                                      const aiMessage = {
+                                        type: 'ai',
+                                        content: data.response,
+                                        timestamp: new Date(),
+                                        hasData: data.has_data || false,
+                                        dataTypes: data.data_types || []
+                                      };
+                                      setChatMessages(prev => [...prev, aiMessage]);
+                                      setConversationId(data.conversation_id);
+                                    }
+                                  } catch (error) {
+                                    const errorMessage = {
+                                      type: 'error',
+                                      content: 'Erreur lors de la communication avec le serveur.',
+                                      timestamp: new Date()
+                                    };
+                                    setChatMessages(prev => [...prev, errorMessage]);
+                                  } finally {
+                                    setChatLoading(false);
+                                  }
                                 }, 100);
                               }}
                               className="text-left p-3 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors group cursor-pointer"
