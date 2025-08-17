@@ -215,7 +215,7 @@ async def upload_commandes_excel(file: UploadFile = File(...)):
         if len(df) == 0:
             raise HTTPException(
                 status_code=400, 
-                detail="Aucun dépôt autorisé trouvé. Les dépôts autorisés sont: M115, M120, M130, M170, M171, et M212-M280"
+                detail=f"Aucun dépôt autorisé trouvé. Les dépôts autorisés sont: {', '.join(sorted(ALLOWED_DEPOTS))}"
             )
         
         # Generate session ID
