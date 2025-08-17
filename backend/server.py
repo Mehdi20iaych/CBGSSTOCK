@@ -1154,16 +1154,20 @@ async def chat_with_ai(request: ChatRequest):
         try:
             import google.generativeai as genai
             if not GEMINI_API_KEY:
-                # No key → fallback
+                print(f"DEBUG: No GEMINI_API_KEY found, falling back to minimal_bullets")
                 response_text = minimal_bullets(data_context)
             else:
+                print(f"DEBUG: Configuring Gemini API with key: {GEMINI_API_KEY[:20]}...")
                 genai.configure(api_key=GEMINI_API_KEY)
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 full_prompt = f"{system_prompt}\n\nQUESTION UTILISATEUR: {request.message}"
+                print(f"DEBUG: Sending prompt to Gemini API: {full_prompt[:100]}...")
                 resp = model.generate_content(full_prompt)
+                print(f"DEBUG: Gemini API response received: {getattr(resp, 'text', 'No text attribute')[:100]}...")
                 response_text = resp.text if getattr(resp, 'text', None) else minimal_bullets(data_context)
-        except Exception:
+        except Exception as e:
             # ImportError or API error → fallback
+            print(f"DEBUG: Exception in Gemini API call: {type(e).__name__}: {str(e)}")
             response_text = minimal_bullets(data_context)
         
         conversation_id = request.conversation_id or str(uuid.uuid4())
