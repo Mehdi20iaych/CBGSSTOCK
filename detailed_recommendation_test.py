@@ -5,7 +5,7 @@ import pandas as pd
 
 def detailed_recommendation_test():
     """Detailed test of the recommendation logic as per review request"""
-    base_url = "https://config-manager-2.preview.emergentagent.com"
+    base_url = "https://key-switcher.preview.emergentagent.com"
     
     print("🔍 DETAILED RECOMMENDATION LOGIC TEST")
     print("=" * 50)
