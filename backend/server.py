@@ -33,7 +33,7 @@ import openpyxl.comments
 import openpyxl.styles
 
 # Gemini API configuration - will be loaded lazily in chat endpoint
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', "AIzaSyB6DG8yocaGBjwfp7TatlDDHlKELYm56BU")
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', "AIzaSyA1Sx1oPOq1JOhzbTOxMvJ2PRooGA78fwg")
 
 app = FastAPI()
 
