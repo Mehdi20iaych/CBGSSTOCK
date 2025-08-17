@@ -639,16 +639,17 @@ async def get_available_options():
     """Get available depots and articles from predefined depots and uploaded data"""
     # Use predefined depots list
     available_depots = set(ALLOWED_DEPOTS)
-    available_articles = set()
+    available_articles = set(AVAILABLE_ARTICLE_CODES)  # Start with predefined article codes
     
-    # Get articles from commandes data if available
+    # Add articles from commandes data if available (extends the list)
     for session_id, session_data in commandes_data.items():
         if 'filters' in session_data:
             available_articles.update(session_data['filters'].get('articles', []))
     
     return {
         "depots": sorted(list(available_depots)),
-        "articles": sorted(list(available_articles))
+        "articles": sorted(list(available_articles)),
+        "default_configuration_depots": DEFAULT_CONFIGURATION_DEPOTS
     }
 
 @app.post("/api/export-excel")
