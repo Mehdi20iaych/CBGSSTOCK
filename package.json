@@ -1,0 +1,41 @@
+{
+  "name": "inventory-management-system",
+  "version": "1.0.0",
+  "description": "Inventory Management System with React frontend and FastAPI backend",
+  "main": "index.js",
+  "scripts": {
+    "install-all": "npm run install-frontend && npm run install-backend",
+    "install-frontend": "cd frontend && npm install",
+    "install-backend": "cd backend && pip install -r requirements.txt",
+    "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\"",
+    "start-frontend": "cd frontend && npm start",
+    "start-backend": "cd backend && python -m uvicorn server:app --reload --host 0.0.0.0 --port 8001",
+    "dev": "npm run start",
+    "build": "cd frontend && npm run build",
+    "test": "npm run test-frontend",
+    "test-frontend": "cd frontend && npm test",
+    "setup": "npm run install-all && npm run setup-env",
+    "setup-env": "node scripts/setup-env.js"
+  },
+  "keywords": [
+    "inventory",
+    "management",
+    "react",
+    "fastapi",
+    "excel",
+    "logistics"
+  ],
+  "author": "Emergent",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  }
+}
