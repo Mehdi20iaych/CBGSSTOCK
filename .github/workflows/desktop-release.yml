@@ -29,6 +29,18 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install OS dependencies
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y patchelf
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            echo "No extra deps needed for macOS"
+          else
+            echo "No extra deps needed for Windows"
+          fi
+
       - name: Install backend deps
         run: |
           python -m pip install --upgrade pip
@@ -39,11 +51,19 @@ jobs:
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            pyinstaller -F -n backend-server backend/entry.py
+            pyinstaller -F -n backend-server backend/entry.py \
+              --collect-all pandas \
+              --collect-all numpy \
+              --collect-all openpyxl \
+              --collect-all tzdata
             mkdir -p backend
             cp dist/backend-server.exe backend/
           else
-            pyinstaller -F -n backend-server backend/entry.py
+            pyinstaller -F -n backend-server backend/entry.py \
+              --collect-all pandas \
+              --collect-all numpy \
+              --collect-all openpyxl \
+              --collect-all tzdata
             mkdir -p backend
             cp dist/backend-server backend/
           fi
