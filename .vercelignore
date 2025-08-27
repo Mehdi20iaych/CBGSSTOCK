@@ -1,0 +1,25 @@
+# Exclude non-frontend files to keep upload small
+.git/
+.github/
+.vite/
+.venv/
+node_modules/
+frontend/node_modules/
+dist/
+electron/
+backend/
+tests/
+.emergent/
+
+# Large sample data and artifacts
+*.xlsx
+*.csv
+*.log
+*.ipynb
+
+# Python sources not needed for frontend-only deploy
+*.py
+
+# Local scripts
+*.bat
+*.sh
