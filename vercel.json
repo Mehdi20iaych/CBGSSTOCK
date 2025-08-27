@@ -9,13 +9,6 @@
     { "handle": "filesystem" },
     { "src": "/.*", "dest": "/index.html" }
   ],
-  "functions": {
-    "api/index.py": {
-      "runtime": "python3.11",
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  },
   "env": {
     "PYTHONUNBUFFERED": "1"
   }
