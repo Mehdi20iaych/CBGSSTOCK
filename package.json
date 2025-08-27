@@ -47,7 +47,8 @@
       "electron/**/*",
       "frontend/build/**/*",
       "backend/**/*",
-      "!**/*.pyc"
+      "!**/*.pyc",
+      "!backend/**/*.py"
     ],
     "extraResources": [
       {

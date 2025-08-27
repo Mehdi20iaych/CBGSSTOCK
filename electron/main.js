@@ -2,6 +2,7 @@ const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const http = require('http');
+const fs = require('fs');
 
 const BACKEND_HOST = '127.0.0.1';
 const BACKEND_PORT = process.env.BACKEND_PORT || '8001';
@@ -26,13 +27,26 @@ function getPythonCommand() {
 }
 
 function startBackend() {
-	const pythonCmd = getPythonCommand();
-	const args = ['-m', 'uvicorn', 'backend.server:app', '--host', BACKEND_HOST, '--port', BACKEND_PORT];
-	backendProcess = spawn(pythonCmd, args, {
-		cwd: path.join(__dirname, '..'),
-		env: { ...process.env },
-		detached: false,
-	});
+	const resourcesBase = app.isPackaged ? (process.resourcesPath || path.join(__dirname, '..')) : path.join(__dirname, '..');
+	const packagedBinary = process.platform === 'win32' ? 'backend-server.exe' : 'backend-server';
+	const packagedPath = path.join(resourcesBase, 'backend', packagedBinary);
+	const canUsePackaged = app.isPackaged && fs.existsSync(packagedPath);
+
+	if (canUsePackaged) {
+		backendProcess = spawn(packagedPath, [], {
+			cwd: resourcesBase,
+			env: { ...process.env, BACKEND_HOST: BACKEND_HOST, BACKEND_PORT: BACKEND_PORT },
+			detached: false,
+		});
+	} else {
+		const pythonCmd = getPythonCommand();
+		const args = ['-m', 'uvicorn', 'backend.server:app', '--host', BACKEND_HOST, '--port', BACKEND_PORT];
+		backendProcess = spawn(pythonCmd, args, {
+			cwd: path.join(__dirname, '..'),
+			env: { ...process.env },
+			detached: false,
+		});
+	}
 
 	backendProcess.stdout?.on('data', (data) => {
 		console.log(`[backend] ${data}`.toString());
