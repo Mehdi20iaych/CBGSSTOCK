@@ -16,10 +16,10 @@ import {
   PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
 
-// Detect Electron and use local backend URL if available
+// Backend base URL priority: Electron preload -> REACT_APP_BACKEND_URL (build time) -> same origin
 const API_BASE_URL = (typeof window !== 'undefined' && window.electron && window.electron.backendBaseUrl)
 	? window.electron.backendBaseUrl
-	: window.location.origin;
+	: (process.env.REACT_APP_BACKEND_URL || window.location.origin);
 
 function App() {
   // Helper pour parser JSON en toute sécurité (gère les réponses vides ou en texte)
