@@ -2,9 +2,6 @@
   "version": 2,
   "buildCommand": "cd frontend && yarn install && yarn build",
   "outputDirectory": "frontend/build",
-  "functions": {
-    "api/**/*.py": { "runtime": "vercel-python@3.11" }
-  },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],

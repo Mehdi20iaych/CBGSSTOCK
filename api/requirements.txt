@@ -8,7 +8,7 @@ pyjwt>=2.10.1
 passlib>=1.7.4
 email-validator>=2.2.0
 pandas==2.1.4
-numpy==1.25.2
+numpy==1.26.4
 openpyxl==3.1.2
 et-xmlfile>=2.0.0
 google-generativeai==0.8.5
