@@ -55,7 +55,11 @@ jobs:
               --collect-all pandas \
               --collect-all numpy \
               --collect-all openpyxl \
-              --collect-all tzdata
+              --collect-all tzdata \
+              --collect-all pydantic \
+              --collect-all pydantic_core \
+              --hidden-import pydantic_core._pydantic_core \
+              --collect-all et_xmlfile
             mkdir -p backend
             cp dist/backend-server.exe backend/
           else
@@ -63,7 +67,11 @@ jobs:
               --collect-all pandas \
               --collect-all numpy \
               --collect-all openpyxl \
-              --collect-all tzdata
+              --collect-all tzdata \
+              --collect-all pydantic \
+              --collect-all pydantic_core \
+              --hidden-import pydantic_core._pydantic_core \
+              --collect-all et_xmlfile
             mkdir -p backend
             cp dist/backend-server backend/
           fi
