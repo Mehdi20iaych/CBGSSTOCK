@@ -12,6 +12,9 @@
     "start-backend": "cd backend && python -m uvicorn server:app --reload --host 0.0.0.0 --port 8001",
     "dev": "npm run start",
     "build": "cd frontend && npm run build",
+    "desktop:dev": "npm run build && cross-env BACKEND_PORT=8001 electron .",
+    "desktop:pack": "npm run build && electron-builder --dir",
+    "desktop:make": "npm run build && electron-builder",
     "test": "npm run test-frontend",
     "test-frontend": "cd frontend && npm test",
     "setup": "npm run install-all && npm run setup-env",
@@ -28,7 +31,46 @@
   "author": "Emergent",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "electron": "^31.2.1",
+    "electron-builder": "^24.13.3",
+    "cross-env": "^7.0.3"
+  },
+  "main": "electron/main.js",
+  "build": {
+    "appId": "com.emergent.cbgsstock",
+    "productName": "CBGS Stock",
+    "directories": {
+      "buildResources": "electron"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/build/**/*",
+      "backend/**/*",
+      "!**/*.pyc"
+    ],
+    "extraResources": [
+      {
+        "from": "frontend/build",
+        "to": "frontend/build"
+      },
+      {
+        "from": "backend",
+        "to": "backend"
+      }
+    ],
+    "win": {
+      "target": ["nsis"],
+      "icon": "electron/icon.ico"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "electron/icon.icns"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "electron/icon.png"
+    }
   },
   "engines": {
     "node": ">=18.0.0",

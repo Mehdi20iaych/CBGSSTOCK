@@ -16,8 +16,10 @@ import {
   PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
 
-// Use same origin for API calls - all backend calls go through /api prefix
-const API_BASE_URL = window.location.origin;
+// Detect Electron and use local backend URL if available
+const API_BASE_URL = (typeof window !== 'undefined' && window.electron && window.electron.backendBaseUrl)
+	? window.electron.backendBaseUrl
+	: window.location.origin;
 
 function App() {
   // Helper pour parser JSON en toute sécurité (gère les réponses vides ou en texte)
