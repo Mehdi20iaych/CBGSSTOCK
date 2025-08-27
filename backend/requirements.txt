@@ -16,3 +16,4 @@ google-ai-generativelanguage>=0.6.4
 google-api-python-client==2.178.0
 google-api-core>=2.25.1
 httplib2==0.22.0
+uvicorn==0.25.0
